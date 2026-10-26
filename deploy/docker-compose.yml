@@ -1,0 +1,62 @@
+# New API 二开 (gallery-fork) 生产部署 compose
+#
+# 关键点:从【本地 Dockerfile】构建镜像(含你的画廊/首页/主题二开代码),
+#        而不是用上游官方镜像 calciumion/new-api:latest。
+# 变量插值(postgres/redis 口令)与容器环境变量均来自同级 .env(由 deploy.sh 生成)。
+# 运行方式(在 deploy/ 目录内):
+#   docker compose -f docker-compose.yml up -d --build
+
+services:
+  new-api:
+    image: new-api-gallery:latest
+    build:
+      context: ..                 # 仓库根目录(Dockerfile 所在处)
+      dockerfile: Dockerfile
+    container_name: new-api-gallery
+    restart: always
+    command: --log-dir /app/logs
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data:/data
+      - ./logs:/app/logs
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - postgres
+    networks:
+      - new-api-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://localhost:3000/api/status | grep -o '\"success\":\\s*true' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  redis:
+    image: redis:7
+    container_name: new-api-gallery-redis
+    restart: always
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD:-123456}"]
+    networks:
+      - new-api-network
+
+  postgres:
+    image: postgres:15
+    container_name: new-api-gallery-pg
+    restart: always
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-123456}"
+      POSTGRES_DB: new-api
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    networks:
+      - new-api-network
+
+volumes:
+  pg_data:
+
+networks:
+  new-api-network:
+    driver: bridge
