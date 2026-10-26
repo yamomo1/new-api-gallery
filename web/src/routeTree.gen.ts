@@ -31,6 +31,7 @@ import { Route as AuthenticatedSystemSettingsRouteRouteImport } from './routes/_
 import { Route as AboutIndexRouteImport } from './routes/about/index'
 import { Route as OauthProviderRouteImport } from './routes/oauth/$provider'
 import { Route as PricingIndexRouteImport } from './routes/pricing/index'
+import { Route as PromptGalleryIndexRouteImport } from './routes/prompt-gallery/index'
 import { Route as RankingsIndexRouteImport } from './routes/rankings/index'
 import { Route as SetupIndexRouteImport } from './routes/setup/index'
 import { Route as authUserResetRouteImport } from './routes/(auth)/user/reset'
@@ -42,6 +43,7 @@ import { Route as AuthenticatedErrorsErrorRouteImport } from './routes/_authenti
 import { Route as AuthenticatedKeysIndexRouteImport } from './routes/_authenticated/keys/index'
 import { Route as AuthenticatedModelsIndexRouteImport } from './routes/_authenticated/models/index'
 import { Route as AuthenticatedModelsSectionRouteImport } from './routes/_authenticated/models/$section'
+import { Route as AuthenticatedMyWorksIndexRouteImport } from './routes/_authenticated/my-works/index'
 import { Route as AuthenticatedPlaygroundIndexRouteImport } from './routes/_authenticated/playground/index'
 import { Route as AuthenticatedProfileIndexRouteImport } from './routes/_authenticated/profile/index'
 import { Route as AuthenticatedRedemptionCodesIndexRouteImport } from './routes/_authenticated/redemption-codes/index'
@@ -56,6 +58,8 @@ import { Route as AuthenticatedUsageLogsAuditRouteImport } from './routes/_authe
 import { Route as AuthenticatedUsersIndexRouteImport } from './routes/_authenticated/users/index'
 import { Route as AuthenticatedWalletIndexRouteImport } from './routes/_authenticated/wallet/index'
 import { Route as PricingModelIdIndexRouteImport } from './routes/pricing/$modelId/index'
+import { Route as AuthenticatedAdminHomeSettingsIndexRouteImport } from './routes/_authenticated/admin/home-settings/index'
+import { Route as AuthenticatedAdminPromptGalleryIndexRouteImport } from './routes/_authenticated/admin/prompt-gallery/index'
 import { Route as AuthenticatedSystemSettingsAuthIndexRouteImport } from './routes/_authenticated/system-settings/auth/index'
 import { Route as AuthenticatedSystemSettingsAuthSectionRouteImport } from './routes/_authenticated/system-settings/auth/$section'
 import { Route as AuthenticatedSystemSettingsBillingIndexRouteImport } from './routes/_authenticated/system-settings/billing/index'
@@ -182,6 +186,11 @@ const PricingIndexRoute = PricingIndexRouteImport.update({
   path: '/pricing/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PromptGalleryIndexRoute = PromptGalleryIndexRouteImport.update({
+  id: '/prompt-gallery/',
+  path: '/prompt-gallery/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RankingsIndexRoute = RankingsIndexRouteImport.update({
   id: '/rankings/',
   path: '/rankings/',
@@ -241,6 +250,12 @@ const AuthenticatedModelsSectionRoute =
   AuthenticatedModelsSectionRouteImport.update({
     id: '/models/$section',
     path: '/models/$section',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedMyWorksIndexRoute =
+  AuthenticatedMyWorksIndexRouteImport.update({
+    id: '/my-works/',
+    path: '/my-works/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedPlaygroundIndexRoute =
@@ -325,6 +340,18 @@ const PricingModelIdIndexRoute = PricingModelIdIndexRouteImport.update({
   path: '/pricing/$modelId/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAdminHomeSettingsIndexRoute =
+  AuthenticatedAdminHomeSettingsIndexRouteImport.update({
+    id: '/admin/home-settings/',
+    path: '/admin/home-settings/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminPromptGalleryIndexRoute =
+  AuthenticatedAdminPromptGalleryIndexRouteImport.update({
+    id: '/admin/prompt-gallery/',
+    path: '/admin/prompt-gallery/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedSystemSettingsAuthIndexRoute =
   AuthenticatedSystemSettingsAuthIndexRouteImport.update({
     id: '/auth/',
@@ -443,6 +470,7 @@ export interface FileRoutesByFullPath {
   '/oauth/$provider': typeof OauthProviderRoute
   '/about/': typeof AboutIndexRoute
   '/pricing/': typeof PricingIndexRoute
+  '/prompt-gallery/': typeof PromptGalleryIndexRoute
   '/rankings/': typeof RankingsIndexRoute
   '/setup/': typeof SetupIndexRoute
   '/user/reset': typeof authUserResetRoute
@@ -456,6 +484,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/': typeof AuthenticatedDashboardIndexRoute
   '/keys/': typeof AuthenticatedKeysIndexRoute
   '/models/': typeof AuthenticatedModelsIndexRoute
+  '/my-works/': typeof AuthenticatedMyWorksIndexRoute
   '/playground/': typeof AuthenticatedPlaygroundIndexRoute
   '/profile/': typeof AuthenticatedProfileIndexRoute
   '/redemption-codes/': typeof AuthenticatedRedemptionCodesIndexRoute
@@ -476,6 +505,8 @@ export interface FileRoutesByFullPath {
   '/system-settings/request-policies/$section': typeof AuthenticatedSystemSettingsRequestPoliciesSectionRoute
   '/system-settings/security/$section': typeof AuthenticatedSystemSettingsSecuritySectionRoute
   '/system-settings/site/$section': typeof AuthenticatedSystemSettingsSiteSectionRoute
+  '/admin/home-settings/': typeof AuthenticatedAdminHomeSettingsIndexRoute
+  '/admin/prompt-gallery/': typeof AuthenticatedAdminPromptGalleryIndexRoute
   '/system-settings/auth/': typeof AuthenticatedSystemSettingsAuthIndexRoute
   '/system-settings/billing/': typeof AuthenticatedSystemSettingsBillingIndexRoute
   '/system-settings/content/': typeof AuthenticatedSystemSettingsContentIndexRoute
@@ -505,6 +536,7 @@ export interface FileRoutesByTo {
   '/oauth/$provider': typeof OauthProviderRoute
   '/about': typeof AboutIndexRoute
   '/pricing': typeof PricingIndexRoute
+  '/prompt-gallery': typeof PromptGalleryIndexRoute
   '/rankings': typeof RankingsIndexRoute
   '/setup': typeof SetupIndexRoute
   '/user/reset': typeof authUserResetRoute
@@ -518,6 +550,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardIndexRoute
   '/keys': typeof AuthenticatedKeysIndexRoute
   '/models': typeof AuthenticatedModelsIndexRoute
+  '/my-works': typeof AuthenticatedMyWorksIndexRoute
   '/playground': typeof AuthenticatedPlaygroundIndexRoute
   '/profile': typeof AuthenticatedProfileIndexRoute
   '/redemption-codes': typeof AuthenticatedRedemptionCodesIndexRoute
@@ -538,6 +571,8 @@ export interface FileRoutesByTo {
   '/system-settings/request-policies/$section': typeof AuthenticatedSystemSettingsRequestPoliciesSectionRoute
   '/system-settings/security/$section': typeof AuthenticatedSystemSettingsSecuritySectionRoute
   '/system-settings/site/$section': typeof AuthenticatedSystemSettingsSiteSectionRoute
+  '/admin/home-settings': typeof AuthenticatedAdminHomeSettingsIndexRoute
+  '/admin/prompt-gallery': typeof AuthenticatedAdminPromptGalleryIndexRoute
   '/system-settings/auth': typeof AuthenticatedSystemSettingsAuthIndexRoute
   '/system-settings/billing': typeof AuthenticatedSystemSettingsBillingIndexRoute
   '/system-settings/content': typeof AuthenticatedSystemSettingsContentIndexRoute
@@ -571,6 +606,7 @@ export interface FileRoutesById {
   '/oauth/$provider': typeof OauthProviderRoute
   '/about/': typeof AboutIndexRoute
   '/pricing/': typeof PricingIndexRoute
+  '/prompt-gallery/': typeof PromptGalleryIndexRoute
   '/rankings/': typeof RankingsIndexRoute
   '/setup/': typeof SetupIndexRoute
   '/(auth)/user/reset': typeof authUserResetRoute
@@ -584,6 +620,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/': typeof AuthenticatedDashboardIndexRoute
   '/_authenticated/keys/': typeof AuthenticatedKeysIndexRoute
   '/_authenticated/models/': typeof AuthenticatedModelsIndexRoute
+  '/_authenticated/my-works/': typeof AuthenticatedMyWorksIndexRoute
   '/_authenticated/playground/': typeof AuthenticatedPlaygroundIndexRoute
   '/_authenticated/profile/': typeof AuthenticatedProfileIndexRoute
   '/_authenticated/redemption-codes/': typeof AuthenticatedRedemptionCodesIndexRoute
@@ -604,6 +641,8 @@ export interface FileRoutesById {
   '/_authenticated/system-settings/request-policies/$section': typeof AuthenticatedSystemSettingsRequestPoliciesSectionRoute
   '/_authenticated/system-settings/security/$section': typeof AuthenticatedSystemSettingsSecuritySectionRoute
   '/_authenticated/system-settings/site/$section': typeof AuthenticatedSystemSettingsSiteSectionRoute
+  '/_authenticated/admin/home-settings/': typeof AuthenticatedAdminHomeSettingsIndexRoute
+  '/_authenticated/admin/prompt-gallery/': typeof AuthenticatedAdminPromptGalleryIndexRoute
   '/_authenticated/system-settings/auth/': typeof AuthenticatedSystemSettingsAuthIndexRoute
   '/_authenticated/system-settings/billing/': typeof AuthenticatedSystemSettingsBillingIndexRoute
   '/_authenticated/system-settings/content/': typeof AuthenticatedSystemSettingsContentIndexRoute
@@ -636,6 +675,7 @@ export interface FileRouteTypes {
     | '/oauth/$provider'
     | '/about/'
     | '/pricing/'
+    | '/prompt-gallery/'
     | '/rankings/'
     | '/setup/'
     | '/user/reset'
@@ -649,6 +689,7 @@ export interface FileRouteTypes {
     | '/dashboard/'
     | '/keys/'
     | '/models/'
+    | '/my-works/'
     | '/playground/'
     | '/profile/'
     | '/redemption-codes/'
@@ -669,6 +710,8 @@ export interface FileRouteTypes {
     | '/system-settings/request-policies/$section'
     | '/system-settings/security/$section'
     | '/system-settings/site/$section'
+    | '/admin/home-settings/'
+    | '/admin/prompt-gallery/'
     | '/system-settings/auth/'
     | '/system-settings/billing/'
     | '/system-settings/content/'
@@ -698,6 +741,7 @@ export interface FileRouteTypes {
     | '/oauth/$provider'
     | '/about'
     | '/pricing'
+    | '/prompt-gallery'
     | '/rankings'
     | '/setup'
     | '/user/reset'
@@ -711,6 +755,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/keys'
     | '/models'
+    | '/my-works'
     | '/playground'
     | '/profile'
     | '/redemption-codes'
@@ -731,6 +776,8 @@ export interface FileRouteTypes {
     | '/system-settings/request-policies/$section'
     | '/system-settings/security/$section'
     | '/system-settings/site/$section'
+    | '/admin/home-settings'
+    | '/admin/prompt-gallery'
     | '/system-settings/auth'
     | '/system-settings/billing'
     | '/system-settings/content'
@@ -763,6 +810,7 @@ export interface FileRouteTypes {
     | '/oauth/$provider'
     | '/about/'
     | '/pricing/'
+    | '/prompt-gallery/'
     | '/rankings/'
     | '/setup/'
     | '/(auth)/user/reset'
@@ -776,6 +824,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/'
     | '/_authenticated/keys/'
     | '/_authenticated/models/'
+    | '/_authenticated/my-works/'
     | '/_authenticated/playground/'
     | '/_authenticated/profile/'
     | '/_authenticated/redemption-codes/'
@@ -796,6 +845,8 @@ export interface FileRouteTypes {
     | '/_authenticated/system-settings/request-policies/$section'
     | '/_authenticated/system-settings/security/$section'
     | '/_authenticated/system-settings/site/$section'
+    | '/_authenticated/admin/home-settings/'
+    | '/_authenticated/admin/prompt-gallery/'
     | '/_authenticated/system-settings/auth/'
     | '/_authenticated/system-settings/billing/'
     | '/_authenticated/system-settings/content/'
@@ -820,6 +871,7 @@ export interface RootRouteChildren {
   OauthProviderRoute: typeof OauthProviderRoute
   AboutIndexRoute: typeof AboutIndexRoute
   PricingIndexRoute: typeof PricingIndexRoute
+  PromptGalleryIndexRoute: typeof PromptGalleryIndexRoute
   RankingsIndexRoute: typeof RankingsIndexRoute
   SetupIndexRoute: typeof SetupIndexRoute
   PricingModelIdIndexRoute: typeof PricingModelIdIndexRoute
@@ -981,6 +1033,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PricingIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/prompt-gallery/': {
+      id: '/prompt-gallery/'
+      path: '/prompt-gallery'
+      fullPath: '/prompt-gallery/'
+      preLoaderRoute: typeof PromptGalleryIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/rankings/': {
       id: '/rankings/'
       path: '/rankings'
@@ -1056,6 +1115,13 @@ declare module '@tanstack/react-router' {
       path: '/models/$section'
       fullPath: '/models/$section'
       preLoaderRoute: typeof AuthenticatedModelsSectionRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/my-works/': {
+      id: '/_authenticated/my-works/'
+      path: '/my-works'
+      fullPath: '/my-works/'
+      preLoaderRoute: typeof AuthenticatedMyWorksIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/playground/': {
@@ -1155,6 +1221,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/pricing/$modelId/'
       preLoaderRoute: typeof PricingModelIdIndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/admin/home-settings/': {
+      id: '/_authenticated/admin/home-settings/'
+      path: '/admin/home-settings'
+      fullPath: '/admin/home-settings/'
+      preLoaderRoute: typeof AuthenticatedAdminHomeSettingsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/prompt-gallery/': {
+      id: '/_authenticated/admin/prompt-gallery/'
+      path: '/admin/prompt-gallery'
+      fullPath: '/admin/prompt-gallery/'
+      preLoaderRoute: typeof AuthenticatedAdminPromptGalleryIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/system-settings/auth/': {
       id: '/_authenticated/system-settings/auth/'
@@ -1373,6 +1453,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardIndexRoute: typeof AuthenticatedDashboardIndexRoute
   AuthenticatedKeysIndexRoute: typeof AuthenticatedKeysIndexRoute
   AuthenticatedModelsIndexRoute: typeof AuthenticatedModelsIndexRoute
+  AuthenticatedMyWorksIndexRoute: typeof AuthenticatedMyWorksIndexRoute
   AuthenticatedPlaygroundIndexRoute: typeof AuthenticatedPlaygroundIndexRoute
   AuthenticatedProfileIndexRoute: typeof AuthenticatedProfileIndexRoute
   AuthenticatedRedemptionCodesIndexRoute: typeof AuthenticatedRedemptionCodesIndexRoute
@@ -1383,6 +1464,8 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedUsageLogsIndexRoute: typeof AuthenticatedUsageLogsIndexRoute
   AuthenticatedUsersIndexRoute: typeof AuthenticatedUsersIndexRoute
   AuthenticatedWalletIndexRoute: typeof AuthenticatedWalletIndexRoute
+  AuthenticatedAdminHomeSettingsIndexRoute: typeof AuthenticatedAdminHomeSettingsIndexRoute
+  AuthenticatedAdminPromptGalleryIndexRoute: typeof AuthenticatedAdminPromptGalleryIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -1399,6 +1482,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardIndexRoute: AuthenticatedDashboardIndexRoute,
   AuthenticatedKeysIndexRoute: AuthenticatedKeysIndexRoute,
   AuthenticatedModelsIndexRoute: AuthenticatedModelsIndexRoute,
+  AuthenticatedMyWorksIndexRoute: AuthenticatedMyWorksIndexRoute,
   AuthenticatedPlaygroundIndexRoute: AuthenticatedPlaygroundIndexRoute,
   AuthenticatedProfileIndexRoute: AuthenticatedProfileIndexRoute,
   AuthenticatedRedemptionCodesIndexRoute:
@@ -1410,6 +1494,10 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedUsageLogsIndexRoute: AuthenticatedUsageLogsIndexRoute,
   AuthenticatedUsersIndexRoute: AuthenticatedUsersIndexRoute,
   AuthenticatedWalletIndexRoute: AuthenticatedWalletIndexRoute,
+  AuthenticatedAdminHomeSettingsIndexRoute:
+    AuthenticatedAdminHomeSettingsIndexRoute,
+  AuthenticatedAdminPromptGalleryIndexRoute:
+    AuthenticatedAdminPromptGalleryIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -1429,6 +1517,7 @@ const rootRouteChildren: RootRouteChildren = {
   OauthProviderRoute: OauthProviderRoute,
   AboutIndexRoute: AboutIndexRoute,
   PricingIndexRoute: PricingIndexRoute,
+  PromptGalleryIndexRoute: PromptGalleryIndexRoute,
   RankingsIndexRoute: RankingsIndexRoute,
   SetupIndexRoute: SetupIndexRoute,
   PricingModelIdIndexRoute: PricingModelIdIndexRoute,
