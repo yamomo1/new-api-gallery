@@ -48,6 +48,10 @@ const NEW_API_FOOTER_ATTRIBUTION_KEY = [
   'projectAttributionSuffix',
 ].join('.')
 
+// 本 fork 的对应源码仓库（AGPL-3.0 合规：运营公开站点必须向用户提供对应源码）。
+// 若你之后把仓库改名，只需改这里一处即可。
+const FORK_SOURCE_URL = 'https://github.com/yamomo1/new-api-gallery'
+
 function FooterLinkItem(props: { link: FooterLink }) {
   const { t } = useTranslation()
   const isExternal = props.link.href.startsWith('http')
@@ -137,6 +141,15 @@ function ProjectAttribution(props: { currentYear: number; inline?: boolean }) {
         {t('New API')}
       </a>
       . {t(NEW_API_FOOTER_ATTRIBUTION_KEY)}
+      {' · '}
+      <a
+        href={FORK_SOURCE_URL}
+        target='_blank'
+        rel='noopener noreferrer'
+        className='text-foreground/70 hover:text-foreground font-medium transition-colors'
+      >
+        {t('footer.sourceCode')}
+      </a>
     </span>
   )
   if (props.inline) {
