@@ -107,7 +107,7 @@
 .ghome .home-hero-inner {
   position: relative; z-index: 2;
   display: flex; flex-direction: column; justify-content: flex-end;
-  width: 100%; max-width: 84rem; margin-inline: auto;
+  width: 100%; max-width: 80rem; margin-inline: auto;
   padding: 7rem 1.25rem 5.5rem; /* 底部 5.5rem 给 hero 内滚动条留位 */
 }
 .ghome .home-hero-copy { max-width: 38rem; }
@@ -304,7 +304,9 @@
 
 /* ============================================================
    通用区块（section）
+   内容容器统一限宽 1280px（对标站 .container 规格，全局 .container 无 max-width）
    ============================================================ */
+.ghome .container { max-width: 80rem; }
 .ghome .section { padding: 88px 0; }
 .ghome .section--tinted { background: color-mix(in oklab, var(--foreground) 3%, var(--background)); border-block: 1px solid var(--border); }
 .ghome .section-head { max-width: 720px; margin: 0 auto 48px; text-align: center; }
@@ -330,7 +332,7 @@
 /* 非对称头部：大标题两行居左（第二行灰）+ lead 右侧窄列（对标站比例） */
 .ghome .agent-head {
   display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, 380px);
-  gap: 20px 56px; align-items: end; margin-bottom: 6px;
+  gap: 20px 56px; align-items: end; margin-bottom: 40px;
 }
 .ghome .agent-head h2 {
   text-align: left; margin: 12px 0 0;
@@ -342,7 +344,7 @@
 
 /* 大输入面板（对标：顶部一行输入 + 底部工具条 参考图/自动/helper/圆形发送） */
 .ghome .agent-composer {
-  max-width: 720px; margin: 26px auto 0;
+  max-width: 720px; margin: 0 auto;
   background: var(--card); border: 1px solid var(--border); border-radius: 18px;
   padding: 16px 16px 14px; box-shadow: var(--shadow, 0 18px 40px -22px rgba(0,0,0,.5));
 }
@@ -395,7 +397,7 @@
 .ghome .agent-send:hover { transform: translateY(-1px); filter: brightness(1.06); }
 /* 快捷技能 chips（选中态金框，与下拉框联动） */
 .ghome .agent-chips {
-  display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: 18px;
+  display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: 22px;
 }
 .ghome .agent-chip {
   display: inline-flex; align-items: center; gap: 7px;
@@ -413,7 +415,7 @@
 /* 两栏：左特性列表（收窄，对标约 4:5）+ 右预览卡 */
 .ghome .agent-body {
   display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 5fr); gap: 40px;
-  align-items: start; margin-top: 46px;
+  align-items: start; margin-top: 76px;
 }
 .ghome .agent-features { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
 .ghome .agent-features li { display: flex; gap: 14px; padding: 18px 0; border-top: 1px solid var(--border); }
