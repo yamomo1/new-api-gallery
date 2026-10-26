@@ -1,0 +1,49 @@
+# New API 二开 · 1Panel 应用容器(仅 app,DB/缓存用 1Panel 应用商店单独装)
+#
+# 适用场景:你希望 PostgreSQL / Redis 由 1Panel「应用商店」一键安装并统一托管,
+#          而这里只编排应用容器,通过宿主机映射端口连到它们。
+#
+# 连接方式:host.docker.internal → 宿主机 → 映射端口 → 商店里的 PG/Redis 容器
+#
+# 前置(在 1Panel 里做):
+#   1) 应用商店装 PostgreSQL:
+#        - 勾选/设置「映射端口到宿主机」(默认 5432;若占用可改用 15432)
+#        - 记录 root 口令;确认已创建数据库 new-api
+#          (New API 用 GORM 自动建表,但「new-api 这个库本身」要预先存在)
+#        - 若商店装完没建库,进 1Panel「数据库 → PostgreSQL」建一个库名 new-api
+#   2) 应用商店装 Redis:
+#        - 映射端口到宿主机(默认 6379;若占用改 16379)
+#        - 设置 requirepass 口令
+#
+# 替换 6 个占位符:
+#   <PG_PASS> <REDIS_PASS>        — 你给 PG/Redis 设的口令
+#   <PG_HOST_PORT> <REDIS_HOST_PORT> — 上面「映射到宿主机」的端口(不是 15432/16379 就是 5432/6379)
+#   <SESSION_SECRET> <CRYPT_KEY>  — openssl rand -hex 32,务必保存
+
+services:
+  new-api:
+    image: new-api-gallery:latest
+    container_name: new-api-gallery
+    restart: always
+    command: --log-dir /app/logs
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data:/data
+      - ./logs:/app/logs
+    extra_hosts:
+      - "host.docker.internal:host-gateway"   # 关键:让容器能访问宿主机
+    environment:
+      - SQL_DSN=postgresql://root:<PG_PASS>@host.docker.internal:<PG_HOST_PORT>/new-api
+      - REDIS_CONN_STRING=redis://:<REDIS_PASS>@host.docker.internal:<REDIS_HOST_PORT>
+      - SESSION_SECRET=<SESSION_SECRET>
+      - CRYPT_KEY=<CRYPT_KEY>
+      - TZ=Asia/Shanghai
+      - PORT=3000
+      - ERROR_LOG_ENABLED=true
+      - DEFAULT_LANGUAGE=zh-CN
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://localhost:3000/api/status | grep -o '\"success\":\\s*true' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3

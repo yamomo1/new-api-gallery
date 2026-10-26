@@ -32,6 +32,12 @@ docker images | grep new-api-gallery   # 确认已生成
 
 ## 第 2 步:1Panel 创建编排
 
+> **两种选法,取决于 PostgreSQL / Redis 装在哪:**
+> - **方案甲(内置,最省心)**:PG/Redis 跟 app 放在同一编排里 → 用 `docker-compose.1panel.yml`(3 容器),替换 4 个口令占位符。
+> - **方案乙(商店装,你要的)**:PG/Redis 用 1Panel「应用商店」单独一键装,app 只编排 1 个容器 → 用 `docker-compose.1panel-external-db.yml`,通过 `host.docker.internal` 连到商店里的 PG/Redis(见下方「替代:DB/缓存交给 1Panel 应用商店」)。
+
+### 方案甲:内置(默认)
+
 1. 左侧菜单 **容器 → 编排 → 创建编排**。
 2. 文件夹名称填 `new-api-gallery`,来源默认「编辑」。
 3. 把本仓库 `deploy/docker-compose.1panel.yml` 的内容**粘贴**进编辑框。
@@ -45,6 +51,26 @@ docker images | grep new-api-gallery   # 确认已生成
    > `POSTGRES_PASSWORD` 一旦写进编排首次启动,后续不可随意改(改了要连同数据库一起重置)。
 5. 点 **确认/创建** → 1Panel 会自动 `docker compose up`,生成编排。
 6. 编排目录实际落在:`/opt/1panel/apps/docker/compose/new-api-gallery/`(1Panel 路径,`./data`、`./logs` 相对它)。
+
+### 方案乙:DB/缓存交给 1Panel 应用商店(你要求的"用 1Panel 装这两个容器")
+
+**可以。** 1Panel 应用商店有一键装 PostgreSQL / Redis 的应用。做法:把 DB/缓存拆出 app,商店里装好并**映射端口到宿主机**,app 容器用 `host.docker.internal` 连过去。
+
+1. **1Panel → 应用商店 → 安装 PostgreSQL**:
+   - 安装时**勾选「端口映射到宿主机」**(默认 `5432`,若被占用可改成 `15432`)。记下这个宿主端口 = `<PG_HOST_PORT>`。
+   - 设 root 口令(`<PG_PASS>`)。
+   - **预建库** `new-api`(New API 用 GORM 自动建表,但库本身要先存在;商店装完若没建库,进 **数据库 → PostgreSQL** 建一个库名 `new-api`)。
+2. **1Panel → 应用商店 → 安装 Redis**:
+   - 同样**映射端口到宿主机**(默认 `6379`,占用可改 `16379`)= `<REDIS_HOST_PORT>`,并设 `requirepass`(`<REDIS_PASS>`)。
+3. **1Panel → 容器 → 编排 → 创建编排**(文件夹名可叫 `new-api-gallery-app`):
+   - 粘贴 `deploy/docker-compose.1panel-external-db.yml`。
+   - 替换占位符:`<PG_PASS>`、`<PG_HOST_PORT>`、`<REDIS_PASS>`、`<REDIS_HOST_PORT>`、`<SESSION_SECRET>`、`<CRYPT_KEY>`。
+   - 该文件已内置 `extra_hosts: host.docker.internal:host-gateway`,让 app 容器能经宿主机访问商店的 PG/Redis。
+4. 点创建 → 只有 **1 个 app 容器** 起来(DB/Redis 是商店那 2 个,分开管理)。
+
+> 这样备份/升级 DB 直接用 1Panel 商店自带功能,更省事;代价是 `host.docker.internal` 多一跳,且要记 2 个宿主端口。
+> **方案乙里的 3 个容器**:`new-api-gallery`(app)+ 商店装的 `PostgreSQL` + `Redis`。
+> 二开代码更新方法不变:shell `git pull && docker build -t new-api-gallery:latest .` → 1Panel **容器 → 编排 → new-api-gallery-app → 「重建」**。
 
 ## 第 3 步:验证
 
