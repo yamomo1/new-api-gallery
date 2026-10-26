@@ -18,8 +18,9 @@ For commercial licensing, please contact support@quantumnous.com
 */
 import { createFileRoute } from '@tanstack/react-router'
 
-import { Home } from '@/features/home'
+// 二开：首页替换为电影感画廊首页（原官方首页在 @/features/home，可随时切回）
+import { GalleryHome } from '@/features/gallery-home'
 
 export const Route = createFileRoute('/')({
-  component: Home,
+  component: GalleryHome,
 })
