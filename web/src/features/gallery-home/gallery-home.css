@@ -123,7 +123,14 @@ html:not(.dark) .ghome {
   filter: saturate(1.05) contrast(1.03);
 }
 @keyframes home-settle { 0% { opacity: 0; transform: translateX(-50%) scale(1.06); } }
-@keyframes home-rise { 0% { opacity: 0; transform: translateY(18px); } }
+@keyframes home-rise {
+  0% { opacity: 0; transform: translateY(30px); filter: blur(7px); }
+  100% { opacity: 1; transform: none; filter: none; }
+}
+/* Hero 首屏 stagger 入场：.rise + 内联 animation-delay 依次递进（80/160/240/320/420ms） */
+.ghome .rise {
+  animation: home-rise 1s var(--home-ease, cubic-bezier(0.16, 1, 0.3, 1)) both;
+}
 @keyframes home-bob { 50% { transform: translateY(3px); } }
 /* 换段淡入（HeroVideoStage 切段重建元素时触发） */
 .home-hero-video { animation: hero-video-in 0.9s var(--home-ease, ease) both; }
@@ -811,6 +818,48 @@ html:not(.dark) .ghome {
   .ghome .model-stats { gap: 24px; flex-wrap: wrap; }
 }
 
+/* ============================================================
+   滚动进入视口时的出现动画（scroll-reveal）
+   两种挂法（见 index.tsx 的 useEffect）：
+   · [data-reveal]        单个元素淡入上浮，data-reveal-delay（毫秒）可错峰
+   · [data-reveal-group]  盒子级：内部「直接子元素」逐个挂动画，
+                          data-reveal-step（默认 110ms）控制相邻间隔
+   · 只动 opacity / transform / filter，卡片自身 hover 过渡不受影响
+   调参（想更快/更慢、更夸张/更轻，只改这四个值）：
+   ============================================================ */
+.ghome {
+  --reveal-dur: 1.05s; /* 单元素动画时长：越大越慢 */
+  --reveal-y: 38px; /* 起始下沉距离：越大越明显 */
+  --reveal-blur: 8px; /* 起始模糊：越大越"浮现" */
+  --reveal-scale: 0.972; /* 起始缩放：越小越明显 */
+  --reveal-ease: cubic-bezier(0.16, 1, 0.3, 1);
+}
+.ghome [data-reveal] {
+  opacity: 0;
+  transform: translate3d(0, var(--reveal-y), 0) scale(var(--reveal-scale));
+  filter: blur(var(--reveal-blur));
+  transition:
+    opacity var(--reveal-dur) var(--reveal-ease) var(--rd, 0ms),
+    transform var(--reveal-dur) var(--reveal-ease) var(--rd, 0ms),
+    filter var(--reveal-dur) var(--reveal-ease) var(--rd, 0ms);
+}
+/* 只在"还没出现"时提权，出现后释放，避免几十个元素长期占合成层 */
+.ghome [data-reveal]:not(.in) {
+  will-change: opacity, transform, filter;
+}
+.ghome [data-reveal].in {
+  opacity: 1;
+  transform: none;
+  filter: none;
+}
+/* 兜底：无 IntersectionObserver / JS 未加载时，直接可见（不被藏住） */
+.ghome.no-io [data-reveal] {
+  opacity: 1;
+  transform: none;
+  filter: none;
+  transition: none;
+}
+
 /* 尊重系统「减少动效」偏好 */
 @media (prefers-reduced-motion: reduce) {
   .ghome .hero-ticker-track,
@@ -818,5 +867,11 @@ html:not(.dark) .ghome {
   .ghome .agent-attach svg {
     animation: none !important;
     transition: none !important;
+  }
+  .ghome [data-reveal] {
+    opacity: 1;
+    transform: none;
+    filter: none;
+    transition: none;
   }
 }

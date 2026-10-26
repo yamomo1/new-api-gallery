@@ -10,6 +10,8 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
+# 构建产物备份（重新构建前把旧 dist 改名用，勿提交）
+dist.bak.*
 *.local
 
 .env

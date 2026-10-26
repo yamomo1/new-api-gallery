@@ -159,6 +159,55 @@ export function GalleryHome() {
     }
   }, [skillMenuOpen])
 
+  // ============ 滚动出现动画（scroll-reveal） ============
+  // 两种挂法：
+  //   1) [data-reveal]        单个元素自己淡入上浮（可配 data-reveal-delay 毫秒错峰）
+  //   2) [data-reveal-group]  盒子级：其「直接子元素」自动逐个挂上动画，
+  //                           按 data-reveal-step（默认 110ms）依次错峰，最多累积 8 步
+  // 只动 opacity / transform / filter，不碰卡片自身的 hover 过渡
+  useEffect(() => {
+    // 先把「盒子」展开成逐子元素
+    document
+      .querySelectorAll<HTMLElement>('.ghome [data-reveal-group]')
+      .forEach((group) => {
+        const step = Number(group.dataset.revealStep || 110)
+        Array.from(group.children).forEach((child, i) => {
+          const el = child as HTMLElement
+          // 子元素自己已声明 reveal / 也是新的盒子 → 交给它自己处理，避免父子上浮动效叠加
+          if (el.hasAttribute('data-reveal') || el.hasAttribute('data-reveal-group')) return
+          el.setAttribute('data-reveal', '')
+          if (!el.dataset.revealDelay) {
+            el.style.setProperty('--rd', `${Math.min(i * step, step * 8)}ms`)
+          }
+        })
+      })
+
+    const els = Array.from(document.querySelectorAll<HTMLElement>('.ghome [data-reveal]'))
+    if (els.length === 0) return
+    if (typeof IntersectionObserver === 'undefined') {
+      // 无 IO（极老浏览器 / SSR 兜底）：不藏元素，直接显示
+      document.querySelectorAll('.ghome').forEach((r) => r.classList.add('no-io'))
+      return
+    }
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) {
+            e.target.classList.add('in')
+            io.unobserve(e.target)
+          }
+        }
+      },
+      { threshold: 0.1, rootMargin: '0px 0px -8% 0px' },
+    )
+    els.forEach((el) => {
+      const d = el.dataset.revealDelay
+      if (d) el.style.setProperty('--rd', `${d}ms`)
+      if (!el.classList.contains('in')) io.observe(el)
+    })
+    return () => io.disconnect()
+  }, [h, m])
+
   const activeSkill =
     agentSkill === 'auto'
       ? null
@@ -272,7 +321,7 @@ export function GalleryHome() {
         <section className='section section--tinted' id='home-agent'>
           <div className='container'>
             {/* 非对称头部：大标题两行居左（第二行灰）+ lead 右侧窄列 */}
-            <div className='agent-head'>
+            <div className='agent-head' data-reveal-group data-reveal-step='90'>
               <div className='agent-head-copy'>
                 <span className='eyebrow'>
                   <span className='sec-index'>{h.agent.index}</span>
@@ -288,7 +337,7 @@ export function GalleryHome() {
             </div>
 
             {/* 大输入面板：参考图 + 技能下拉 + helper + 圆形发送（对标站同款） */}
-            <div className='agent-composer'>
+            <div className='agent-composer' data-reveal-group data-reveal-step='110'>
               <textarea
                 value={agentQ}
                 onChange={(e) => setAgentQ(e.target.value)}
@@ -377,7 +426,7 @@ export function GalleryHome() {
             </div>
 
             {/* 快捷技能 chips（与下拉框双向联动：key 同步选中） */}
-            <div className='agent-chips'>
+            <div className='agent-chips' data-reveal-group data-reveal-step='55'>
               {h.agent.skills.map((s) => {
                 const Icon = ICONS[s.icon] || Sparkles
                 const on = agentSkill === s.key
@@ -397,7 +446,7 @@ export function GalleryHome() {
 
             {/* 两栏：左特性列表 + 右「画布 Agent」预览卡（对标站同款） */}
             <div className='agent-body'>
-              <ul className='agent-features'>
+              <ul className='agent-features' data-reveal-group data-reveal-step='120'>
                 {h.agent.features.map((f) => {
                   const Icon = ICONS[f.icon] || Sparkles
                   return (
@@ -414,7 +463,7 @@ export function GalleryHome() {
                 })}
               </ul>
 
-              <div className='agent-preview'>
+              <div className='agent-preview' data-reveal-group data-reveal-step='100'>
                 <div className='agent-preview-bubble'>
                   {h.agent.preview.bubble}
                 </div>
@@ -424,14 +473,14 @@ export function GalleryHome() {
                   </span>
                   <span className='agent-preview-badge'>{h.agent.preview.badge}</span>
                 </div>
-                <ul className='agent-preview-plan'>
+                <ul className='agent-preview-plan' data-reveal-group data-reveal-step='90'>
                   {h.agent.preview.plan.map((p) => (
                     <li key={p}>
                       <Check size={14} /> {p}
                     </li>
                   ))}
                 </ul>
-                <div className='agent-preview-steps'>
+                <div className='agent-preview-steps' data-reveal-group data-reveal-step='90'>
                   {h.agent.preview.steps.map((s, i) => (
                     <button type='button' key={s} className={i === 0 ? 'on' : ''}>
                       <i>{String(i + 1).padStart(2, '0')}</i>
@@ -455,7 +504,7 @@ export function GalleryHome() {
         {/* ============ 3. 三个 Studio ============ */}
         <section className='section'>
           <div className='container'>
-            <div className='section-head'>
+            <div className='section-head' data-reveal-group data-reveal-step='90'>
               <span className='eyebrow'>
                 <span className='sec-index'>{h.studios.index}</span>
                 {h.studios.eyebrow}
@@ -463,7 +512,7 @@ export function GalleryHome() {
               <h2>{h.studios.title}</h2>
               <p>{h.studios.lead}</p>
             </div>
-            <div className='studios'>
+            <div className='studios' data-reveal-group data-reveal-step='150'>
               {h.studios.items.map((s) => (
                 <Nav className='studio' to={s.url} key={s.title}>
                   <div className='studio-media'>
@@ -486,7 +535,7 @@ export function GalleryHome() {
         {/* ============ 4. 灵感画廊 ============ */}
         <section className='section section--tinted'>
           <div className='container'>
-            <div className='gallery-head'>
+            <div className='gallery-head' data-reveal-group data-reveal-step='90'>
               <div>
                 <span className='eyebrow'>
                   <span className='sec-index'>{h.gallery.index}</span>
@@ -511,11 +560,11 @@ export function GalleryHome() {
                 ))}
               </div>
             </div>
-            <p style={{ color: 'var(--muted)', marginTop: 14 }}>
+            <p style={{ color: 'var(--muted)', marginTop: 14 }} data-reveal>
               {h.gallery.lead}
             </p>
 
-            <div className='gallery-grid'>
+            <div className='gallery-grid' data-reveal-group data-reveal-step='95'>
               {h.gallery.items.map((g) => (
                 <Nav className='gcard' to={g.url} key={g.title}>
                   <div className='gcard-cover'>
@@ -538,14 +587,14 @@ export function GalleryHome() {
               ))}
             </div>
 
-            <div className='center'>
+            <div className='center' data-reveal>
               <Nav className='gallery-link' to='/prompt-gallery'>
                 {h.gallery.exploreLabel} <ArrowRight size={14} />
               </Nav>
             </div>
 
             {h.gallery.featuredVideo && (
-              <div className='featured-video'>
+              <div className='featured-video' data-reveal data-reveal-delay='80'>
                 <video
                   src={h.gallery.featuredVideo}
                   autoPlay
@@ -563,7 +612,7 @@ export function GalleryHome() {
         {/* ============ 5. 模型亮点 ============ */}
         <section className='section'>
           <div className='container'>
-            <div className='section-head'>
+            <div className='section-head' data-reveal-group data-reveal-step='90'>
               <span className='eyebrow'>
                 <span className='sec-index'>{h.models.index}</span>
                 {h.models.eyebrow}
@@ -571,7 +620,7 @@ export function GalleryHome() {
               <h2>{h.models.title}</h2>
               <p>{h.models.lead}</p>
             </div>
-            <div className='model-stats'>
+            <div className='model-stats' data-reveal-group data-reveal-step='140'>
               <div className='stat'>
                 <b>{h.models.stats.models}</b>
                 <span>{t('Available models')}</span>
@@ -581,7 +630,7 @@ export function GalleryHome() {
                 <span>{t('Providers')}</span>
               </div>
             </div>
-            <div className='model-list'>
+            <div className='model-list' data-reveal-group data-reveal-step='85'>
               {h.models.items.map((mi) => (
                 <Nav className='model-item' to={mi.url} key={mi.name}>
                   <span className='model-rank'>
@@ -597,7 +646,7 @@ export function GalleryHome() {
                 </Nav>
               ))}
             </div>
-            <div className='center'>
+            <div className='center' data-reveal>
               <Nav className='gallery-link' to='/pricing'>
                 {h.models.exploreLabel} <ArrowRight size={14} />
               </Nav>
@@ -608,14 +657,14 @@ export function GalleryHome() {
         {/* ============ 6. 统一 API CTA ============ */}
         <section className='section cta'>
           <div className='container'>
-            <div className='cta-inner'>
+            <div className='cta-inner' data-reveal-group data-reveal-step='110'>
               <span className='eyebrow' style={{ color: 'var(--hero-gold)' }}>
                 <span className='sec-index'>{h.cta.index}</span>
                 YMM · You Make Moments
               </span>
               <h2>{h.cta.title}</h2>
               <p>{h.cta.lead}</p>
-              <ul className='cta-features'>
+              <ul className='cta-features' data-reveal-group data-reveal-step='70'>
                 {h.cta.features.map((f) => (
                   <li key={f}>{f}</li>
                 ))}
@@ -671,7 +720,7 @@ export function GalleryHome() {
               loading='lazy'
               decoding='async'
             />
-            <div className='home-closing-inner'>
+            <div className='home-closing-inner' data-reveal-group data-reveal-step='120'>
               <p className='home-closing-kicker'>
                 <Sparkles size={16} /> {h.closing.kicker}
               </p>
@@ -692,7 +741,9 @@ export function GalleryHome() {
         </section>
 
         {/* ============ 8. 页脚上方模型滚动条 ============ */}
-        <ModelTicker models={m.ticker} tickerSec={m.tickerSec} />
+        <div data-reveal>
+          <ModelTicker models={m.ticker} tickerSec={m.tickerSec} />
+        </div>
       </div>
     </PublicLayout>
   )
