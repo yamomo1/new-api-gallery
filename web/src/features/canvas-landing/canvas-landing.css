@@ -1,0 +1,704 @@
+/* ============================================================
+   CanvasLanding —— 「画布工作室」落地页
+   对标 api.seedance.nz/canvas · 作用域 .ctlp
+   深色电影感单主题：媒体为主，不跟随站点明暗切换
+   结构：头部（眉标 + 两行标题 / 说明段）→ 左画布面板 + 右工作室卡
+   ============================================================ */
+
+.ctlp {
+  /* —— 调参令牌：改这里即可整体改观感 —— */
+  --ctlp-bg: #050506;
+  --ctlp-ink: #f5f3ef;
+  --ctlp-muted: #8b8b93;
+  --ctlp-dim: #616168;
+  --ctlp-line: rgba(255, 255, 255, 0.09);
+  --ctlp-line-strong: rgba(255, 255, 255, 0.16);
+  --ctlp-card: #0b0b0e;
+  --ctlp-glass: rgba(13, 13, 16, 0.72);
+  --ctlp-gold: #e9c27a;
+  --ctlp-radius: 20px;
+  --ctlp-shell: 1180px;
+  --ctlp-ease: cubic-bezier(0.16, 1, 0.3, 1);
+
+  position: relative;
+  background: var(--ctlp-bg);
+  color: var(--ctlp-ink);
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB',
+    'Microsoft YaHei', system-ui, 'Segoe UI', Roboto, sans-serif;
+  padding: 7.5rem 0 6rem;
+  overflow: clip;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 顶部一层极淡的金色辉光，避免纯黑发闷 */
+.ctlp::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 34rem;
+  pointer-events: none;
+  background: radial-gradient(
+    58% 62% at 22% 0%,
+    rgba(233, 194, 122, 0.09),
+    transparent 70%
+  );
+}
+
+.ctlp-shell {
+  position: relative;
+  max-width: var(--ctlp-shell);
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* ============ 头部 ============ */
+.ctlp-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 402px);
+  align-items: start;
+  gap: 28px 48px;
+  margin-bottom: 34px;
+}
+
+.ctlp-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  color: var(--ctlp-dim);
+  text-transform: uppercase;
+  animation: ctlp-line-in 0.9s var(--ctlp-ease) both;
+}
+.ctlp-eyebrow i {
+  font-style: normal;
+  font-variant-numeric: tabular-nums;
+  color: var(--ctlp-muted);
+}
+.ctlp-sep {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.7;
+}
+
+.ctlp-head h1 {
+  margin: 14px 0 0;
+  font-size: clamp(2.15rem, 4.4vw, 3.55rem);
+  line-height: 1.06;
+  letter-spacing: -0.035em;
+  font-weight: 700;
+}
+.ctlp-head h1 > span {
+  display: block;
+  animation: ctlp-line-in 1.05s var(--ctlp-ease) both;
+}
+
+.ctlp-lead {
+  margin: 34px 0 0;
+  color: var(--ctlp-muted);
+  font-size: 14.5px;
+  line-height: 1.78;
+  animation: ctlp-line-in 1.05s var(--ctlp-ease) 0.3s both;
+}
+
+@keyframes ctlp-line-in {
+  from {
+    opacity: 0;
+    transform: translateY(26px);
+    filter: blur(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+
+/* ============ 两栏 ============ */
+.ctlp-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.32fr) minmax(0, 1fr);
+  align-items: start;
+  gap: 20px;
+}
+
+/* ============ 左：画布面板 ============ */
+.ctlp-canvas {
+  position: relative;
+  border-radius: var(--ctlp-radius);
+  border: 1px solid var(--ctlp-line);
+  background: #07070a;
+  overflow: hidden;
+  aspect-ratio: 1.12 / 1;
+  min-height: 400px;
+  isolation: isolate;
+}
+
+.ctlp-canvas-art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* 缓慢推拉：24s 往返，像画布在呼吸 */
+  animation: ctlp-kenburns 24s ease-in-out infinite alternate;
+}
+
+@keyframes ctlp-kenburns {
+  from {
+    transform: scale(1.02) translate3d(0, 0, 0);
+  }
+  to {
+    transform: scale(1.11) translate3d(-1.4%, -1.2%, 0);
+  }
+}
+
+/* 四角压暗，突出中央的选区 */
+.ctlp-canvas::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    82% 76% at 50% 44%,
+    transparent 42%,
+    rgba(0, 0, 0, 0.62) 100%
+  );
+}
+
+/* —— 辅助线：从选区外沿延伸到画布边缘（描线动画） —— */
+.ctlp-guide {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.14);
+  z-index: 1;
+}
+.ctlp-guide-v {
+  left: 7%;
+  top: 9%;
+  bottom: 0;
+  width: 1px;
+  transform-origin: top;
+  animation: ctlp-draw-y 1.5s var(--ctlp-ease) 0.35s both;
+}
+.ctlp-guide-h {
+  left: 7%;
+  right: 0;
+  bottom: 25%;
+  height: 1px;
+  transform-origin: left;
+  animation: ctlp-draw-x 1.5s var(--ctlp-ease) 0.55s both;
+}
+@keyframes ctlp-draw-y {
+  from {
+    transform: scaleY(0);
+    opacity: 0;
+  }
+  to {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+}
+@keyframes ctlp-draw-x {
+  from {
+    transform: scaleX(0);
+    opacity: 0;
+  }
+  to {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+}
+
+/* —— 虚线选区 —— */
+.ctlp-sel {
+  position: absolute;
+  inset: 9% 5% 26% 9%;
+  z-index: 2;
+  animation: ctlp-fade 0.7s var(--ctlp-ease) 0.4s both;
+}
+.ctlp-sel-edge {
+  position: absolute;
+  opacity: 0.9;
+}
+/* 行军蚁：白色短线沿边移动 */
+.ctlp-sel-edge.ctlp-sel-t,
+.ctlp-sel-edge.ctlp-sel-b {
+  left: 0;
+  right: 0;
+  height: 1px;
+  background-image: repeating-linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.9) 0 6px,
+    transparent 6px 12px
+  );
+  animation: ctlp-ants-x 1.1s linear infinite;
+}
+.ctlp-sel-edge.ctlp-sel-l,
+.ctlp-sel-edge.ctlp-sel-r {
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background-image: repeating-linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.9) 0 6px,
+    transparent 6px 12px
+  );
+  animation: ctlp-ants-y 1.1s linear infinite;
+}
+.ctlp-sel-t {
+  top: 0;
+}
+.ctlp-sel-b {
+  bottom: 0;
+}
+.ctlp-sel-l {
+  left: 0;
+}
+.ctlp-sel-r {
+  right: 0;
+}
+@keyframes ctlp-ants-x {
+  to {
+    background-position: 12px 0;
+  }
+}
+@keyframes ctlp-ants-y {
+  to {
+    background-position: 0 12px;
+  }
+}
+
+.ctlp-sel-handle {
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  border-radius: 1.5px;
+  background: #fff;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.55);
+  animation: ctlp-handle-pulse 2.6s ease-in-out infinite;
+}
+.ctlp-h-tl {
+  top: -3.5px;
+  left: -3.5px;
+}
+.ctlp-h-tr {
+  top: -3.5px;
+  right: -3.5px;
+  animation-delay: 0.3s;
+}
+.ctlp-h-bl {
+  bottom: -3.5px;
+  left: -3.5px;
+  animation-delay: 0.6s;
+}
+.ctlp-h-br {
+  bottom: -3.5px;
+  right: -3.5px;
+  animation-delay: 0.9s;
+}
+@keyframes ctlp-handle-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.95;
+  }
+  50% {
+    transform: scale(1.35);
+    opacity: 0.55;
+  }
+}
+
+/* —— 左侧竖向工具条 —— */
+.ctlp-tools {
+  position: absolute;
+  left: 14px;
+  top: 54%;
+  transform: translateY(-50%);
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 5px;
+  border-radius: 12px;
+  background: var(--ctlp-glass);
+  border: 1px solid var(--ctlp-line);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+.ctlp-tools button {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #cfcfd6;
+  cursor: pointer;
+  transition:
+    background 0.18s,
+    color 0.18s,
+    transform 0.18s var(--ctlp-ease);
+  animation: ctlp-pop 0.55s var(--ctlp-ease) both;
+}
+.ctlp-tools button:nth-child(1) {
+  animation-delay: 0.6s;
+}
+.ctlp-tools button:nth-child(2) {
+  animation-delay: 0.7s;
+}
+.ctlp-tools button:nth-child(3) {
+  animation-delay: 0.8s;
+}
+.ctlp-tools button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  transform: translateY(-1px);
+}
+@keyframes ctlp-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.8) translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* —— 左下「画布」浮标 —— */
+.ctlp-canvas-badge {
+  position: absolute;
+  left: 14px;
+  bottom: 14px;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 12px 0 9px;
+  border-radius: 999px;
+  background: var(--ctlp-glass);
+  border: 1px solid var(--ctlp-line);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  color: #dcdce2;
+  font-size: 12px;
+  animation:
+    ctlp-bob 4.6s ease-in-out 1.2s infinite,
+    ctlp-fade 0.6s var(--ctlp-ease) 0.9s both;
+}
+@keyframes ctlp-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+@keyframes ctlp-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ============ 右：工作室卡 ============ */
+.ctlp-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.ctlp-card {
+  background: var(--ctlp-card);
+  border: 1px solid var(--ctlp-line);
+  border-radius: 16px;
+  padding: 12px 12px 15px;
+  transition:
+    transform 0.34s var(--ctlp-ease),
+    border-color 0.28s,
+    box-shadow 0.34s;
+}
+.ctlp-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(233, 194, 122, 0.34);
+  box-shadow:
+    0 26px 64px -38px rgba(0, 0, 0, 0.95),
+    0 0 0 1px rgba(233, 194, 122, 0.08);
+}
+
+.ctlp-card-tag {
+  display: block;
+  margin: 2px 2px 10px;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  color: var(--ctlp-dim);
+}
+
+.ctlp-card-media {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  aspect-ratio: 1.92 / 1;
+  background: #08080b;
+}
+.ctlp-card-media > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.9s var(--ctlp-ease);
+}
+.ctlp-card:hover .ctlp-card-media > img {
+  transform: scale(1.05);
+}
+
+/* —— 提示词输入胶囊 —— */
+.ctlp-prompt {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 38px;
+  padding: 0 5px 0 11px;
+  border-radius: 999px;
+  background: var(--ctlp-glass);
+  border: 1px solid var(--ctlp-line-strong);
+  -webkit-backdrop-filter: blur(14px) saturate(1.15);
+  backdrop-filter: blur(14px) saturate(1.15);
+  box-shadow: 0 10px 26px -16px rgba(0, 0, 0, 0.9);
+  transition: border-color 0.24s;
+}
+.ctlp-card:hover .ctlp-prompt {
+  border-color: rgba(255, 255, 255, 0.28);
+}
+.ctlp-clip {
+  flex: none;
+  color: #a9a9b2;
+}
+.ctlp-prompt-text {
+  flex: 1;
+  min-width: 0;
+  font-size: 11.5px;
+  line-height: 1;
+  color: #e8e8ec;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ctlp-caret {
+  display: inline-block;
+  width: 1px;
+  height: 12px;
+  margin-left: 2px;
+  vertical-align: -2px;
+  background: var(--ctlp-gold);
+  animation: ctlp-blink 1s steps(1) infinite;
+}
+@keyframes ctlp-blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+.ctlp-submit {
+  position: relative;
+  flex: none;
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #ffffff, #e7e7ee);
+  color: #101014;
+  cursor: pointer;
+  transition: transform 0.2s var(--ctlp-ease);
+}
+.ctlp-submit:hover {
+  transform: scale(1.07);
+}
+.ctlp-submit::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  animation: ctlp-ring 3s ease-out infinite;
+}
+@keyframes ctlp-ring {
+  0% {
+    opacity: 0.55;
+    transform: scale(0.92);
+  }
+  70%,
+  100% {
+    opacity: 0;
+    transform: scale(1.35);
+  }
+}
+
+/* —— 卡片正文 —— */
+.ctlp-card-body {
+  padding: 14px 4px 0;
+}
+.ctlp-card-body h3 {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0 0 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #f1eff0;
+}
+.ctlp-card-body h3 svg {
+  color: #b9b9c1;
+}
+.ctlp-card-body p {
+  margin: 0 0 10px;
+  font-size: 12.5px;
+  line-height: 1.72;
+  color: var(--ctlp-muted);
+}
+.ctlp-card-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12.5px;
+  color: #e8e6e2;
+  text-decoration: none;
+  transition:
+    color 0.2s,
+    gap 0.24s var(--ctlp-ease);
+}
+.ctlp-card-link:hover {
+  color: var(--ctlp-gold);
+  gap: 8px;
+}
+
+/* ============ 滚动出现动画（与首页同一套值） ============ */
+.ctlp {
+  --reveal-dur: 1.05s;
+  --reveal-y: 38px;
+  --reveal-blur: 8px;
+  --reveal-scale: 0.972;
+  --reveal-ease: cubic-bezier(0.16, 1, 0.3, 1);
+}
+.ctlp [data-reveal] {
+  opacity: 0;
+  transform: translate3d(0, var(--reveal-y), 0) scale(var(--reveal-scale));
+  filter: blur(var(--reveal-blur));
+  transition:
+    opacity var(--reveal-dur) var(--reveal-ease) var(--rd, 0ms),
+    transform var(--reveal-dur) var(--reveal-ease) var(--rd, 0ms),
+    filter var(--reveal-dur) var(--reveal-ease) var(--rd, 0ms);
+}
+.ctlp [data-reveal]:not(.in) {
+  will-change: opacity, transform, filter;
+}
+.ctlp [data-reveal].in {
+  opacity: 1;
+  transform: none;
+  filter: none;
+}
+.ctlp.no-io [data-reveal] {
+  opacity: 1;
+  transform: none;
+  filter: none;
+  transition: none;
+}
+
+/* ============ 响应式 ============ */
+@media (max-width: 1080px) {
+  .ctlp-head {
+    grid-template-columns: minmax(0, 1fr) minmax(220px, 340px);
+    gap: 24px 32px;
+  }
+}
+
+@media (max-width: 960px) {
+  .ctlp {
+    padding: 6.5rem 0 4.5rem;
+  }
+  .ctlp-head {
+    grid-template-columns: 1fr;
+    align-items: start;
+    gap: 16px;
+    margin-bottom: 26px;
+  }
+  .ctlp-lead {
+    margin: 0;
+    max-width: 34rem;
+  }
+  .ctlp-grid {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+  .ctlp-canvas {
+    aspect-ratio: 1.3 / 1;
+    min-height: 300px;
+  }
+}
+
+@media (max-width: 640px) {
+  .ctlp {
+    padding: 6rem 0 3.5rem;
+  }
+  .ctlp-shell {
+    padding: 0 16px;
+  }
+  .ctlp-head h1 {
+    font-size: clamp(1.95rem, 8.6vw, 2.5rem);
+  }
+  .ctlp-canvas {
+    aspect-ratio: 1.05 / 1;
+    min-height: 260px;
+    border-radius: 16px;
+  }
+  .ctlp-canvas-art {
+    animation-duration: 30s;
+  }
+  .ctlp-card-media {
+    aspect-ratio: 1.7 / 1;
+  }
+  .ctlp-prompt-text {
+    font-size: 11px;
+  }
+}
+
+/* 尊重系统「减少动效」偏好：关掉所有持续动画，元素直接可见 */
+@media (prefers-reduced-motion: reduce) {
+  .ctlp .ctlp-canvas-art,
+  .ctlp .ctlp-sel-edge,
+  .ctlp .ctlp-sel-handle,
+  .ctlp .ctlp-tools button,
+  .ctlp .ctlp-canvas-badge,
+  .ctlp .ctlp-caret,
+  .ctlp .ctlp-submit::after,
+  .ctlp .ctlp-guide,
+  .ctlp .ctlp-eyebrow,
+  .ctlp .ctlp-lead,
+  .ctlp .ctlp-head h1 > span {
+    animation: none !important;
+  }
+  .ctlp [data-reveal] {
+    opacity: 1;
+    transform: none;
+    filter: none;
+    transition: none;
+  }
+}

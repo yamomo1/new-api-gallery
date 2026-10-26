@@ -264,7 +264,7 @@ export const HOME_DATA = {
         title: 'Arrange on an infinite canvas',
         desc: 'Lay out references, prompts, images, video and sound in one fluid visual workflow. Keep the whole idea in view.',
         cta: 'Open the gallery',
-        url: '/prompt-gallery',
+        url: '/canvas',
       },
       {
         image: '/images/home/studio-portrait-v3.webp',

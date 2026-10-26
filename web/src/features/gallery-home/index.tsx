@@ -36,6 +36,7 @@ import {
 } from 'lucide-react'
 
 import { PublicLayout } from '@/components/layout'
+import { useScrollReveal } from '@/hooks/use-scroll-reveal'
 
 import {
   HeroShowcaseCard,
@@ -159,54 +160,10 @@ export function GalleryHome() {
     }
   }, [skillMenuOpen])
 
-  // ============ 滚动出现动画（scroll-reveal） ============
-  // 两种挂法：
-  //   1) [data-reveal]        单个元素自己淡入上浮（可配 data-reveal-delay 毫秒错峰）
-  //   2) [data-reveal-group]  盒子级：其「直接子元素」自动逐个挂上动画，
-  //                           按 data-reveal-step（默认 110ms）依次错峰，最多累积 8 步
-  // 只动 opacity / transform / filter，不碰卡片自身的 hover 过渡
-  useEffect(() => {
-    // 先把「盒子」展开成逐子元素
-    document
-      .querySelectorAll<HTMLElement>('.ghome [data-reveal-group]')
-      .forEach((group) => {
-        const step = Number(group.dataset.revealStep || 110)
-        Array.from(group.children).forEach((child, i) => {
-          const el = child as HTMLElement
-          // 子元素自己已声明 reveal / 也是新的盒子 → 交给它自己处理，避免父子上浮动效叠加
-          if (el.hasAttribute('data-reveal') || el.hasAttribute('data-reveal-group')) return
-          el.setAttribute('data-reveal', '')
-          if (!el.dataset.revealDelay) {
-            el.style.setProperty('--rd', `${Math.min(i * step, step * 8)}ms`)
-          }
-        })
-      })
-
-    const els = Array.from(document.querySelectorAll<HTMLElement>('.ghome [data-reveal]'))
-    if (els.length === 0) return
-    if (typeof IntersectionObserver === 'undefined') {
-      // 无 IO（极老浏览器 / SSR 兜底）：不藏元素，直接显示
-      document.querySelectorAll('.ghome').forEach((r) => r.classList.add('no-io'))
-      return
-    }
-    const io = new IntersectionObserver(
-      (entries) => {
-        for (const e of entries) {
-          if (e.isIntersecting) {
-            e.target.classList.add('in')
-            io.unobserve(e.target)
-          }
-        }
-      },
-      { threshold: 0.1, rootMargin: '0px 0px -8% 0px' },
-    )
-    els.forEach((el) => {
-      const d = el.dataset.revealDelay
-      if (d) el.style.setProperty('--rd', `${d}ms`)
-      if (!el.classList.contains('in')) io.observe(el)
-    })
-    return () => io.disconnect()
-  }, [h, m])
+  // 滚动出现动画（scroll-reveal）：逻辑见 @/hooks/use-scroll-reveal
+  //   1) [data-reveal]        单个元素淡入上浮（data-reveal-delay 毫秒错峰）
+  //   2) [data-reveal-group]  盒子级：直接子元素自动逐个挂动画、按 data-reveal-step 错峰
+  useScrollReveal('.ghome', [h, m])
 
   const activeSkill =
     agentSkill === 'auto'
