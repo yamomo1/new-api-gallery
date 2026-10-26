@@ -1,0 +1,68 @@
+# New API 二开 · 国内加速版 Dockerfile(适用于阿里云/国内 ECS,解决 build 慢)
+#
+# 用法(服务器 build):
+#   docker build -f Dockerfile.cn -t new-api-gallery:latest .
+#
+# 推荐:把你【阿里云个人镜像加速器】(ECS 控制台 → 容器镜像服务里获取,
+#   形如 https://<id>.mirror.aliyuncs.com)传进去,基础镜像拉取最快最稳:
+#   docker build -f Dockerfile.cn --build-arg REGISTRY=<你的加速器> -t new-api-gallery:latest .
+#
+# 慢的三处,本文件都做了加速:
+#   1) 基础镜像(oven/bun、golang、debian)→ 走 ${REGISTRY} 镜像源(默认 docker.m.daocloud.io,可 --build-arg 覆盖)
+#   2) bun install(npm 依赖)→ BUN_CONFIG_REGISTRY=npmmirror
+#   3) go mod download(Go 模块)→ GOPROXY=goproxy.cn
+#
+# 说明:首次 build 仍要拉基础层(比直连官方快很多);之后 build 命中 Docker 层缓存,重建很快。
+
+# 全局默认值(均可被 --build-arg 覆盖)
+ARG REGISTRY=docker.m.daocloud.io
+ARG BUN_REGISTRY=https://registry.npmmirror.com
+ARG GO_PROXY=https://goproxy.cn,direct
+
+# ---- 阶段 1:编前端 ----
+ARG REGISTRY
+FROM ${REGISTRY}/oven/bun:1.4.0 AS builder
+# 阶段内重新声明 ARG,否则 BUN_REGISTRY 在该阶段内为空(ARG 不跨阶段继承)
+ARG BUN_REGISTRY
+WORKDIR /build/web
+COPY web/package.json web/bun.lock ./
+ENV BUN_CONFIG_REGISTRY=${BUN_REGISTRY}
+RUN bun install --frozen-lockfile
+COPY ./web ./
+COPY ./VERSION /build/VERSION
+RUN DISABLE_ESLINT_PLUGIN='true' VITE_REACT_APP_VERSION=$(cat /build/VERSION) bun run build
+
+# ---- 阶段 2:编后端(内嵌前端 dist)----
+ARG REGISTRY
+FROM ${REGISTRY}/golang:1.26.10-alpine AS builder2
+ARG GO_PROXY
+ENV GO111MODULE=on CGO_ENABLED=0 GOWORK=off
+ARG TARGETOS
+ARG TARGETARCH
+ENV GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH:-amd64}
+ENV GOEXPERIMENT=greenteagc
+ENV GOPROXY=${GO_PROXY}
+
+WORKDIR /build
+ADD go.mod go.sum ./
+# relaykit / tokenkit 是 go.mod 里 replace 引用的本地子模块,需先提供其 go.mod
+ADD relaykit/go.mod ./relaykit/go.mod
+ADD tokenkit/go.mod ./tokenkit/go.mod
+RUN go mod download
+
+COPY . .
+COPY --from=builder /build/web/dist ./web/dist
+RUN go build -pgo="$(go list -m -f '{{.Dir}}' github.com/Calcium-Ion/moejs)/default.pgo" -ldflags "-s -w -X 'github.com/QuantumNous/new-api/common.Version=$(cat VERSION)'" -o new-api
+
+# ---- 阶段 3:运行时 ----
+ARG REGISTRY
+FROM ${REGISTRY}/debian:bookworm-slim
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates tzdata libasan8 wget \
+    && rm -rf /var/lib/apt/lists/* \
+    && update-ca-certificates
+COPY --from=builder2 /build/new-api /
+COPY LICENSE NOTICE THIRD-PARTY-LICENSES.md /licenses/
+EXPOSE 3000
+WORKDIR /data
+ENTRYPOINT ["/new-api"]
