@@ -7501,8 +7501,6 @@
     "Button label": "ボタンの文字",
     "Loading…": "読み込み中…",
     "Home settings": "ホーム設定",
-    "Page builder": "ページビルダー",
-    "Page builder hint": "ブロックをドラッグしてホームページの順序を変更したり、セクションの表示/非表示を切り替えたり、カスタムテキスト/バナーを追加できます。エディタの Publish をクリックしてレイアウトを保存します。ブロックの文案は「内容」タブで言語ごとに編集します。",
     "The hero playlist accepts any number of clips played in order; text changes show up after refreshing the homepage.": "ヒーローのプレイリストは任意の本数を順番にループ再生します。文字の変更はホームを再読み込みすると反映されます。",
     "Hero video playlist": "ヒーロー動画プレイリスト",
     "clips": "本",

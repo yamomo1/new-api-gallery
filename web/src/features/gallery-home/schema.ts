@@ -234,37 +234,11 @@ export function parseHomeConfig(raw: unknown): HomeConfig | null {
  * - locales.en 兜底：某语种没填时先用英文，而不是直接掉回内置默认
  */
 
-/**
- * Puck 可视化搭建数据（结构由 @measured/puck 定义）。
- * { root: {...}, content: [{ type, props, id }] }
- * 这里只做宽松校验：type 必须是字符串，content 是数组即可，
- * 具体 props 的形状由各区块组件自己解释，避免和 Puck 版本耦合。
- */
-export const puckDataSchema = z
-  .object({
-    root: z.record(z.string(), z.unknown()).optional(),
-    content: z
-      .array(
-        z
-          .object({
-            type: z.string(),
-            props: z.record(z.string(), z.unknown()).optional(),
-            id: z.string().optional(),
-          })
-          .passthrough(),
-      )
-      .optional(),
-  })
-  .passthrough()
-
-export type PuckData = z.infer<typeof puckDataSchema>
-
 export const homeConfigV2Schema = z
   .object({
     version: z.literal(2).optional(),
     locales: z.record(z.string(), homeConfigSchema).optional(),
     shared: homeConfigSchema.optional(),
-    puck: puckDataSchema.optional(),
   })
   .passthrough()
 

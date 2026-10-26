@@ -27,7 +27,7 @@ For commercial licensing, please contact support@quantumnous.com
  * 存储为 HomeConfig option（JSON），公开接口 GET /api/home_config 供首页读取。
  * 结构见 features/gallery-home/schema.ts 的 v2 说明。
  */
-import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   ArrowDown,
   ArrowUp,
@@ -41,7 +41,6 @@ import {
   Search,
   Trash2,
 } from 'lucide-react'
-import type { Data } from '@measured/puck'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
@@ -98,17 +97,12 @@ import {
 
 const HOME_CONFIG_KEY = 'HomeConfig'
 
-/** 懒加载 Puck 编辑器（避免在首页 bundle 里塞入 Puck 运行时） */
-const PageBuilder = lazy(() => import('./page-builder'))
-
 type Cfg = Record<string, unknown>
 
 type Draft = {
   version: 2
   locales: Record<string, Cfg>
   shared: Cfg
-  /** Puck 可视化搭建布局（Data）；未搭建时为 undefined */
-  puck?: unknown
 }
 
 const EMPTY_DRAFT: Draft = { version: 2, locales: {}, shared: {} }
@@ -215,7 +209,6 @@ export function HomeSettings() {
   const [dirty, setDirty] = useState(false)
   const [migrated, setMigrated] = useState(false)
   const [search, setSearch] = useState('')
-  const [tab, setTab] = useState<'content' | 'builder'>('content')
 
   useEffect(() => {
     let alive = true
@@ -236,7 +229,6 @@ export function HomeSettings() {
           version: 2,
           locales: (parsed?.locales as Record<string, Cfg>) ?? {},
           shared: (parsed?.shared as Cfg) ?? {},
-          puck: (parsed?.puck as unknown) ?? null,
         })
       } catch {
         if (!alive) return
@@ -390,24 +382,15 @@ export function HomeSettings() {
 
   /* ---------------------------- 保存 / 重置 ---------------------------- */
 
-  const save = async (override?: Partial<Draft>) => {
+  const save = async () => {
     setSaving(true)
     try {
-      const merged: Draft = {
+      const payload = prune({
         version: 2,
         locales: draft.locales,
         shared: draft.shared,
-        puck: draft.puck,
-        ...override,
-      }
-      // 只 prune 文案/共享资源；puck 布局保持原样（避免空字符串字段被删改）
-      const payload = {
-        version: 2,
-        locales: prune(merged.locales) ?? {},
-        shared: prune(merged.shared) ?? {},
-        ...(merged.puck ? { puck: merged.puck } : {}),
-      }
-      const parsed = homeConfigV2Schema.safeParse(payload)
+      })
+      const parsed = homeConfigV2Schema.safeParse(payload ?? {})
       if (!parsed.success) {
         const first = parsed.error.issues[0]
         toast.error(
@@ -606,7 +589,7 @@ export function HomeSettings() {
   }
 
   return (
-    <div className='mx-auto h-full w-full max-w-6xl space-y-5 overflow-y-auto p-4'>
+    <div className='mx-auto w-full max-w-4xl space-y-5 p-4 pb-20'>
       {/* 头部 */}
       <div className='flex flex-wrap items-start justify-between gap-3'>
         <div>
@@ -620,32 +603,12 @@ export function HomeSettings() {
             </p>
           )}
         </div>
-        <Button onClick={() => save()} disabled={saving}>
+        <Button onClick={save} disabled={saving}>
           {saving ? <Loader2 className='size-4 animate-spin' /> : <Save className='size-4' />}
           {t('Save')}
         </Button>
       </div>
 
-      {/* Tab 切换：内容编辑 / 可视化搭建（Puck） */}
-      <div className='flex gap-2'>
-        <Button
-          variant={tab === 'content' ? 'default' : 'outline'}
-          size='sm'
-          onClick={() => setTab('content')}
-        >
-          {t('Content')}
-        </Button>
-        <Button
-          variant={tab === 'builder' ? 'default' : 'outline'}
-          size='sm'
-          onClick={() => setTab('builder')}
-        >
-          {t('Page builder')}
-        </Button>
-      </div>
-
-      {tab === 'content' && (
-      <div className='mx-auto max-w-4xl space-y-5 pb-20'>
       {migrated && (
         <div className='rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs'>
           {t('Legacy config migrated to English')}
@@ -863,35 +826,11 @@ export function HomeSettings() {
       </Collapsible>
 
       <div className='flex justify-end'>
-        <Button onClick={() => save()} disabled={saving}>
+        <Button onClick={save} disabled={saving}>
           {saving ? <Loader2 className='size-4 animate-spin' /> : <Save className='size-4' />}
           {t('Save')}
         </Button>
       </div>
-      </div>
-      )}
-
-      {tab === 'builder' && (
-        <div className='space-y-3 pb-20'>
-          <Card>
-            <CardContent className='text-sm text-muted-foreground'>
-              {t('Page builder hint')}
-            </CardContent>
-          </Card>
-          <Suspense
-            fallback={
-              <div className='flex items-center justify-center gap-2 py-24 text-muted-foreground'>
-                <Loader2 className='size-4 animate-spin' /> {t('Loading…')}
-              </div>
-            }
-          >
-            <PageBuilder
-              initialData={draft.puck as Data}
-              onPublish={(data) => save({ puck: data })}
-            />
-          </Suspense>
-        </div>
-      )}
     </div>
   )
 }
