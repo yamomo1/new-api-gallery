@@ -24,6 +24,7 @@ import {
   useMemo,
   useState,
 } from 'react'
+import { useQuery } from '@tanstack/react-query'
 
 import {
   CONTENT_LAYOUT_VALUES,
@@ -45,6 +46,7 @@ import {
   THEME_STORAGE_KEYS,
   writeThemePreference,
 } from '@/lib/theme-storage'
+import { statusQueryOptions } from '@/lib/status-query'
 
 function applyAttribute(name: string, value: string | null) {
   if (typeof document === 'undefined') return
@@ -89,6 +91,16 @@ const ThemeCustomizationContext =
 export function ThemeCustomizationProvider(props: {
   children: React.ReactNode
 }) {
+  // 站点默认主题（后台「站点设置 → 主题外观」下发，经 /api/status 的 theme 字段）
+  const { data: statusData } = useQuery(statusQueryOptions)
+  const sitePreset = useMemo<ThemePreset | null>(() => {
+    const raw = statusData?.theme
+    if (typeof raw !== 'string') return null
+    return THEME_PRESET_VALUES.has(raw as ThemePreset)
+      ? (raw as ThemePreset)
+      : null
+  }, [statusData])
+
   const [preset, _setPreset] = useState<ThemePreset>(() =>
     readThemePreference<ThemePreset>(
       THEME_STORAGE_KEYS.preset,
@@ -124,6 +136,19 @@ export function ThemeCustomizationProvider(props: {
       DEFAULT_THEME_CUSTOMIZATION.contentLayout
     )
   )
+
+  // 站点主题生效：仅当用户未手动选择过 preset 时，才跟随后台下发的站点主题。
+  // 用户手动选过（localStorage 有值）则不覆盖。
+  useEffect(() => {
+    if (!sitePreset) return
+    try {
+      const raw = window.localStorage.getItem(THEME_STORAGE_KEYS.preset)
+      if (raw && THEME_PRESET_VALUES.has(raw as ThemePreset)) return
+    } catch {
+      /* ignore */
+    }
+    _setPreset(sitePreset)
+  }, [sitePreset])
 
   // Mirror state to the <body> via data-* attributes so theme-presets.css can
   // override CSS variables at the right cascade layer.
