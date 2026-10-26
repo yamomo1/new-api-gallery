@@ -299,8 +299,8 @@ export function GalleryHome() {
                 aria-label={h.agent.placeholder}
               />
               <div className='agent-composer-bar'>
-                <button type='button' className='agent-attach' aria-label={h.agent.attachLabel}>
-                  <Paperclip size={15} /> {h.agent.attachLabel}
+                <button type='button' className='agent-attach' aria-label={h.agent.attachLabel} title={h.agent.attachLabel}>
+                  <Paperclip size={16} />
                 </button>
                 <div className='agent-skill' ref={skillMenuRef} data-open={skillMenuOpen}>
                   <button
@@ -367,7 +367,7 @@ export function GalleryHome() {
                   )}
                 </div>
                 <span className='agent-helper'>
-                  <i aria-hidden='true' /> {h.agent.helperLabel}
+                  <ShieldCheck size={14} aria-hidden='true' /> {h.agent.helperLabel}
                 </span>
                 <Nav className='agent-send' to='/prompt-gallery' aria-label={h.agent.sendLabel}>
                   <ArrowUp size={18} />

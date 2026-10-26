@@ -365,8 +365,19 @@ html:not(.dark) .ghome { --ghome-glow: #f6b669; }
 /* 大输入面板（对标：顶部一行输入 + 底部工具条 参考图/自动/helper/圆形发送） */
 .ghome .agent-composer {
   max-width: 720px; margin: 0 auto;
-  background: var(--card); border: 1px solid var(--border); border-radius: 18px;
-  padding: 16px 16px 14px; box-shadow: var(--shadow, 0 18px 40px -22px rgba(0,0,0,.5));
+  background: var(--card);
+  border: 1px solid color-mix(in oklab, var(--foreground) 14%, transparent);
+  border-radius: 18px; padding: 16px 16px 14px;
+  box-shadow:
+    0 24px 70px -30px rgba(0, 0, 0, 0.6),
+    0 0 46px -18px color-mix(in oklab, var(--ghome-glow, #a56217) 30%, transparent);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.ghome .agent-composer:focus-within {
+  border-color: color-mix(in oklab, var(--ghome-glow, #a56217) 45%, transparent);
+  box-shadow:
+    0 24px 70px -30px rgba(0, 0, 0, 0.6),
+    0 0 60px -16px color-mix(in oklab, var(--ghome-glow, #a56217) 45%, transparent);
 }
 .ghome .agent-composer > input {
   width: 100%; background: transparent; border: 0; outline: none; resize: none; display: block;
@@ -379,11 +390,17 @@ html:not(.dark) .ghome { --ghome-glow: #f6b669; }
 }
 .ghome .agent-attach, .ghome .agent-auto {
   display: inline-flex; align-items: center; gap: 6px; flex: none; cursor: pointer;
-  font-size: 13px; color: var(--foreground); font-family: var(--font-sans);
-  background: var(--card-2); border: 1px solid var(--border); border-radius: 999px; padding: 6px 13px;
-  transition: 0.18s;
+  font-size: 13px; color: color-mix(in oklab, var(--foreground) 82%, transparent); font-family: var(--font-sans);
+  background: transparent; border: 0; border-radius: 999px;
+  transition: background 0.18s, color 0.18s;
 }
-.ghome .agent-attach:hover, .ghome .agent-auto:hover { border-color: var(--border-strong); background: var(--card); }
+/* 附件：纯图标圆形 ghost（对标站 icon-only） */
+.ghome .agent-attach { width: 36px; height: 36px; justify-content: center; }
+.ghome .agent-attach svg { transition: transform 0.22s ease; }
+.ghome .agent-attach:hover { background: color-mix(in oklab, var(--foreground) 8%, transparent); color: var(--foreground); }
+.ghome .agent-attach:hover svg { transform: rotate(-14deg) scale(1.08); }
+.ghome .agent-auto { padding: 8px 13px; }
+.ghome .agent-auto:hover { background: color-mix(in oklab, var(--foreground) 8%, transparent); color: var(--foreground); }
 /* 技能下拉框（按钮 + 弹出菜单，与 chips 双向联动） */
 .ghome .agent-skill { position: relative; flex: none; }
 .ghome .agent-auto .agent-caret { transition: transform 0.18s; opacity: 0.7; }
@@ -406,9 +423,8 @@ html:not(.dark) .ghome { --ghome-glow: #f6b669; }
 .ghome .agent-skill-menu button.on { color: var(--hero-gold); font-weight: 600; }
 .ghome .agent-skill-menu button svg { flex: none; opacity: 0.85; }
 .ghome .agent-skill-menu button svg:last-child { margin-left: auto; color: var(--hero-gold); }
-.ghome .agent-helper { flex: 1; min-width: 120px; color: var(--muted); font-size: 12.5px; display: flex; align-items: center; gap: 7px; }
-.ghome .agent-helper i { width: 15px; height: 15px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
-  background: color-mix(in oklab, var(--hero-gold) 20%, transparent); color: var(--hero-gold); font-style: normal; font-size: 10px; }
+.ghome .agent-helper { flex: 1; min-width: 120px; color: var(--muted); font-size: 12.5px; display: flex; align-items: center; gap: 6px; }
+.ghome .agent-helper svg { flex: none; opacity: 0.7; }
 .ghome .agent-send {
   flex: none; width: 38px; height: 38px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
   background: var(--hero-gold); color: #2a1c0a; border: none; cursor: pointer;
@@ -441,9 +457,10 @@ html:not(.dark) .ghome { --ghome-glow: #f6b669; }
 .ghome .agent-features li { display: flex; gap: 14px; padding: 18px 0; border-top: 1px solid color-mix(in oklab, var(--border) 55%, transparent); }
 .ghome .agent-features li:first-child { border-top: 0; padding-top: 0; }
 .ghome .agent-feature-ico {
-  flex: none; width: 40px; height: 40px; border-radius: 11px; display: flex; align-items: center; justify-content: center;
-  background: color-mix(in oklab, var(--hero-gold) 14%, transparent);
-  border: 1px solid color-mix(in oklab, var(--hero-gold) 34%, transparent); color: var(--hero-gold);
+  /* 裸 SVG 图标（对标站 .home-agent-feature>svg：1.25rem，金色，无包装盒） */
+  flex: none; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center;
+  background: transparent; border: 0; border-radius: 0; color: var(--ghome-glow, #a56217);
+  margin-top: 2px;
 }
 .ghome .agent-features h3 { margin: 2px 0 6px; font-size: 16px; font-weight: 650; }
 .ghome .agent-features p { margin: 0; color: var(--muted); font-size: 13.5px; line-height: 1.65; }
