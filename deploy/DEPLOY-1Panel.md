@@ -72,6 +72,35 @@ docker images | grep new-api-gallery   # 确认已生成
 > **方案乙里的 3 个容器**:`new-api-gallery`(app)+ 商店装的 `PostgreSQL` + `Redis`。
 > 二开代码更新方法不变:shell `git pull && docker build -t new-api-gallery:latest .` → 1Panel **容器 → 编排 → new-api-gallery-app → 「重建」**。
 
+### 方案丙:共享 1Panel 网络直连(你现在的实际环境,最干净)★推荐
+
+你的 1Panel 里所有容器都接在同一 docker 网络 `1panel-network`,应用商店装的 PostgreSQL / Redis 也在其中——那就让 app 编排**加入 `1panel-network`**,直接按**容器名**直连,**既不用 `host.docker.internal`、也不用给 PG/Redis 映射宿主端口**(更安全)。
+
+**① 先核对网络名 & 容器名**(1Panel → 主机 → 终端 执行):
+```bash
+# 确认你的 1Panel 共享网络名(默认 1panel-network,若不同以输出为准)
+docker network ls | grep -i 1panel
+# 列出该网络里的容器名 + 镜像 + 端口,认出 PG 和 Redis 各自的【容器名】
+docker ps --filter "network=1panel-network" --format "{{.Names}}\t{{.Image}}\t{{.Ports}}"
+```
+记下两个容器名(例如 `postgre_sql`、`redis`,**以你实际输出为准**),以及装 PG 时设的 root 口令、装 Redis 时设的 requirepass。
+
+**② 预建库**:1Panel → 数据库 → PostgreSQL → 建库 `new-api`(GORM 只自动建表)。
+
+**③ 1Panel → 容器 → 编排 → 创建编排**(文件夹名 `new-api-gallery-app`):
+- 粘贴 `deploy/docker-compose.1panel-sharednet.yml`。
+- 该文件已写好 `networks: 1panel-network (external)` 和容器名连接串,你只需替换 6 个占位符:
+  `<PG_CONTAINER>`、`<REDIS_CONTAINER>`、`<PG_PASS>`、`<REDIS_PASS>`、`<SESSION_SECRET>`、`<CRYPT_KEY>`。
+- 点创建 → 起 1 个 app 容器,与商店的 PG/Redis 同在 `1panel-network` 按容器名互通。
+
+> **务必核对网络名**:compose 里 `1panel-network` 是 `external: true`(只挂载、不新建)。
+> 若你的实际网络名不是 `1panel-network`(比如带后缀/大小写不同),要同步改文件里的 `networks:` 段和 service 的 `networks:` 段,否则编排会因网络不存在而启动失败。
+
+> **方案丙里的 3 个容器**:商店装的 `PostgreSQL` + `Redis` + 编排里的 `new-api-gallery`(app),三者同网络、容器名直连。
+> 二开代码更新方法同前:shell `git pull && docker build -t new-api-gallery:latest .` → 1Panel **容器 → 编排 → new-api-gallery-app → 「重建」**。
+
+**三方案速记**:甲=3 容器全内置(最省心);乙=商店装 DB + `host.docker.internal`(要映射宿主端口);**丙=商店装 DB + 共享 `1panel-network` 容器名直连(最干净,适配你的环境)★**。
+
 ## 第 3 步:验证
 
 - **容器 → 容器** 里应看到 `new-api-gallery` / `-redis` / `-pg` 三个容器在运行。

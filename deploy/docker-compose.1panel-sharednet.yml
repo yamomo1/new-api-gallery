@@ -1,0 +1,55 @@
+# New API 二开 · 1Panel 共享网络直连版(推荐,PG/Redis 用 1Panel 应用商店装)
+#
+# 前提(你已确认):1Panel 里所有容器都接在 docker 网络 `1panel-network` 上。
+#   1Panel 应用商店装的 PostgreSQL / Redis 也在 `1panel-network` 里,可用【容器名】直连。
+#   本编排让 app 容器【也加入 1panel-network】,于是:
+#     - 不需要 host.docker.internal、不需要给 PG/Redis 映射宿主端口
+#     - 连接串直接用 <PG容器名>:5432 / <Redis容器名>:6379(容器内部端口)
+#
+# 用法:1Panel → 容器 → 编排 → 创建编排,粘贴本文件。
+# 需替换 6 个占位符:
+#   <PG_CONTAINER>   — 1Panel 里 PostgreSQL 的容器名(见下方「查容器名」)
+#   <REDIS_CONTAINER>— 1Panel 里 Redis 的容器名
+#   <PG_PASS>        — PG 的 root 口令(1Panel 装 PG 时设的)
+#   <REDIS_PASS>     — Redis 的 requirepass(1Panel 装 Redis 时设的)
+#   <SESSION_SECRET> — openssl rand -hex 32
+#   <CRYPT_KEY>      — openssl rand -hex 32(务必保存,丢了已存 API Key 解不开)
+#
+# 查容器名(1Panel → 主机 → 终端 执行):
+#   docker ps --filter "network=1panel-network" --format "{{.Names}}\t{{.Image}}\t{{.Ports}}"
+#   PostgreSQL / Redis 各对应一个容器名,填进下面两个占位符即可。
+#
+# 另:PG 需预先存在名为 `new-api` 的库(1Panel → 数据库 → PostgreSQL 建库;GORM 只自动建表)。
+
+services:
+  new-api:
+    image: new-api-gallery:latest
+    container_name: new-api-gallery
+    restart: always
+    command: --log-dir /app/logs
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data:/data
+      - ./logs:/app/logs
+    networks:
+      - 1panel-network          # 关键:加入 1Panel 的共享网络,才能按容器名直连 PG/Redis
+    environment:
+      - SQL_DSN=postgresql://root:<PG_PASS>@<PG_CONTAINER>:5432/new-api
+      - REDIS_CONN_STRING=redis://:<REDIS_PASS>@<REDIS_CONTAINER>:6379
+      - SESSION_SECRET=<SESSION_SECRET>
+      - CRYPT_KEY=<CRYPT_KEY>
+      - TZ=Asia/Shanghai
+      - PORT=3000
+      - ERROR_LOG_ENABLED=true
+      - DEFAULT_LANGUAGE=zh-CN
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://localhost:3000/api/status | grep -o '\"success\":\\s*true' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+# 1panel-network 由 1Panel 创建,这里声明为 external:只挂载、不新建/不销毁
+networks:
+  1panel-network:
+    external: true
