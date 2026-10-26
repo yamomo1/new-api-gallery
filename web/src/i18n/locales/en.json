@@ -7576,6 +7576,24 @@
     "Feature 3 description": "Feature 3 description",
     "Feature 4 title": "Feature 4 title",
     "Feature 4 description": "Feature 4 description",
-    "Top ticker": "Top ticker"
+    "Top ticker": "Top ticker",
+    "Jump to section": "Jump to section",
+    "Page structure": "Page structure",
+    "Drag to reorder sections; toggle to hide.": "Drag to reorder sections; toggle to hide.",
+    "Add a section": "Add a section",
+    "Reset order": "Reset order",
+    "hidden": "hidden",
+    "Custom block": "Custom block",
+    "Custom block added": "Custom block added",
+    "Block order reset": "Block order reset",
+    "Custom blocks render as a generic text/banner section on the homepage.": "Custom blocks render as a generic text/banner section on the homepage.",
+    "Show this section": "Show this section",
+    "Delete this block": "Delete this block",
+    "Hero section": "Hero section",
+    "Gallery section": "Gallery section",
+    "Models section": "Models section",
+    "API CTA section": "API CTA section",
+    "Closing section": "Closing section",
+    "Model ticker": "Model ticker"
   }
 }

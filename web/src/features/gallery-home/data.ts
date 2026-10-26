@@ -32,7 +32,12 @@ For commercial licensing, please contact support@quantumnous.com
  */
 
 import { HOME_FALLBACK_LOCALE } from './locales'
-import type { HomeConfig, HomeConfigV2 } from './schema'
+import {
+  BLOCK_KEYS,
+  type CustomBlock,
+  type HomeConfig,
+  type HomeConfigV2,
+} from './schema'
 
 export type Translate = (key: string) => string
 
@@ -544,4 +549,49 @@ export function resolveHomeOverride(
   if (shared?.motion) motion = mergeHomeConfig(motion, shared.motion)
 
   return { layers: [en, locale, shared].filter(Boolean), motion }
+}
+
+/* ------------------------------------------------------------------
+ * 区块顺序 / 显隐解析
+ * ------------------------------------------------------------------
+ * 前台渲染顺序 = blocks.order（缺省用内置顺序）；隐藏的区块不渲染。
+ * 自定义区块：id 不在 order 里的自动追加到末尾（避免后台加完区块前台不显示）。
+ * 失效 key（既非内置也非自定义）→ 过滤掉，前端不渲染空壳。
+ */
+export type ResolvedBlocks = {
+  order: string[]
+  hidden: Record<string, boolean>
+  custom: Record<string, CustomBlock>
+}
+
+export function resolveHomeBlocks(cfg: HomeConfigV2 | null | undefined): ResolvedBlocks {
+  const empty: ResolvedBlocks = {
+    order: [...BLOCK_KEYS],
+    hidden: {},
+    custom: {},
+  }
+  if (!cfg) return empty
+
+  const custom = (cfg.custom ?? {}) as Record<string, CustomBlock>
+  const blocks = cfg.blocks ?? {}
+  const declaredOrder = Array.isArray(blocks.order) ? blocks.order : []
+  const order = declaredOrder.length ? [...declaredOrder] : [...BLOCK_KEYS]
+
+  // 把已经定义、但还没在 order 里的自定义区块补到末尾
+  for (const id of Object.keys(custom)) {
+    if (!order.includes(id)) order.push(id)
+  }
+  // 过滤失效 key（既不是内置也不是自定义）
+  const valid = new Set<string>([...BLOCK_KEYS, ...Object.keys(custom)])
+  const cleanOrder = order.filter((k) => valid.has(k))
+
+  // 隐藏只保留有效 key
+  const hidden: Record<string, boolean> = {}
+  if (blocks.hidden && typeof blocks.hidden === 'object') {
+    for (const [k, v] of Object.entries(blocks.hidden)) {
+      if (valid.has(k) && v === true) hidden[k] = true
+    }
+  }
+
+  return { order: cleanOrder, hidden, custom }
 }

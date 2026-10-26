@@ -32,10 +32,15 @@ import {
   buildHomeData,
   buildMotionData,
   mergeHomeConfig,
+  resolveHomeBlocks,
   resolveHomeOverride,
 } from './data'
 import { normalizeHomeLocale } from './locales'
-import { normalizeHomeConfig, type HomeConfigV2 } from './schema'
+import {
+  normalizeHomeConfig,
+  type CustomBlock,
+  type HomeConfigV2,
+} from './schema'
 import type { HomeContent, MotionContent } from './types'
 
 const HOME_CONFIG_KEY = ['gallery-home', 'home-config'] as const
@@ -59,6 +64,8 @@ type MotionOverride = NonNullable<HomeConfigV2['shared']>['motion']
 export type GalleryHomeContent = {
   home: HomeContent
   motion: MotionContent
+  blocks: { order: string[]; hidden: Record<string, boolean> }
+  custom: Record<string, CustomBlock>
   isLoading: boolean
 }
 
@@ -79,6 +86,7 @@ export function useGalleryHomeContent(): GalleryHomeContent {
   return useMemo(() => {
     let home = buildHomeData(t)
     let motion: MotionOverride = {}
+    const blocks = resolveHomeBlocks(data)
     if (data) {
       const resolved = resolveHomeOverride(data, lang)
       for (const layer of resolved.layers) {
@@ -89,6 +97,8 @@ export function useGalleryHomeContent(): GalleryHomeContent {
     return {
       home,
       motion: buildMotionData(t, motion),
+      blocks,
+      custom: blocks.custom,
       isLoading,
     }
   }, [data, isLoading, lang, t])

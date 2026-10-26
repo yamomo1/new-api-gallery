@@ -234,11 +234,52 @@ export function parseHomeConfig(raw: unknown): HomeConfig | null {
  * - locales.en 兜底：某语种没填时先用英文，而不是直接掉回内置默认
  */
 
+/* ------------------------------------------------------------------
+ * 区块（页面结构）配置：顺序、显隐、自定义区块
+ * ------------------------------------------------------------------
+ * 与语种无关，挂在 v2 顶层（不属于 locales/shared）：
+ *   blocks: { order: string[], hidden: Record<string, boolean> }
+ *   custom: Record<id, CustomBlock>
+ * - order 列出区块 key（内置 key + 自定义 id），决定前台渲染顺序
+ * - hidden 按 key 标记是否隐藏（隐藏的区块前台不渲染）
+ * - 自定义区块是一段通用文案/横幅，可由后台「添加区块」动态插入
+ */
+export const BLOCK_KEYS = [
+  'hero',
+  'agent',
+  'studios',
+  'gallery',
+  'models',
+  'cta',
+  'closing',
+  'ticker',
+] as const
+export type BuiltinBlockKey = (typeof BLOCK_KEYS)[number]
+
+export const customBlockSchema = z.object({
+  id: z.string().min(1).max(40),
+  kind: z.enum(['text', 'banner']).default('text'),
+  kicker: short(120).optional(),
+  title: short(120).optional(),
+  body: text(2000).optional(),
+  url: text(300).optional(),
+  urlLabel: short(80).optional(),
+  bg: z.enum(['default', 'tinted']).default('default'),
+})
+export type CustomBlock = z.infer<typeof customBlockSchema>
+
+export const blocksSchema = z.object({
+  order: z.array(z.string().min(1).max(40)).optional(),
+  hidden: z.record(z.string(), z.boolean()).optional(),
+})
+
 export const homeConfigV2Schema = z
   .object({
     version: z.literal(2).optional(),
     locales: z.record(z.string(), homeConfigSchema).optional(),
     shared: homeConfigSchema.optional(),
+    blocks: blocksSchema.optional(),
+    custom: z.record(z.string(), customBlockSchema).optional(),
   })
   .passthrough()
 

@@ -7576,6 +7576,24 @@
     "Feature 3 description": "特色 3 描述",
     "Feature 4 title": "特色 4 標題",
     "Feature 4 description": "特色 4 描述",
-    "Top ticker": "頂部跑馬燈"
+    "Top ticker": "頂部跑馬燈",
+    "Jump to section": "跳轉到區塊",
+    "Page structure": "頁面結構",
+    "Drag to reorder sections; toggle to hide.": "拖拽調整區塊順序，開關控制顯隱。",
+    "Add a section": "新增區塊",
+    "Reset order": "重設順序",
+    "hidden": "已隱藏",
+    "Custom block": "自訂區塊",
+    "Custom block added": "已新增自訂區塊",
+    "Block order reset": "區塊順序已重設",
+    "Custom blocks render as a generic text/banner section on the homepage.": "自訂區塊在前台渲染為通用文案/橫幅區塊。",
+    "Show this section": "顯示該區塊",
+    "Delete this block": "刪除該區塊",
+    "Hero section": "首屏區塊",
+    "Gallery section": "畫廊區塊",
+    "Models section": "模型區塊",
+    "API CTA section": "API 行動號召區塊",
+    "Closing section": "結尾區塊",
+    "Model ticker": "模型滾動條"
   }
 }

@@ -34,6 +34,7 @@ import {
   Check,
   ChevronDown,
   Eraser,
+  GripVertical,
   Loader2,
   Plus,
   RotateCcw,
@@ -43,6 +44,21 @@ import {
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
+import {
+  DndContext,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core'
+import {
+  SortableContext,
+  arrayMove,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 
 import {
   AlertDialog,
@@ -83,8 +99,10 @@ import {
   HOME_LOCALES,
 } from '@/features/gallery-home/locales'
 import {
+  BLOCK_KEYS,
   homeConfigV2Schema,
   normalizeHomeConfig,
+  type CustomBlock,
 } from '@/features/gallery-home/schema'
 import {
   SHARED_GROUPS,
@@ -99,13 +117,32 @@ const HOME_CONFIG_KEY = 'HomeConfig'
 
 type Cfg = Record<string, unknown>
 
+type DraftBlocks = {
+  order: string[]
+  hidden: Record<string, boolean>
+}
+
 type Draft = {
   version: 2
   locales: Record<string, Cfg>
   shared: Cfg
+  blocks?: DraftBlocks
+  custom?: Record<string, CustomBlock>
 }
 
 const EMPTY_DRAFT: Draft = { version: 2, locales: {}, shared: {} }
+
+/** 内置区块在后台「页面结构」里的展示名（英文即 i18n key） */
+const BUILTIN_BLOCK_LABELS: Record<string, string> = {
+  hero: 'Hero section',
+  agent: 'Canvas Agent section',
+  studios: 'Studios section',
+  gallery: 'Gallery section',
+  models: 'Models section',
+  cta: 'API CTA section',
+  closing: 'Closing section',
+  ticker: 'Model ticker',
+}
 
 /* ------------------------------------------------------------------ */
 /* 路径读写：支持 a.b.0.c 数组下标，全程不可变                        */
@@ -229,6 +266,13 @@ export function HomeSettings() {
           version: 2,
           locales: (parsed?.locales as Record<string, Cfg>) ?? {},
           shared: (parsed?.shared as Cfg) ?? {},
+          blocks: parsed?.blocks
+            ? {
+                order: (parsed.blocks.order as string[]) ?? [...BLOCK_KEYS],
+                hidden: (parsed.blocks.hidden as Record<string, boolean>) ?? {},
+              }
+            : undefined,
+          custom: (parsed?.custom as Record<string, CustomBlock>) ?? undefined,
         })
       } catch {
         if (!alive) return
@@ -389,6 +433,8 @@ export function HomeSettings() {
         version: 2,
         locales: draft.locales,
         shared: draft.shared,
+        blocks: draft.blocks,
+        custom: draft.custom,
       })
       const parsed = homeConfigV2Schema.safeParse(payload ?? {})
       if (!parsed.success) {
@@ -588,8 +634,14 @@ export function HomeSettings() {
     )
   }
 
+  /* 区块跳转：滚动到对应分组 */
+  const jumpTo = (id: string) => {
+    if (!id) return
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
   return (
-    <div className='mx-auto w-full max-w-4xl space-y-5 p-4 pb-20'>
+    <div className='mx-auto h-full w-full max-w-4xl space-y-5 overflow-y-auto p-4 pb-20'>
       {/* 头部 */}
       <div className='flex flex-wrap items-start justify-between gap-3'>
         <div>
@@ -603,10 +655,27 @@ export function HomeSettings() {
             </p>
           )}
         </div>
-        <Button onClick={save} disabled={saving}>
-          {saving ? <Loader2 className='size-4 animate-spin' /> : <Save className='size-4' />}
-          {t('Save')}
-        </Button>
+        <div className='flex flex-wrap items-center gap-2'>
+          <select
+            className='h-9 rounded-md border bg-background px-2 text-sm'
+            value=''
+            onChange={(e) => jumpTo(e.target.value ? `group-${e.target.value}` : '')}
+            aria-label={t('Jump to section')}
+          >
+            <option value=''>{t('Jump to section')}</option>
+            {TEXT_GROUPS.map((g) => (
+              <option key={g.key} value={g.key}>
+                {t(g.title)}
+              </option>
+            ))}
+            <option value='shared'>{t('Shared assets (all languages)')}</option>
+            <option value='structure'>{t('Page structure')}</option>
+          </select>
+          <Button onClick={save} disabled={saving}>
+            {saving ? <Loader2 className='size-4 animate-spin' /> : <Save className='size-4' />}
+            {t('Save')}
+          </Button>
+        </div>
       </div>
 
       {migrated && (
@@ -698,35 +767,38 @@ export function HomeSettings() {
         const fields = group.fields.filter((f) => matches(f, group))
         if (!fields.length) return null
         return (
-          <Collapsible key={group.key} defaultOpen={group.key === 'hero'}>
-            <Card>
-              <CollapsibleTrigger className='flex w-full items-center justify-between gap-2 px-4 py-3 text-left'>
-                <CardTitle className='text-base'>{t(group.title)}</CardTitle>
-                <div className='flex items-center gap-2'>
-                  <Badge variant='outline' className='tabular-nums'>
-                    {fields.filter((f) => {
-                      const v = getPath(localeDraft, f.path)
-                      return v !== undefined && v !== null && v !== ''
-                    }).length}
-                    /{group.fields.length}
-                  </Badge>
-                  <ChevronDown className='size-4 text-muted-foreground' />
-                </div>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <CardContent className='grid gap-4 border-t md:grid-cols-2'>
-                  {fields.map((f) => (
-                    <div key={f.path}>{renderTextField(f)}</div>
-                  ))}
-                </CardContent>
-              </CollapsibleContent>
-            </Card>
-          </Collapsible>
+          <div id={`group-${group.key}`} key={group.key}>
+            <Collapsible defaultOpen={group.key === 'hero'}>
+              <Card>
+                <CollapsibleTrigger className='flex w-full items-center justify-between gap-2 px-4 py-3 text-left'>
+                  <CardTitle className='text-base'>{t(group.title)}</CardTitle>
+                  <div className='flex items-center gap-2'>
+                    <Badge variant='outline' className='tabular-nums'>
+                      {fields.filter((f) => {
+                        const v = getPath(localeDraft, f.path)
+                        return v !== undefined && v !== null && v !== ''
+                      }).length}
+                      /{group.fields.length}
+                    </Badge>
+                    <ChevronDown className='size-4 text-muted-foreground' />
+                  </div>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <CardContent className='grid gap-4 border-t md:grid-cols-2'>
+                    {fields.map((f) => (
+                      <div key={f.path}>{renderTextField(f)}</div>
+                    ))}
+                  </CardContent>
+                </CollapsibleContent>
+              </Card>
+            </Collapsible>
+          </div>
         )
       })}
 
       {/* 共享资源 */}
-      <Collapsible defaultOpen>
+      <div id='group-shared'>
+        <Collapsible defaultOpen>
         <Card>
           <CollapsibleTrigger className='flex w-full items-center justify-between gap-2 px-4 py-3 text-left'>
             <div>
@@ -822,8 +894,14 @@ export function HomeSettings() {
               })}
             </CardContent>
           </CollapsibleContent>
-        </Card>
-      </Collapsible>
+          </Card>
+        </Collapsible>
+      </div>
+
+      {/* ===================== 页面结构（可视化搭建） ===================== */}
+      <div id='group-structure'>
+        <PageStructureCard draft={draft} patch={patch} t={t} />
+      </div>
 
       <div className='flex justify-end'>
         <Button onClick={save} disabled={saving}>
@@ -832,6 +910,216 @@ export function HomeSettings() {
         </Button>
       </div>
     </div>
+  )
+}
+
+/* ------------------------------------------------------------------
+ * 页面结构卡片：拖拽排序 / 显隐 / 添加区块
+ * ------------------------------------------------------------------ */
+function SortableBlockRow({
+  id,
+  label,
+  visible,
+  deletable,
+  onToggle,
+  onDelete,
+}: {
+  id: string
+  label: string
+  visible: boolean
+  deletable: boolean
+  onToggle: (v: boolean) => void
+  onDelete: () => void
+}) {
+  const { t } = useTranslation()
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id })
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.6 : 1,
+  }
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className='flex items-center gap-2 rounded-md border bg-card px-3 py-2'
+    >
+      <button
+        type='button'
+        className='cursor-grab touch-none text-muted-foreground hover:text-foreground'
+        aria-label='Drag to reorder'
+        {...attributes}
+        {...listeners}
+      >
+        <GripVertical className='size-4' />
+      </button>
+      <span className='min-w-0 flex-1 truncate text-sm'>{label}</span>
+      <Switch
+        checked={visible}
+        onCheckedChange={onToggle}
+        aria-label={t('Show this section')}
+      />
+      {deletable && (
+        <Button
+          variant='ghost'
+          size='icon'
+          className='size-7 text-muted-foreground hover:text-destructive'
+          aria-label={t('Delete this block')}
+          onClick={onDelete}
+        >
+          <Trash2 className='size-4' />
+        </Button>
+      )}
+    </div>
+  )
+}
+
+function PageStructureCard({
+  draft,
+  patch,
+  t,
+}: {
+  draft: Draft
+  patch: (fn: (d: Draft) => Draft) => void
+  t: (key: string) => string
+}) {
+  const blocks: DraftBlocks =
+    draft.blocks && Array.isArray(draft.blocks.order)
+      ? draft.blocks
+      : { order: [...BLOCK_KEYS], hidden: {} }
+  const custom = draft.custom ?? {}
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+  )
+
+  const setBlocks = (next: DraftBlocks) =>
+    patch((prev) => ({ ...prev, blocks: next }))
+
+  const toggleHidden = (key: string) => {
+    const hidden = { ...blocks.hidden }
+    if (hidden[key]) delete hidden[key]
+    else hidden[key] = true
+    setBlocks({ order: blocks.order, hidden })
+  }
+
+  const onDragEnd = (e: DragEndEvent) => {
+    const { active, over } = e
+    if (!over || active.id === over.id) return
+    const from = blocks.order.indexOf(String(active.id))
+    const to = blocks.order.indexOf(String(over.id))
+    if (from < 0 || to < 0) return
+    setBlocks({ order: arrayMove(blocks.order, from, to), hidden: blocks.hidden })
+  }
+
+  const addCustom = () => {
+    const id = `c${Math.random().toString(36).slice(2, 8)}`
+    patch((prev) => ({
+      ...prev,
+      custom: {
+        ...(prev.custom ?? {}),
+        [id]: {
+          id,
+          kind: 'text',
+          title: 'New section',
+          body: '',
+          bg: 'default',
+        } as CustomBlock,
+      },
+      blocks: {
+        order: [...(prev.blocks?.order ?? [...BLOCK_KEYS]), id],
+        hidden: prev.blocks?.hidden ?? {},
+      },
+    }))
+    toast.success(t('Custom block added'))
+  }
+
+  const removeCustom = (id: string) => {
+    patch((prev) => {
+      const nextCustom = { ...(prev.custom ?? {}) }
+      delete nextCustom[id]
+      const nextBlocks = {
+        order: (prev.blocks?.order ?? [...BLOCK_KEYS]).filter((k) => k !== id),
+        hidden: { ...(prev.blocks?.hidden ?? {}) },
+      }
+      delete nextBlocks.hidden[id]
+      return { ...prev, custom: nextCustom, blocks: nextBlocks }
+    })
+  }
+
+  const resetOrder = () => {
+    setBlocks({ order: [...BLOCK_KEYS], hidden: {} })
+    toast.success(t('Block order reset'))
+  }
+
+  const labelOf = (key: string) =>
+    BLOCK_KEYS.includes(key as (typeof BLOCK_KEYS)[number])
+      ? t(BUILTIN_BLOCK_LABELS[key] ?? key)
+      : (custom[key]?.title ?? '') || t('Custom block')
+
+  const hiddenCount = Object.values(blocks.hidden).filter(Boolean).length
+
+  return (
+    <Collapsible defaultOpen>
+      <Card>
+        <CollapsibleTrigger className='flex w-full items-center justify-between gap-2 px-4 py-3 text-left'>
+          <div>
+            <CardTitle className='text-base'>{t('Page structure')}</CardTitle>
+            <p className='text-xs text-muted-foreground'>{t('Drag to reorder sections; toggle to hide.')}</p>
+          </div>
+          <div className='flex items-center gap-2'>
+            <Badge variant='outline' className='tabular-nums'>
+              {blocks.order.length}
+            </Badge>
+            <ChevronDown className='size-4 text-muted-foreground' />
+          </div>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <CardContent className='space-y-3 border-t'>
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={onDragEnd}
+            >
+              <SortableContext items={blocks.order} strategy={verticalListSortingStrategy}>
+                <div className='space-y-2'>
+                  {blocks.order.map((key) => (
+                    <SortableBlockRow
+                      key={key}
+                      id={key}
+                      label={labelOf(key)}
+                      visible={!blocks.hidden[key]}
+                      deletable={!BLOCK_KEYS.includes(key as (typeof BLOCK_KEYS)[number])}
+                      onToggle={() => toggleHidden(key)}
+                      onDelete={() => removeCustom(key)}
+                    />
+                  ))}
+                </div>
+              </SortableContext>
+            </DndContext>
+
+            <div className='flex flex-wrap items-center gap-2 pt-1'>
+              <Button variant='outline' size='sm' onClick={addCustom}>
+                <Plus className='size-4' /> {t('Add a section')}
+              </Button>
+              <Button variant='ghost' size='sm' onClick={resetOrder}>
+                <RotateCcw className='size-4' /> {t('Reset order')}
+              </Button>
+              {hiddenCount > 0 && (
+                <span className='text-xs text-muted-foreground'>
+                  {hiddenCount} {t('hidden')}
+                </span>
+              )}
+            </div>
+
+            <p className='text-xs text-muted-foreground'>
+              {t('Custom blocks render as a generic text/banner section on the homepage.')}
+            </p>
+          </CardContent>
+        </CollapsibleContent>
+      </Card>
+    </Collapsible>
   )
 }
 
