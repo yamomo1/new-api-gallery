@@ -4,7 +4,8 @@
  */
 import { useState } from 'react'
 
-import { MOTION_DATA, type HeroCardConfig } from './data'
+import type { HeroCardConfig } from './data'
+import type { MotionContent } from './types'
 
 /* ---------------- HeroVideoStage：首屏视频背景（多段顺序播放） ---------------- */
 export function HeroVideoStage({ videos }: { videos: string[] }) {
@@ -29,9 +30,7 @@ export function HeroVideoStage({ videos }: { videos: string[] }) {
 }
 
 /* ---------------- HeroTicker：Hero 面板内底部模型滚动条 ---------------- */
-export function HeroTicker() {
-  const cfg = MOTION_DATA.heroTicker
-  const models = MOTION_DATA.ticker
+export function HeroTicker({ cfg, models }: { cfg: MotionContent['heroTicker']; models: string[] }) {
   if (!cfg.enabled || !models.length) return null
 
   const dur = Math.max(8, cfg.durationSec || 42)
@@ -127,12 +126,11 @@ export function HeroShowcaseCard({ card }: { card: HeroCardConfig }) {
 }
 
 /* ---------------- ModelTicker：页脚上方模型滚动条 ---------------- */
-export function ModelTicker() {
-  const models = MOTION_DATA.ticker
+export function ModelTicker({ models, tickerSec }: { models: string[]; tickerSec?: number }) {
   if (!models.length) return null
 
   const text = models.join('　✦　')
-  const durSec = Math.max(8, MOTION_DATA.tickerSec ?? 30)
+  const durSec = Math.max(8, tickerSec ?? 30)
 
   return (
     <div className='model-ticker marquee'>

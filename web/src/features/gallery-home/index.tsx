@@ -43,7 +43,7 @@ import {
   HeroVideoStage,
   ModelTicker,
 } from './components'
-import { HOME_DATA, MOTION_DATA, fetchHomeConfig, mergeHomeConfig } from './data'
+import { useGalleryHomeContent } from './api'
 import './gallery-home.css'
 
 const ICONS: Record<string, typeof LayoutGrid> = {
@@ -115,33 +115,9 @@ function renderHeroTitle(title: string, accent?: string) {
 export function GalleryHome() {
   const { t } = useTranslation()
 
-  // 首页数据：内置默认 + 后台「二开设置 → 首页设置」(GET /api/home_config) 深合并
-  const [homeData, setHomeData] = useState(HOME_DATA)
-  const [motionData, setMotionData] = useState(MOTION_DATA)
-  useEffect(() => {
-    let alive = true
-    fetchHomeConfig().then((cfg) => {
-      if (!alive || !cfg) return
-      setHomeData(mergeHomeConfig(HOME_DATA, cfg))
-      const motion = (cfg as { motion?: { heroVideo?: { videos?: unknown } } }).motion
-      const videos = motion?.heroVideo?.videos
-      if (Array.isArray(videos) && videos.length) {
-        const list = videos.filter((v): v is string => typeof v === 'string' && v.trim() !== '')
-        if (list.length) {
-          setMotionData((prev) => ({
-            ...prev,
-            heroVideo: { ...prev.heroVideo, videos: list },
-          }))
-        }
-      }
-    })
-    return () => {
-      alive = false
-    }
-  }, [])
-
-  const h = homeData
-  const m = motionData
+  // 首页数据：内置默认（按当前语言）深合并后台「二开设置 → 首页设置」(GET /api/home_config)
+  // 由 api.ts 的 TanStack Query 钩子统一提供（缓存 + 重试 + 解析校验）
+  const { home: h, motion: m } = useGalleryHomeContent()
   const [agentQ, setAgentQ] = useState('')
   const [agentSkill, setAgentSkill] = useState<AgentSkillKey>('auto')
   const [skillMenuOpen, setSkillMenuOpen] = useState(false)
@@ -267,7 +243,7 @@ export function GalleryHome() {
               zIndex: 2,
             }}
           >
-            <HeroTicker />
+            <HeroTicker cfg={m.heroTicker} models={m.ticker} />
           </div>
         </section>
 
@@ -691,7 +667,7 @@ export function GalleryHome() {
         </section>
 
         {/* ============ 8. 页脚上方模型滚动条 ============ */}
-        <ModelTicker />
+        <ModelTicker models={m.ticker} tickerSec={m.tickerSec} />
       </div>
     </PublicLayout>
   )

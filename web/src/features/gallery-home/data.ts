@@ -1,9 +1,39 @@
+/*
+Copyright (C) 2023-2026 QuantumNous
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as
+published by the Free Software Foundation, either version 3 of the
+License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+For commercial licensing, please contact support@quantumnous.com
+*/
+
 /**
- * GalleryHome 首页默认数据（移植自 gallery-frontend content.tsx）
+ * GalleryHome 首页默认数据
  * ------------------------------------------------------------------
  * 首页完全数据驱动：改这里的文案/图片/链接即改页面。
- * URL 已适配 New API（rc.46）真实路由：/prompt-gallery、/pricing、/about。
+ * URL 已适配 New API（rc.46）真实路由：/prompt-gallery、/pricing、/about、/sign-up。
+ *
+ * 多语种约定（与 New API 现有 i18n 一致）：
+ * - 这里的文案一律写 **英文原文**，字符串本身就是 i18n key
+ * - `buildHomeData(t)` 深遍历把每个可翻译字段过一遍 t()
+ * - 英文不需要额外翻译（缺失 key 时 i18next 回退 key 本身）
+ * - zh / zh-TW / ja / fr / ru / vi 在 src/i18n/locales 里补译文
+ * - RAW_KEYS 里的字段是路径/色值/品牌名/图标名，不参与翻译
  */
+
+import type { HomeConfig } from './schema'
+
+export type Translate = (key: string) => string
 
 export type HeroColors = {
   screenBg: string
@@ -32,20 +62,104 @@ export type HeroCardConfig = {
   images: string[]
 }
 
+/** 不参与翻译的字段（路径、色值、品牌名、代码、枚举） */
+const RAW_KEYS = new Set([
+  'url',
+  'primaryUrl',
+  'secondaryUrl',
+  'connectUrl',
+  'featuredVideo',
+  'videos',
+  'image',
+  'thumb',
+  'cover',
+  'art',
+  'images',
+  'code',
+  'icon',
+  'key',
+  'index',
+  'rank',
+  'model',
+  'name',
+  'ticker',
+  'bg',
+  'dot',
+  'text',
+  'secondaryTime',
+  'ratio',
+  'count',
+  'screenBg',
+  'ink',
+  'muted',
+  'line',
+  'accentFrom',
+  'accentVia',
+  'accentTo',
+  'scrimTop',
+  'scrimMid',
+  'scrimBottom',
+  'badgeFrom',
+  'badgeTo',
+  'primaryBtn',
+  'primaryBtnInk',
+])
+
+/**
+ * 深遍历：对所有可翻译字符串调用 fn（RAW_KEYS 字段与 RAW 数组整体跳过）。
+ * localize 与 collectStrings 共用同一套遍历，保证「渲染时翻译了哪些」
+ * 和「测试里检查了哪些」永远一致。
+ */
+function mapStrings<T>(node: T, fn: (s: string) => string, key?: string): T {
+  if (typeof node === 'string') {
+    if (key && RAW_KEYS.has(key)) return node
+    return fn(node as string) as unknown as T
+  }
+  if (Array.isArray(node)) {
+    if (key && RAW_KEYS.has(key)) return node
+    return node.map((item) =>
+      typeof item === 'string' ? (fn(item as string) as unknown as T) : mapStrings(item, fn),
+    ) as unknown as T
+  }
+  if (node && typeof node === 'object') {
+    const out: Record<string, unknown> = {}
+    for (const [k, v] of Object.entries(node as Record<string, unknown>)) {
+      out[k] = mapStrings(v, fn, k)
+    }
+    return out as unknown as T
+  }
+  return node
+}
+
+function localize<T>(node: T, t: Translate): T {
+  return mapStrings(node, t)
+}
+
+/** 收集结构里所有需要翻译的原文（用于译文覆盖率测试） */
+export function collectStrings(node: unknown, out: string[] = []): string[] {
+  mapStrings(node, (s) => {
+    if (!out.includes(s)) out.push(s)
+    return s
+  })
+  return out
+}
+
+/* ------------------------------------------------------------------ */
+
 export const HOME_DATA = {
   hero: {
-    title: '想象一下。\n让它成为现实。',
-    titleAccent: '让它成为现实。',
+    title: 'Imagine it.',
+    titleAccent: 'Let it be real.',
     subtitle:
-      '一个将您的想法变成图像、电影等的地方。使用领先的 AI 模型进行创建，一切都在一个工作区中进行。',
-    badge: '新的',
-    announcement: '画布 Agent 上线：说一句话，画布自动搭好',
-    primaryLabel: '进入画布 Agent 创作',
+      'A place that turns your ideas into images, films and more. Create with leading AI models, all in one workspace.',
+    badge: 'New',
+    announcement: 'Canvas Agent is live: say one sentence, the canvas builds itself',
+    primaryLabel: 'Start creating with Agent',
     primaryUrl: '/prompt-gallery',
-    secondaryLabel: '观看介绍',
+    secondaryLabel: 'Watch the intro',
     secondaryUrl: '',
     secondaryTime: '0:47',
-    metaLabels: ['无需开会员', '按量付费', '人人享受超低价'],
+    metaLabels: ['No membership needed', 'Pay as you go', 'Low prices for everyone'],
     colors: {
       screenBg: '#030b0f',
       ink: '#f5f1e8',
@@ -64,8 +178,8 @@ export const HOME_DATA = {
     } as HeroColors,
     card: {
       enabled: true,
-      tag: '四像生成',
-      title: '银色兜帽人像，暖金逆光，极简黑背景',
+      tag: 'Four images generated',
+      title: 'Silver hooded portrait, warm backlight, minimal black background',
       model: 'GPT Image 2.5',
       ratio: '3:4',
       count: '×3',
@@ -79,132 +193,132 @@ export const HOME_DATA = {
   agent: {
     index: '01',
     eyebrow: 'Canvas Agent',
-    // 头部非对称布局：大标题两行居左（第二行灰），lead 右侧窄列
-    titleLine1: '说出想法，',
-    titleLine2: '画布自动生成。',
-    lead: '用一句话描述你想要什么。Canvas Agent 挑选模型、写好每个 prompt、接好参考图，并在你确认前展示价格。',
-    // 大输入面板（对标：参考图纸 + 自动模式 + helper + 圆形发送）
-    placeholder: '描述你想创作的内容，例如「一本 6 页水彩绘本，讲述小狐狸学习分享的故事」',
-    attachLabel: '参考图',
-    autoLabel: '自动（推荐）',
-    skillsMenuTitle: 'Agent 技能',
-    helperLabel: '生成前需你确认方案',
-    sendLabel: '发送',
-    // 技能列表：下拉框与下方 chips 共用，双向联动（key 对应）
+    // Asymmetric head: two-line serif title left, lead in a narrow right column
+    titleLine1: 'Say the idea.',
+    titleLine2: 'The Agent builds the canvas.',
+    lead: 'Describe what you want in one sentence. Canvas Agent picks the models, writes every prompt, wires the references and shows the price before you approve.',
+    // Large composer: reference attach + auto mode + helper + round send button
+    placeholder: 'Describe what you want to create, for example "a six-page watercolor picture book about a fox learning to share"',
+    attachLabel: 'Reference images',
+    autoLabel: 'Auto (recommended)',
+    skillsMenuTitle: 'Agent skills',
+    helperLabel: 'You approve the plan before anything is generated',
+    sendLabel: 'Send',
+    // Skills shared by the dropdown and the chips below (matched by key)
     skills: [
-      { key: 'book', label: '多页绘本', icon: 'BookOpen' },
-      { key: 'comic', label: '漫画分镜', icon: 'LayoutGrid' },
-      { key: 'character', label: '角色设定表', icon: 'User' },
-      { key: 'poster', label: '系列海报', icon: 'Images' },
-      { key: 'storyboard', label: '分镜海报', icon: 'Film' },
-      { key: 'video', label: '多镜头短视频', icon: 'Video' },
+      { key: 'book', label: 'Picture book', icon: 'BookOpen' },
+      { key: 'comic', label: 'Comic panels', icon: 'LayoutGrid' },
+      { key: 'character', label: 'Character sheet', icon: 'User' },
+      { key: 'poster', label: 'Poster series', icon: 'Images' },
+      { key: 'storyboard', label: 'Storyboard', icon: 'Film' },
+      { key: 'video', label: 'Multi-shot video', icon: 'Video' },
     ],
-    // 左栏：特性列表（图标 + 标题 + 说明，竖排）
+    // Left column: feature list (icon + title + description)
     features: [
       {
         icon: 'LayoutGrid',
-        title: '一句话规划完整工作流',
-        desc: '模型、提示词、节点与连线自动铺在画布上，随时可运行。',
+        title: 'One sentence plans the whole workflow',
+        desc: 'Models, prompts, nodes and connections are laid out on the canvas, ready to run.',
       },
       {
         icon: 'Sparkles',
-        title: '常用创作技能',
-        desc: '绘本、漫画、角色设定、海报系列、多镜头视频和商品套装，一句话即可开始。',
+        title: 'Skills for everyday tasks',
+        desc: 'Picture books, comics, character sheets, poster series, multi-shot video and product sets — all from one sentence.',
       },
       {
         icon: 'Images',
-        title: '支持你的参考素材',
-        desc: '选图片或用 @ 引用节点，Agent 会让角色和商品在每个镜头中保持一致。',
+        title: 'Works with your references',
+        desc: 'Pick images or @ mention nodes; the Agent keeps characters and products consistent in every shot.',
       },
       {
         icon: 'ShieldCheck',
-        title: '一切由你掌控',
-        desc: '先查看方案和预估价格，确认之前不会生成任何内容。',
+        title: 'You stay in control',
+        desc: 'Review the plan and estimated price first. Nothing is generated until you approve.',
       },
     ],
-    // 右栏：「画布 Agent」产品预览卡（对标 .agent-preview）
+    // Right column: "Canvas Agent" product preview card
     preview: {
-      bubble: '宇航员登夜晚探索城市，三个各 5 秒的镜头，电影感',
-      title: '画布 Agent',
-      badge: '方案已就绪',
+      bubble: 'An astronaut exploring a night city, three shots of five seconds each, cinematic',
+      title: 'Canvas Agent',
+      badge: 'Plan ready',
       plan: [
-        '角色参考图，保证画面一致',
-        '三个镜头的提示词写好并连接',
-        '运行前先显示预估价格',
+        'Character reference locked for consistency',
+        'Three shot prompts written and wired',
+        'Estimated price shown before running',
       ],
-      steps: ['角色定案', '镜头 1', '镜头 2', '镜头 3'],
-      editLabel: '修改方案',
-      runLabel: '确认并运行',
+      steps: ['Character locked', 'Shot 1', 'Shot 2', 'Shot 3'],
+      editLabel: 'Edit plan',
+      runLabel: 'Approve and run',
     },
   },
   studios: {
     index: '02',
-    eyebrow: '一个想法。每种创作方式。',
-    title: '一个想法。每种创作方式。',
-    lead: '用于探索的视觉工作区、用于提速的专注工作室，以及当想法成为产品时稳定的模型接入。',
+    eyebrow: 'One idea. Every way to make it.',
+    title: 'One idea. Every way to make it.',
+    lead: 'A visual workspace for exploring, focused studios for speed, and steady model access once an idea becomes a product.',
     items: [
       {
         image: '/images/home/creative-workspace-hero.webp',
         kicker: 'Canvas',
-        title: '在无限画布上编排',
-        desc: '在一块流畅的视觉工作流里安排参考图、prompt、图像、视频与声音。让整个想法尽收眼底。',
-        cta: '进入画廊',
+        title: 'Arrange on an infinite canvas',
+        desc: 'Lay out references, prompts, images, video and sound in one fluid visual workflow. Keep the whole idea in view.',
+        cta: 'Open the gallery',
         url: '/prompt-gallery',
       },
       {
         image: '/images/home/studio-portrait-v3.webp',
         kicker: 'Image studio',
-        title: '文生图',
-        desc: '从一句话到精致图像，手边就是领先的图像模型。',
-        cta: '浏览图像作品',
+        title: 'Text to image',
+        desc: 'From one sentence to polished images with the leading image models at hand.',
+        cta: 'Browse image work',
         url: '/prompt-gallery',
       },
       {
         image: '/images/home/model-cinema-v3.webp',
         kicker: 'Video studio',
-        title: '文生视频',
-        desc: '把文字或静帧变成电影感镜头，并执导每一秒。',
-        cta: '浏览视频作品',
+        title: 'Text to video',
+        desc: 'Turn words or still frames into cinematic shots, and direct every second.',
+        cta: 'Browse video work',
         url: '/prompt-gallery',
       },
     ],
   },
   gallery: {
     index: '03',
-    eyebrow: '一点灵感。无限可能。',
-    title: '一点灵感。无限可能。',
-    lead: '好想法值得被分享。浏览作品、发现 prompt，带去新的地方。',
-    tabs: ['全部', '图像', '视频'],
-    exploreLabel: '浏览画廊',
-    featuredTitle: '灵感广场 · 社区精选',
+    eyebrow: 'A little inspiration. Unlimited possibilities.',
+    title: 'A little inspiration. Unlimited possibilities.',
+    lead: 'Good ideas deserve to be shared. Browse the work, discover prompts, and take them somewhere new.',
+    tabs: ['All', 'Image', 'Video'],
+    exploreLabel: 'Browse the gallery',
+    featuredTitle: 'Inspiration square · Community picks',
     featuredVideo: '/videos/gallery-video.mp4',
     items: [
       {
-        title: '90 年代冷调仙侠 · 翡翠绿汉服肖像',
+        title: '90s cool-tone fantasy portrait in emerald hanfu',
         model: 'gpt-image-2.5',
         cover: '/images/home/model-image-v4.webp',
         url: '/prompt-gallery',
       },
       {
-        title: '超精细 3D 漫画星收藏海报',
+        title: 'Ultra-detailed 3D comic star collectible poster',
         model: 'gpt-image-2.5',
         cover: '/images/home/studio-portrait-v3.webp',
         url: '/prompt-gallery',
       },
       {
-        title: '复古赛车海报设计 Prompt',
+        title: 'Retro racing poster design prompt',
         model: 'gpt-image-2.5',
         cover: '/images/home/creative-studios.webp',
         url: '/prompt-gallery',
       },
       {
-        title: 'Q 版角色聊天贴纸生成 Prompt',
+        title: 'Chibi character sticker set prompt',
         model: 'gpt-image-2.5',
         cover: '/images/home/model-image-v3.webp',
         url: '/prompt-gallery',
       },
       {
-        title: '儿童科普百科海报：认识蜜蜂',
+        title: 'Children’s science poster: meet the bees',
         model: 'gpt-image-2.5',
         cover: '/images/home/creative-workspace-hero.webp',
         url: '/prompt-gallery',
@@ -213,79 +327,79 @@ export const HOME_DATA = {
   },
   models: {
     index: '04',
-    eyebrow: '顶尖模型，没有迷宫。',
-    title: '顶尖模型，没有迷宫。',
-    lead: '从最常被用到的模型开始。准备好时，随时对比价格与能力。',
+    eyebrow: 'Top models, no maze.',
+    title: 'Top models, no maze.',
+    lead: 'Start with the models people reach for most. Compare price and capability whenever you are ready.',
     stats: { models: 295, providers: 30 },
-    exploreLabel: '浏览模型与价格',
+    exploreLabel: 'Browse models and pricing',
     items: [
       {
         rank: 1,
         name: 'Seedance 2.5',
-        type: '视频生成 · 文生视频',
+        type: 'Video generation · Text to video',
         thumb: '/images/home/model-cinema-v4.webp',
         url: '/pricing',
       },
       {
         rank: 2,
         name: 'Seedance 2.0',
-        type: '视频生成 · 文生视频',
+        type: 'Video generation · Text to video',
         thumb: '/images/home/hero-world-v3.webp',
         url: '/pricing',
       },
       {
         rank: 3,
         name: 'GPT Image 2.5',
-        type: '图像生成 · 文生图',
+        type: 'Image generation · Text to image',
         thumb: '/images/home/model-image-v4.webp',
         url: '/pricing',
       },
       {
         rank: 4,
         name: 'Seedream 5 Pro',
-        type: '图像生成 · 文生图',
+        type: 'Image generation · Text to image',
         thumb: '/images/home/model-image-v3.webp',
         url: '/pricing',
       },
       {
         rank: 5,
         name: 'Kling',
-        type: '视频生成 · 文生视频',
+        type: 'Video generation · Text to video',
         thumb: '/images/home/creative-workspace-hero.webp',
         url: '/pricing',
       },
       {
         rank: 6,
         name: 'MinMax H3',
-        type: '视频生成',
+        type: 'Video generation',
         thumb: '/images/home/creative-studios.webp',
         url: '/pricing',
       },
       {
         rank: 7,
         name: 'Vidu',
-        type: '视频生成 · 文生视频',
+        type: 'Video generation · Text to video',
         thumb: '/images/home/canvas-world-v3.webp',
         url: '/pricing',
       },
       {
         rank: 8,
         name: 'Wan 3.0',
-        type: '视频生成 · 图生视频',
+        type: 'Video generation · Image to video',
         thumb: '/images/home/model-reasoning-v3.webp',
         url: '/pricing',
       },
       {
         rank: 9,
         name: 'HappyHorse',
-        type: '视频生成 · 文生视频',
+        type: 'Video generation · Text to video',
         thumb: '/images/home/closing-horizon-v3.webp',
         url: '/pricing',
       },
       {
         rank: 10,
         name: 'DeepSeek',
-        type: '对话 · 推理',
+        type: 'Chat · Reasoning',
         thumb: '/images/home/model-reasoning-v4.webp',
         url: '/pricing',
       },
@@ -293,10 +407,10 @@ export const HOME_DATA = {
   },
   cta: {
     index: '05',
-    title: '用一个兼容的 API 上线。',
-    lead: '用一套一致的 API 调用对话、图像与视频模型，在一个地方完成接入、路由与使用记录。',
-    features: ['OpenAI 兼容路由', '一个密钥，所有模型', '透明的计费'],
-    codeTitle: '代码示例',
+    title: 'Ship with one compatible API.',
+    lead: 'Call chat, image and video models through one consistent API — access, routing and usage logs all in one place.',
+    features: ['OpenAI-compatible routing', 'One key, all models', 'Transparent billing'],
+    codeTitle: 'Code example',
     code: `curl https://your-domain/v1/chat/completions \\
   -H "Authorization: Bearer $API_KEY" \\
   -H "Content-Type: application/json" \\
@@ -304,38 +418,37 @@ export const HOME_DATA = {
     "model": "deepseek/deepseek-v4-pro",
     "messages": [{"role": "user", "content": "Hello"}]
   }'`,
-    genLabel: '生成',
-    connectLabel: '立即连接',
+    genLabel: 'Generate',
+    connectLabel: 'Connect now',
     connectUrl: '/pricing',
   },
   closing: {
-    kicker: '下一个灵感，从这里开始',
-    title: '有格调地创作，无阻力地扩展。',
+    kicker: 'Your next idea starts here',
+    title: 'Create with taste. Scale without friction.',
     lead:
-      '从画布开始视觉创作，进入快捷工作室，或把同一批模型接入自己的产品。',
-    primaryLabel: '开始创作',
+      'Start visually on the canvas, drop into a focused studio, or wire the same models into your own product.',
+    primaryLabel: 'Start creating',
     primaryUrl: '/prompt-gallery',
-    secondaryLabel: '开始使用',
+    secondaryLabel: 'Start using',
     secondaryUrl: '/sign-up',
     art: '/images/home/closing-horizon-v3.webp',
   },
 }
 
 export const MOTION_DATA = {
-  // 首屏视频：两段顺序播放（第一段播完接第二段，再循环）；后台可配 N 段
+  // Hero video playlist: any number of clips, played in order then looped
   heroVideo: {
     enabled: true,
     videos: ['/videos/hero-video.mp4', '/videos/gallery-video.mp4'],
     mask: 0.82,
   },
-  // Hero 内底部滚动条（对标 .home-ticker：42s + hover 暂停 + 金色菱形点）
   heroTicker: {
     enabled: true,
     durationSec: 42,
     bg: 'rgba(255, 255, 255, 0.04)',
     dot: '#f7bf77',
     text: 'rgba(245, 241, 232, 0.74)',
-    prefix: '现已上市',
+    prefix: 'Now available',
   },
   ticker: [
     'DeepSeek',
@@ -350,6 +463,34 @@ export const MOTION_DATA = {
     'HappyHorse',
   ],
   tickerSec: 30,
+}
+
+/* ------------------------------------------------------------------ */
+
+/** 按当前语言生成本地化后的首页默认数据 */
+export function buildHomeData(t: Translate) {
+  return localize(HOME_DATA, t)
+}
+
+/** 动效/轮播数据： video 列表支持后台覆盖任意段数 */
+export function buildMotionData(
+  t: Translate,
+  override?: NonNullable<HomeConfig['motion']> | null,
+) {
+  const base = localize(MOTION_DATA, t)
+  const videos = override?.heroVideo?.videos
+  return {
+    ...base,
+    heroVideo: {
+      ...base.heroVideo,
+      ...(override?.heroVideo ?? {}),
+      videos:
+        Array.isArray(videos) && videos.length
+          ? videos.filter((v) => typeof v === 'string' && v.trim() !== '')
+          : base.heroVideo.videos,
+    },
+    heroTicker: { ...base.heroTicker, ...(override?.heroTicker ?? {}) },
+  }
 }
 
 /* ------------------------------------------------------------------
@@ -373,18 +514,4 @@ export function mergeHomeConfig<T>(base: T, override: unknown): T {
     }
   }
   return out as T
-}
-
-/** 后端返回的 {success, data:"<json>"} 里提取配置对象；空/坏数据返回 null */
-export async function fetchHomeConfig(): Promise<unknown> {
-  try {
-    const res = await fetch('/api/home_config', { headers: { Accept: 'application/json' } })
-    if (!res.ok) return null
-    const body = (await res.json()) as { success?: boolean; data?: unknown }
-    const raw = body?.data
-    if (typeof raw !== 'string' || raw.trim() === '' || raw === 'null') return null
-    return JSON.parse(raw)
-  } catch {
-    return null
-  }
 }
