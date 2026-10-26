@@ -7,6 +7,7 @@
  */
 import { useEffect, useState } from 'react'
 import { Loader2, Plus, Save, Trash2 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
 import { Badge } from '@/components/ui/badge'
@@ -19,8 +20,8 @@ import {
   getSystemOptions,
   updateSystemOption,
 } from '@/features/system-settings/api'
-import { mergeHomeConfig } from '@/features/gallery-home/data'
-import { HOME_DATA, MOTION_DATA } from '@/features/gallery-home/data'
+import { buildHomeData, buildMotionData, mergeHomeConfig } from '@/features/gallery-home/data'
+import { homeConfigSchema } from '@/features/gallery-home/schema'
 
 type Config = Record<string, unknown>
 
@@ -48,96 +49,12 @@ function setPath(obj: Config, path: string, value: unknown): Config {
   return clone(obj, 0) as Config
 }
 
-type Field = { path: string; label: string; type?: 'text' | 'textarea' | 'list' }
-
-const FIELD_GROUPS: { key: string; title: string; fields: Field[] }[] = [
-  {
-    key: 'hero',
-    title: '首屏 Hero',
-    fields: [
-      { path: 'hero.badge', label: '徽标文字' },
-      { path: 'hero.announcement', label: '公告条' },
-      { path: 'hero.title', label: '主标题（\n 换行）', type: 'textarea' },
-      { path: 'hero.titleAccent', label: '标题金色强调句' },
-      { path: 'hero.subtitle', label: '副标题', type: 'textarea' },
-      { path: 'hero.primaryLabel', label: '主按钮文字' },
-      { path: 'hero.primaryUrl', label: '主按钮链接' },
-      { path: 'hero.secondaryLabel', label: '次按钮文字' },
-      { path: 'hero.secondaryUrl', label: '次按钮链接（留空隐藏）' },
-      { path: 'hero.metaLabels', label: '✓ 特性短语（逗号分隔）', type: 'list' },
-    ],
-  },
-  {
-    key: 'agent',
-    title: 'Canvas Agent 区块',
-    fields: [
-      { path: 'agent.titleLine1', label: '标题第一行' },
-      { path: 'agent.titleLine2', label: '标题第二行（灰色）' },
-      { path: 'agent.lead', label: '右侧说明', type: 'textarea' },
-      { path: 'agent.placeholder', label: '输入框占位文字', type: 'textarea' },
-      { path: 'agent.autoLabel', label: '下拉「自动」项文字' },
-      { path: 'agent.skillsMenuTitle', label: '下拉菜单标题' },
-      { path: 'agent.helperLabel', label: '确认提示语' },
-      { path: 'agent.skills.0.label', label: '技能 1 名称' },
-      { path: 'agent.skills.1.label', label: '技能 2 名称' },
-      { path: 'agent.skills.2.label', label: '技能 3 名称' },
-      { path: 'agent.skills.3.label', label: '技能 4 名称' },
-      { path: 'agent.skills.4.label', label: '技能 5 名称' },
-      { path: 'agent.skills.5.label', label: '技能 6 名称' },
-    ],
-  },
-  {
-    key: 'studios',
-    title: '工作室区块',
-    fields: [
-      { path: 'studios.title', label: '标题' },
-      { path: 'studios.lead', label: '说明', type: 'textarea' },
-    ],
-  },
-  {
-    key: 'gallery',
-    title: '灵感画廊区块',
-    fields: [
-      { path: 'gallery.title', label: '标题' },
-      { path: 'gallery.lead', label: '说明', type: 'textarea' },
-      { path: 'gallery.exploreLabel', label: '浏览按钮文字' },
-    ],
-  },
-  {
-    key: 'models',
-    title: '模型亮点区块',
-    fields: [
-      { path: 'models.title', label: '标题' },
-      { path: 'models.lead', label: '说明', type: 'textarea' },
-      { path: 'models.exploreLabel', label: '浏览按钮文字' },
-    ],
-  },
-  {
-    key: 'cta',
-    title: 'API 区块',
-    fields: [
-      { path: 'cta.title', label: '标题' },
-      { path: 'cta.lead', label: '说明', type: 'textarea' },
-      { path: 'cta.connectLabel', label: '按钮文字' },
-    ],
-  },
-  {
-    key: 'closing',
-    title: '落幕 CTA 区块',
-    fields: [
-      { path: 'closing.title', label: '标题' },
-      { path: 'closing.lead', label: '说明', type: 'textarea' },
-      { path: 'closing.primaryLabel', label: '主按钮文字' },
-      { path: 'closing.primaryUrl', label: '主按钮链接' },
-      { path: 'closing.secondaryLabel', label: '次按钮文字' },
-      { path: 'closing.secondaryUrl', label: '次按钮链接' },
-    ],
-  },
-]
+import { FIELD_GROUPS, type Field } from './field-groups'
 
 const HOME_CONFIG_KEY = 'HomeConfig'
 
 export function HomeSettings() {
+  const { t } = useTranslation()
   const [cfg, setCfg] = useState<Config | null>(null)
   const [videos, setVideos] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
@@ -151,22 +68,25 @@ export function HomeSettings() {
         const raw = res?.data?.find((o) => o.key === HOME_CONFIG_KEY)?.value
         const overrides =
           typeof raw === 'string' && raw.trim() !== '' ? JSON.parse(raw) : {}
-        const merged = mergeHomeConfig(HOME_DATA, overrides) as Config
+        // 默认文案按当前界面语言显示（编辑框里的 placeholder 就是当前语言默认值）
+        const base = buildHomeData(t) as unknown as Config
+        const merged = mergeHomeConfig(base, overrides) as Config
+        const motionDefault = buildMotionData(t).heroVideo.videos
         const motion = (overrides as { motion?: { heroVideo?: { videos?: unknown } } })
           .motion
         const list = Array.isArray(motion?.heroVideo?.videos)
           ? (motion!.heroVideo!.videos as unknown[]).filter(
               (v): v is string => typeof v === 'string' && v.trim() !== ''
             )
-          : MOTION_DATA.heroVideo.videos
+          : motionDefault
         if (!alive) return
         setCfg(merged)
         setVideos(list)
       } catch {
         if (!alive) return
-        setCfg(HOME_DATA as unknown as Config)
-        setVideos(MOTION_DATA.heroVideo.videos)
-        toast.error('加载首页配置失败，已回退默认值')
+        setCfg(buildHomeData(t) as unknown as Config)
+        setVideos(buildMotionData(t).heroVideo.videos)
+        toast.error(t('Failed to load home settings, fell back to defaults'))
       } finally {
         if (alive) setLoading(false)
       }
@@ -174,7 +94,7 @@ export function HomeSettings() {
     return () => {
       alive = false
     }
-  }, [])
+  }, [t])
 
   const update = (path: string, value: string, type?: Field['type']) => {
     setCfg((prev) => {
@@ -190,7 +110,7 @@ export function HomeSettings() {
     if (!cfg) return
     setSaving(true)
     try {
-      const config = {
+      const payload = {
         ...cfg,
         motion: {
           heroVideo: {
@@ -199,17 +119,24 @@ export function HomeSettings() {
           },
         },
       }
-      const res = await updateSystemOption({
-        key: HOME_CONFIG_KEY,
-        value: JSON.stringify(config),
-      })
-      if (res?.success === false) {
-        toast.error(res.message || '保存失败')
+      // 保存前校验：结构不合规直接拦下，避免脏配置把前台首页打挂
+      const parsed = homeConfigSchema.safeParse(payload)
+      if (!parsed.success) {
+        const first = parsed.error.issues[0]
+        toast.error(`${t('Home settings validation failed')}: ${first?.path?.join('.') || ''} ${first?.message || ''}`)
         return
       }
-      toast.success('首页配置已保存，刷新首页即可看到效果')
+      const res = await updateSystemOption({
+        key: HOME_CONFIG_KEY,
+        value: JSON.stringify(parsed.data),
+      })
+      if (res?.success === false) {
+        toast.error(res.message || t('Save failed'))
+        return
+      }
+      toast.success(t('Home settings saved, refresh the homepage to see it'))
     } catch {
-      toast.error('保存失败，请稍后重试')
+      toast.error(t('Save failed, please retry later'))
     } finally {
       setSaving(false)
     }
@@ -218,7 +145,7 @@ export function HomeSettings() {
   if (loading || !cfg) {
     return (
       <div className='flex items-center justify-center gap-2 py-24 text-muted-foreground'>
-        <Loader2 className='size-4 animate-spin' /> 加载中…
+        <Loader2 className='size-4 animate-spin' /> {t('Loading…')}
       </div>
     )
   }
@@ -227,14 +154,14 @@ export function HomeSettings() {
     <div className='mx-auto w-full max-w-4xl space-y-5 p-4 pb-16'>
       <div className='flex items-center justify-between gap-3'>
         <div>
-          <h1 className='text-xl font-semibold'>首页设置</h1>
+          <h1 className='text-xl font-semibold'>{t('Home settings')}</h1>
           <p className='text-sm text-muted-foreground'>
-            视频轮播支持任意个数、按顺序循环播放；文字改动保存后前台刷新即生效。
+            {t('The hero playlist accepts any number of clips played in order; text changes show up after refreshing the homepage.')}
           </p>
         </div>
         <Button onClick={save} disabled={saving}>
           {saving ? <Loader2 className='size-4 animate-spin' /> : <Save className='size-4' />}
-          保存
+          {t('Save')}
         </Button>
       </div>
 
@@ -242,8 +169,8 @@ export function HomeSettings() {
       <Card>
         <CardHeader>
           <CardTitle className='flex items-center gap-2 text-base'>
-            首屏视频轮播
-            <Badge variant='secondary'>{videos.length} 段</Badge>
+            {t('Hero video playlist')}
+            <Badge variant='secondary'>{videos.length} {t('clips')}</Badge>
           </CardTitle>
         </CardHeader>
         <CardContent className='space-y-3'>
@@ -264,7 +191,7 @@ export function HomeSettings() {
               <Button
                 variant='ghost'
                 size='icon'
-                aria-label='删除该段'
+                aria-label={t('Remove this clip')}
                 onClick={() => setVideos((prev) => prev.filter((_, j) => j !== i))}
               >
                 <Trash2 className='size-4' />
@@ -276,11 +203,10 @@ export function HomeSettings() {
             size='sm'
             onClick={() => setVideos((prev) => [...prev, ''])}
           >
-            <Plus className='size-4' /> 添加一段视频
+            <Plus className='size-4' /> {t('Add a clip')}
           </Button>
           <p className='text-xs text-muted-foreground'>
-            填网站根路径下的视频地址（如 /videos/hero-video.mp4，文件放
-            web/public/videos/）。按顺序循环播放，可添加任意个数。
+            {t('Use a path under the site root (for example /videos/hero-video.mp4, stored in web/public/videos/). Clips loop in order; add as many as you need.')}
           </p>
         </CardContent>
       </Card>
@@ -289,7 +215,7 @@ export function HomeSettings() {
       {FIELD_GROUPS.map((group) => (
         <Card key={group.key}>
           <CardHeader>
-            <CardTitle className='text-base'>{group.title}</CardTitle>
+            <CardTitle className='text-base'>{t(group.title)}</CardTitle>
           </CardHeader>
           <CardContent className='grid gap-4 md:grid-cols-2'>
             {group.fields.map((f) => (
@@ -297,7 +223,7 @@ export function HomeSettings() {
                 key={f.path}
                 className={f.type === 'textarea' ? 'md:col-span-2' : ''}
               >
-                <Label className='mb-1.5 block text-xs'>{f.label}</Label>
+                <Label className='mb-1.5 block text-xs'>{t(f.label)}</Label>
                 {f.type === 'textarea' ? (
                   <Textarea
                     rows={2}
@@ -323,7 +249,7 @@ export function HomeSettings() {
       <div className='flex justify-end'>
         <Button onClick={save} disabled={saving}>
           {saving ? <Loader2 className='size-4 animate-spin' /> : <Save className='size-4' />}
-          保存
+          {t('Save')}
         </Button>
       </div>
     </div>
