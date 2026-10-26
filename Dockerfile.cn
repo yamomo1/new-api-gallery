@@ -53,9 +53,15 @@ RUN --mount=type=cache,target=/go/pkg/mod go mod download
 
 COPY . .
 COPY --from=builder /build/web/dist ./web/dist
-# BuildKit 缓存挂载:Go 编译缓存持久化 → 二次起 go build 走增量(没改的包复用),
-# 改代码后 rebuild 从「从零全量编译几分钟」降到「增量 1~2 分钟」。
-RUN --mount=type=cache,target=/root/.cache/go-build go build -pgo="$(go list -m -f '{{.Dir}}' github.com/Calcium-Ion/moejs)/default.pgo" -ldflags "-s -w -X 'github.com/QuantumNous/new-api/common.Version=$(cat VERSION)'" -o new-api
+# BuildKit 缓存挂载(两个都要挂,缺一不可):
+#   /go/pkg/mod           —— 模块缓存。关键:-pgo 里 $(go list -m -f '{{.Dir}}' moejs)
+#                            是 shell 先求值再跑 go build,求值那一刻 moejs 必须已在
+#                            /go/pkg/mod 里,否则 .Dir 解析为空 → 路径变 /default.pgo → 报错。
+#                            与上面 go mod download 共用同一 target,缓存已填充。
+#   /root/.cache/go-build —— 编译缓存持久化,二次起 go build 走增量。
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    go build -pgo="$(go list -m -f '{{.Dir}}' github.com/Calcium-Ion/moejs)/default.pgo" -ldflags "-s -w -X 'github.com/QuantumNous/new-api/common.Version=$(cat VERSION)'" -o new-api
 
 # ---- 阶段 3:运行时 ----
 ARG REGISTRY
