@@ -22,6 +22,8 @@
   --primary-fg: var(--primary-foreground, #fff);
   --gold: var(--primary);
   --gold-soft: color-mix(in oklch, var(--primary) 55%, #f7bf77);
+  /* 顶部金色辉光（对标 .home-agent::before：深浅模式两档，对标站 --home-gold） */
+  --ghome-glow: #a56217;
   --hero-screen: #030b0f;
   --hero-ink: #f5f1e8;
   --hero-line: rgba(245, 241, 232, 0.14);
@@ -33,11 +35,17 @@
   --font-sans: "Public Sans", system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
   --font-serif: "Lora", Georgia, "PingFang SC", "Microsoft YaHei", sans-serif;
   font-family: var(--font-sans);
-  background: var(--background);
+  background: #f9f8f5; /* 浅色背景（对标站 --background） */
   color: var(--foreground);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
 }
+
+html.dark .ghome {
+  background: #050507; /* 深色背景（对标站 --background） */
+  --ghome-glow: #a56217;
+}
+html:not(.dark) .ghome { --ghome-glow: #f6b669; }
 
 .ghome a { color: inherit; text-decoration: none; }
 .ghome .serif { font-family: var(--font-serif); }
@@ -308,6 +316,18 @@
    ============================================================ */
 .ghome .container { max-width: 80rem; }
 .ghome .section { padding: 88px 0; }
+/* 顶部金色辉光（1:1 复刻对标站 .home-agent::before：
+   radial-gradient 60%x70% at 50% 0%，金 14% 透明度渐隐 70%，高 28rem） */
+.ghome #home-agent { position: relative; isolation: isolate; }
+.ghome #home-agent::before {
+  content: ""; pointer-events: none; z-index: -1;
+  position: absolute; inset: 0 0 auto; height: 28rem;
+  background: radial-gradient(
+    60% 70% at 50% 0%,
+    color-mix(in oklch, var(--ghome-glow, #a56217) 14%, transparent),
+    transparent 70%
+  );
+}
 .ghome .section--tinted { background: transparent; border-block: 0; } /* 与前后区块无缝（对标站整页连续背景，不做灰色色带） */
 .ghome .section-head { max-width: 720px; margin: 0 auto 48px; text-align: center; }
 .ghome .section-head h2 { font-family: var(--font-serif); font-size: clamp(28px, 3.6vw, 40px); line-height: 1.12; margin: 14px 0 12px; font-weight: 600; letter-spacing: -0.015em; }
