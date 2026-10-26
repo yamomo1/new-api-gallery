@@ -84,12 +84,14 @@ describe('index.html theme boot script', () => {
     expect(document.documentElement).toHaveClass('dark')
   })
 
-  it('follows the system light mode when the saved value is invalid', () => {
+  // Fork behaviour: this site ships dark-first, so an unreadable preference
+  // falls back to dark instead of following prefers-color-scheme.
+  it('falls back to dark mode when the saved value is invalid', () => {
     mockSystemDarkMode(false)
     localStorage.setItem(THEME_STORAGE_KEYS.mode, 'sepia')
 
     runBootScript()
 
-    expect(document.documentElement).toHaveClass('light')
+    expect(document.documentElement).toHaveClass('dark')
   })
 })

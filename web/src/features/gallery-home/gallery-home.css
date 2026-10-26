@@ -14,6 +14,25 @@
 }
 
 .ghome {
+  /* ============================================================
+     语义令牌（单一入口：改这里即全站生效，后台/后续主题均可覆盖）
+     命名约定：--gh-<语义>，明暗切换只在这里做（见下方 html.dark 覆盖）
+     ============================================================ */
+  --gh-page: #f9f8f5; /* 页面底色（浅色） */
+  --gh-panel: #030b0f; /* 电影感深色面板：hero / Agent 预览卡，明暗模式恒深 */
+  --gh-panel-ink: #f5f1e8; /* 面板正文 */
+  --gh-panel-muted: rgba(245, 241, 232, 0.66); /* 面板次级文字 */
+  --gh-panel-line: rgba(255, 255, 255, 0.14); /* 面板分隔线 */
+  --gh-accent: #e2a056; /* 品牌金（主强调） */
+  --gh-accent-hi: #f6d29a; /* 品牌金亮端（渐变起） */
+  --gh-accent-top: #fff0d4; /* 品牌金高光（渐变末） */
+  --gh-accent-ink: #2a1c0a; /* 金色按钮上的字 */
+  --gh-accent-soft: #f7bf77; /* 浅仪式强调（偏向 highlight） */
+  --gh-lime: #d9ff43; /* 次强调（亮柠，CTA 按钮） */
+  --gh-lime-ink: #08120a;
+  --gh-glow: #f6b669; /* 区块顶部辉光（浅色下用亮金） */
+  --gh-glow-strength: 14%; /* 辉光透明度（对标站原值） */
+
   /* 补齐 gallery-frontend 有而 New API 无的变量 */
   --muted: var(--muted-foreground, #6a6f76);
   --border: var(--border, #e3e0da);
@@ -22,12 +41,12 @@
   --primary-fg: var(--primary-foreground, #fff);
   --gold: var(--primary);
   --gold-soft: color-mix(in oklch, var(--primary) 55%, #f7bf77);
-  /* 顶部金色辉光（对标 .home-agent::before：深浅模式两档，对标站 --home-gold） */
-  --ghome-glow: #a56217;
-  --hero-screen: #030b0f;
-  --hero-ink: #f5f1e8;
-  --hero-line: rgba(245, 241, 232, 0.14);
-  --hero-gold: #f7bf77;
+  /* 旧命名保留为别名，逐步迁移后可删（避免一次性大面积改动带来回归） */
+  --hero-screen: var(--gh-panel);
+  --hero-ink: var(--gh-panel-ink);
+  --hero-line: var(--gh-panel-line);
+  --hero-gold: var(--gh-accent-soft);
+  --ghome-glow: var(--gh-glow);
   --radius: 1rem;
   --home-radius: clamp(1.1rem, 2vw, 1.75rem);
   --maxw: 1200px;
@@ -35,17 +54,21 @@
   --font-sans: "Public Sans", system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
   --font-serif: "Lora", Georgia, "PingFang SC", "Microsoft YaHei", sans-serif;
   font-family: var(--font-sans);
-  background: #f9f8f5; /* 浅色背景（对标站 --background） */
+  background: var(--gh-page); /* 页面底色（对标站 --background） */
   color: var(--foreground);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
 }
 
+/* 深色模式：只覆盖令牌，组件样式一行不动 */
 html.dark .ghome {
-  background: #050507; /* 深色背景（对标站 --background） */
-  --ghome-glow: #a56217;
+  --gh-page: #050507; /* 对标站深色 --background */
+  --gh-glow: #a56217; /* 对标站 --home-gold（深色模式） */
+  --gh-glow-strength: 14%;
 }
-html:not(.dark) .ghome { --ghome-glow: #f6b669; }
+html:not(.dark) .ghome {
+  --gh-glow: #f6b669;
+}
 
 .ghome a { color: inherit; text-decoration: none; }
 .ghome .serif { font-family: var(--font-serif); }
@@ -62,8 +85,8 @@ html:not(.dark) .ghome { --ghome-glow: #f6b669; }
   position: relative; isolation: isolate; overflow: hidden;
   border-radius: 0 0 var(--home-radius) var(--home-radius); /* 顶部直角贴屏幕上沿，底部保留圆角 */
   min-height: clamp(40rem, calc(100svh - 8px), 64rem);
-  background-color: var(--hero-screen, #030b0f);
-  color: var(--hero-ink, #f5f1e8);
+  background-color: var(--hero-screen, var(--gh-panel));
+  color: var(--hero-ink, var(--gh-panel-ink));
   display: flex;
   /* 顶部 margin 0：视频面板顶到屏幕最上面（导航悬浮在视频上）；
      左右/底部仅 8px 极窄留白 */
@@ -99,7 +122,7 @@ html:not(.dark) .ghome { --ghome-glow: #f6b669; }
 
 /* 蒙版：对标 .home-hero-scrim
    窄屏双层渐变：① 上 38% 透明 → 66% 渐暗 → 100% 纯色（文字可读）
-                ② 顶部 #030b0f99 → 8rem 渐隐（顶部压暗）
+                ② 顶部 var(--gh-panel)99 → 8rem 渐隐（顶部压暗）
    桌面端（≥48rem）：见下方 @media 覆盖 —— 改成「左边黑」三层渐变 */
 .home-hero-mask {
   position: absolute; inset: 0; z-index: 1; pointer-events: none;
@@ -108,7 +131,7 @@ html:not(.dark) .ghome { --ghome-glow: #f6b669; }
     linear-gradient(180deg,
       transparent 38%,
       var(--hero-scrim-mid, rgba(3, 11, 15, 0.82)) 66%,
-      var(--hero-scrim-bottom, #030b0f) 100%),
+      var(--hero-scrim-bottom, var(--gh-panel)) 100%),
     linear-gradient(180deg, var(--hero-scrim-top, rgba(3, 11, 15, 0.6)), transparent 8rem);
 }
 /* 内容容器：沉底 + 左对齐（对标 .home-hero-inner：padding 7rem 顶 / 底部给 ticker 留位） */
@@ -140,10 +163,10 @@ html:not(.dark) .ghome { --ghome-glow: #f6b669; }
   .home-hero-mask {
     background:
       linear-gradient(90deg,
-        var(--hero-scrim-bottom, #030b0f) 0%,
-        color-mix(in srgb, var(--hero-scrim-bottom, #030b0f) 80%, transparent) 28%,
+        var(--hero-scrim-bottom, var(--gh-panel)) 0%,
+        color-mix(in srgb, var(--hero-scrim-bottom, var(--gh-panel)) 80%, transparent) 28%,
         transparent 58%),
-      linear-gradient(180deg, transparent 72%, color-mix(in srgb, var(--hero-scrim-bottom, #030b0f) 92%, transparent) 100%),
+      linear-gradient(180deg, transparent 72%, color-mix(in srgb, var(--hero-scrim-bottom, var(--gh-panel)) 92%, transparent) 100%),
       linear-gradient(180deg, var(--hero-scrim-top, rgba(3, 11, 15, 0.55)), transparent 8rem);
   }
   .ghome .home-hero-inner { padding: 8.5rem 3rem 5.5rem; }
@@ -157,7 +180,7 @@ html:not(.dark) .ghome { --ghome-glow: #f6b669; }
 /* 公告胶囊（对标 .home-hero-announcement：磨砂 blur(12px) + 金色徽章） */
 .ghome .home-hero-announcement {
   display: inline-flex; align-items: center; gap: 0.6rem;
-  color: var(--hero-ink, #f5f1e8);
+  color: var(--hero-ink, var(--gh-panel-ink));
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 999px; padding: 0.25rem 0.85rem 0.25rem 0.3rem;
@@ -171,7 +194,7 @@ html:not(.dark) .ghome { --ghome-glow: #f6b669; }
 /* 金色渐变徽章（对标 .home-hero-announcement-badge，颜色后台可调） */
 .ghome .home-hero-announcement-badge {
   color: #1d1206; letter-spacing: 0.02em; flex: none;
-  background: linear-gradient(100deg, var(--hero-badge-from, #f6d29a), var(--hero-badge-to, #e2a056));
+  background: linear-gradient(100deg, var(--hero-badge-from, var(--gh-accent-hi)), var(--hero-badge-to, var(--gh-accent)));
   border-radius: 999px; padding: 0.2rem 0.6rem; font-size: 0.7rem; font-weight: 700;
 }
 
@@ -184,15 +207,15 @@ html:not(.dark) .ghome { --ghome-glow: #f6b669; }
 /* 标题强调句：金色渐变裁字（三色渐变，全部后台可调） */
 .ghome .home-hero-title-accent {
   background: linear-gradient(100deg,
-    var(--hero-accent-from, #f6d29a) 0%,
-    var(--hero-accent-via, #e2a056) 46%,
-    var(--hero-accent-to, #fff0d4) 100%);
+    var(--hero-accent-from, var(--gh-accent-hi)) 0%,
+    var(--hero-accent-via, var(--gh-accent)) 46%,
+    var(--hero-accent-to, var(--gh-accent-top)) 100%);
   -webkit-background-clip: text; background-clip: text; color: transparent;
   padding-bottom: 0.08em;
 }
 .ghome .home-hero .lead {
   font-size: clamp(15px, 2vw, 19px); line-height: 1.65;
-  color: var(--hero-muted, rgba(245, 241, 232, 0.66));
+  color: var(--hero-muted, var(--gh-panel-muted));
   max-width: 560px; margin: 1.25rem 0 0;
 }
 
@@ -200,16 +223,16 @@ html:not(.dark) .ghome { --ghome-glow: #f6b669; }
 .ghome .home-hero-actions { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 2rem; }
 .ghome .hero-btn-primary {
   display: inline-flex; align-items: center; gap: 0.5rem; cursor: pointer;
-  background: var(--hero-primary-btn, #d9ff43); color: var(--hero-primary-ink, #08120a);
+  background: var(--hero-primary-btn, var(--gh-lime)); color: var(--hero-primary-ink, var(--gh-lime-ink));
   font-weight: 700; font-size: 0.9375rem; font-family: var(--font-sans);
   padding: 0.8rem 1.5rem; border-radius: 999px; border: none; text-decoration: none;
-  box-shadow: 0 12px 30px -12px color-mix(in oklab, var(--hero-primary-btn, #d9ff43) 70%, transparent);
+  box-shadow: 0 12px 30px -12px color-mix(in oklab, var(--hero-primary-btn, var(--gh-lime)) 70%, transparent);
   transition: 0.2s;
 }
 .ghome .hero-btn-primary:hover { filter: brightness(1.05); transform: translateY(-1px); }
 .ghome .hero-btn-ghost {
   display: inline-flex; align-items: center; gap: 0.5rem; cursor: pointer;
-  background: rgba(255, 255, 255, 0.06); color: var(--hero-ink, #f5f1e8);
+  background: rgba(255, 255, 255, 0.06); color: var(--hero-ink, var(--gh-panel-ink));
   border: 1px solid var(--hero-line, rgba(255, 255, 255, 0.14));
   font-size: 0.875rem; font-family: var(--font-sans);
   padding: 0.8rem 1.25rem; border-radius: 999px; text-decoration: none;
@@ -228,10 +251,10 @@ html:not(.dark) .ghome { --ghome-glow: #f6b669; }
 .ghome .home-hero-meta { display: flex; flex-wrap: wrap; gap: 0.5rem 1.25rem; margin-top: 1.5rem; }
 .ghome .home-hero-meta span {
   display: inline-flex; align-items: center; gap: 0.4rem;
-  font-size: 0.8125rem; color: var(--hero-muted, rgba(245, 241, 232, 0.66));
+  font-size: 0.8125rem; color: var(--hero-muted, var(--gh-panel-muted));
 }
 .ghome .home-hero-meta i {
-  font-style: normal; color: var(--hero-accent-via, #e2a056); font-weight: 800; font-size: 0.75rem;
+  font-style: normal; color: var(--hero-accent-via, var(--gh-accent)); font-weight: 800; font-size: 0.75rem;
 }
 
 /* 右上浮动四像生成卡（对标站截图右侧磨砂浮卡 + home-bob 轻浮） */
@@ -253,13 +276,13 @@ html:not(.dark) .ghome { --ghome-glow: #f6b669; }
 .ghome .hero-card-tag {
   display: inline-flex; align-items: center; gap: 0.4rem; align-self: flex-start;
   font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.04em;
-  color: var(--hero-ink, #f5f1e8);
+  color: var(--hero-ink, var(--gh-panel-ink));
   background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 999px; padding: 0.2rem 0.6rem;
 }
-.ghome .hero-card-dot { width: 0.35rem; height: 0.35rem; border-radius: 999px; background: var(--hero-accent-via, #e2a056); }
-.ghome .hero-card-title { margin: 0; font-size: 0.9375rem; line-height: 1.4; color: var(--hero-ink, #f5f1e8); }
-.ghome .hero-card-params { display: flex; align-items: center; gap: 0.4rem; font-size: 0.75rem; color: var(--hero-muted, rgba(245, 241, 232, 0.66)); }
+.ghome .hero-card-dot { width: 0.35rem; height: 0.35rem; border-radius: 999px; background: var(--hero-accent-via, var(--gh-accent)); }
+.ghome .hero-card-title { margin: 0; font-size: 0.9375rem; line-height: 1.4; color: var(--hero-ink, var(--gh-panel-ink)); }
+.ghome .hero-card-params { display: flex; align-items: center; gap: 0.4rem; font-size: 0.75rem; color: var(--hero-muted, var(--gh-panel-muted)); }
 .ghome .hero-card-params i { font-style: normal; opacity: 0.5; }
 .ghome .hero-card-media { display: grid; grid-template-columns: 1.35fr 1fr; gap: 0.4rem; }
 .ghome .hero-card-main {
@@ -272,7 +295,7 @@ html:not(.dark) .ghome { --ghome-glow: #f6b669; }
 .ghome .hero-card-thumbs img { aspect-ratio: 4 / 3; }
 .ghome .hero-card-ph { display: block; background: linear-gradient(160deg, hsl(var(--ph-h, 120) 22% 26%), hsl(var(--ph-h, 120) 18% 14%)); }
 .ghome .hero-card-pages { display: flex; gap: 0.75rem; font-size: 0.6875rem; color: var(--hero-muted, rgba(245, 241, 232, 0.5)); font-variant-numeric: tabular-nums; }
-.ghome .hero-card-pages .on { color: var(--hero-ink, #f5f1e8); }
+.ghome .hero-card-pages .on { color: var(--hero-ink, var(--gh-panel-ink)); }
 
 /* Hero 内底部模型滚动条（对标 .home-ticker：42s 线性 + hover 暂停 + 金色菱形点 + 左右渐隐）
    布局：不通铺——居中限宽（max-width 80rem），左右留白，仅上下发丝线（对标站截图） */
@@ -298,7 +321,7 @@ html:not(.dark) .ghome { --ghome-glow: #f6b669; }
    flex:none + 右侧发丝分隔线与滚动区隔开 */
 .hero-ticker-prefix {
   display: inline-flex; align-items: center; flex: none;
-  font-size: 0.8125rem; font-weight: 700; color: var(--hero-ink, #f5f1e8); white-space: nowrap;
+  font-size: 0.8125rem; font-weight: 700; color: var(--hero-ink, var(--gh-panel-ink)); white-space: nowrap;
   padding: 0 1.1rem 0 1.35rem; border-right: 1px solid var(--hero-line, rgba(255,255,255,0.12));
 }
 .ghome .hero-ticker-item {
@@ -306,9 +329,9 @@ html:not(.dark) .ghome { --ghome-glow: #f6b669; }
   font-size: 0.9375rem; font-weight: 500; color: var(--ht-text, rgba(245, 241, 232, 0.74));
   min-height: 2.75rem; transition: color 0.2s;
 }
-.ghome .hero-ticker-item:hover { color: var(--hero-ink, #f5f1e8); }
+.ghome .hero-ticker-item:hover { color: var(--hero-ink, var(--gh-panel-ink)); }
 /* 金色菱形点（对标 li::before：0.3rem 方块 rotate 45deg） */
-.ghome .hero-ticker-dot { width: 0.3rem; height: 0.3rem; background: var(--ht-dot, #f7bf77); transform: rotate(45deg); opacity: 0.7; flex: none; }
+.ghome .hero-ticker-dot { width: 0.3rem; height: 0.3rem; background: var(--ht-dot, var(--gh-accent-soft)); transform: rotate(45deg); opacity: 0.7; flex: none; }
 
 /* ============================================================
    通用区块（section）
@@ -324,7 +347,7 @@ html:not(.dark) .ghome { --ghome-glow: #f6b669; }
   position: absolute; inset: 0 0 auto; height: 28rem;
   background: radial-gradient(
     60% 70% at 50% 0%,
-    color-mix(in oklch, var(--ghome-glow, #a56217) 14%, transparent),
+    color-mix(in oklch, var(--gh-glow) var(--gh-glow-strength), transparent),
     transparent 70%
   );
 }
@@ -342,7 +365,7 @@ html:not(.dark) .ghome { --ghome-glow: #f6b669; }
 }
 .ghome .sec-index {
   font-family: var(--font-serif); font-size: 15px; font-weight: 700;
-  color: var(--hero-gold, #f7bf77); letter-spacing: 0.02em; text-transform: none;
+  color: var(--hero-gold, var(--gh-accent-soft)); letter-spacing: 0.02em; text-transform: none;
   font-variant-numeric: tabular-nums;
 }
 
@@ -370,14 +393,14 @@ html:not(.dark) .ghome { --ghome-glow: #f6b669; }
   border-radius: 18px; padding: 16px 16px 14px;
   box-shadow:
     0 24px 70px -30px rgba(0, 0, 0, 0.6),
-    0 0 46px -18px color-mix(in oklab, var(--ghome-glow, #a56217) 30%, transparent);
+    0 0 46px -18px color-mix(in oklab, var(--ghome-glow, var(--gh-glow)) 30%, transparent);
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 .ghome .agent-composer:focus-within {
-  border-color: color-mix(in oklab, var(--ghome-glow, #a56217) 45%, transparent);
+  border-color: color-mix(in oklab, var(--ghome-glow, var(--gh-glow)) 45%, transparent);
   box-shadow:
     0 24px 70px -30px rgba(0, 0, 0, 0.6),
-    0 0 60px -16px color-mix(in oklab, var(--ghome-glow, #a56217) 45%, transparent);
+    0 0 60px -16px color-mix(in oklab, var(--ghome-glow, var(--gh-glow)) 45%, transparent);
 }
 .ghome .agent-composer > input {
   width: 100%; background: transparent; border: 0; outline: none; resize: none; display: block;
@@ -427,7 +450,7 @@ html:not(.dark) .ghome { --ghome-glow: #f6b669; }
 .ghome .agent-helper svg { flex: none; opacity: 0.7; }
 .ghome .agent-send {
   flex: none; width: 38px; height: 38px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
-  background: var(--hero-gold); color: #2a1c0a; border: none; cursor: pointer;
+  background: var(--hero-gold); color: var(--gh-accent-ink); border: none; cursor: pointer;
   box-shadow: 0 10px 24px -10px color-mix(in oklab, var(--hero-gold) 80%, transparent); transition: 0.2s;
 }
 .ghome .agent-send:hover { transform: translateY(-1px); filter: brightness(1.06); }
@@ -459,7 +482,7 @@ html:not(.dark) .ghome { --ghome-glow: #f6b669; }
 .ghome .agent-feature-ico {
   /* 裸 SVG 图标（对标站 .home-agent-feature>svg：1.25rem，金色，无包装盒） */
   flex: none; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center;
-  background: transparent; border: 0; border-radius: 0; color: var(--ghome-glow, #a56217);
+  background: transparent; border: 0; border-radius: 0; color: var(--ghome-glow, var(--gh-glow));
   margin-top: 2px;
 }
 .ghome .agent-features h3 { margin: 2px 0 6px; font-size: 16px; font-weight: 650; }
@@ -467,16 +490,16 @@ html:not(.dark) .ghome { --ghome-glow: #f6b669; }
 /* 右栏「画布 Agent」预览卡（恒暗色，与 hero 一致） */
 .ghome .agent-preview {
   position: relative; border-radius: var(--home-radius); padding: 22px; overflow: hidden;
-  background: radial-gradient(120% 90% at 85% 0%, rgba(247,191,119,.14), transparent 55%), var(--hero-screen, #030b0f);
+  background: radial-gradient(120% 90% at 85% 0%, rgba(247,191,119,.14), transparent 55%), var(--hero-screen, var(--gh-panel));
   border: 1px solid rgba(247,191,119,.22); box-shadow: var(--shadow, 0 24px 60px -28px rgba(0,0,0,.7));
 }
 .ghome .agent-preview-bubble {
   align-self: flex-start; width: fit-content; max-width: 92%; margin-bottom: 16px;
-  padding: 9px 15px; border-radius: 12px; font-size: 13.5px; line-height: 1.5; color: var(--hero-ink, #f5f1e8);
+  padding: 9px 15px; border-radius: 12px; font-size: 13.5px; line-height: 1.5; color: var(--hero-ink, var(--gh-panel-ink));
   background: rgba(245,241,232,.07); border: 1px solid rgba(245,241,232,.14);
 }
 .ghome .agent-preview-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
-.ghome .agent-preview-title { display: inline-flex; align-items: center; gap: 7px; font-weight: 700; font-size: 15px; color: var(--hero-ink, #f5f1e8); }
+.ghome .agent-preview-title { display: inline-flex; align-items: center; gap: 7px; font-weight: 700; font-size: 15px; color: var(--hero-ink, var(--gh-panel-ink)); }
 .ghome .agent-preview-title svg { color: var(--hero-gold); }
 .ghome .agent-preview-badge { font-size: 11px; font-weight: 700; letter-spacing: .02em; color: var(--hero-gold);
   background: color-mix(in oklab, var(--hero-gold) 18%, transparent); border: 1px solid color-mix(in oklab, var(--hero-gold) 40%, transparent);
@@ -488,7 +511,7 @@ html:not(.dark) .ghome { --ghome-glow: #f6b669; }
 .ghome .agent-preview-steps button {
   appearance: none; text-align: left; cursor: pointer; font-family: var(--font-sans);
   background: rgba(245,241,232,.05); border: 1px solid rgba(245,241,232,.12); border-radius: 11px;
-  padding: 10px 11px; display: flex; align-items: center; gap: 8px; color: var(--hero-ink, #f5f1e8); font-size: 12.5px; transition: 0.18s;
+  padding: 10px 11px; display: flex; align-items: center; gap: 8px; color: var(--hero-ink, var(--gh-panel-ink)); font-size: 12.5px; transition: 0.18s;
 }
 .ghome .agent-preview-steps button i { font-style: normal; font-size: 11px; font-weight: 800; color: var(--hero-gold);
   font-family: var(--font-serif); min-width: 18px; }
@@ -496,20 +519,20 @@ html:not(.dark) .ghome { --ghome-glow: #f6b669; }
 .ghome .agent-preview-actions { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
 .ghome .agent-preview-edit {
   appearance: none; cursor: pointer; font-family: var(--font-sans); font-size: 13px; font-weight: 600;
-  color: var(--hero-ink, #f5f1e8); background: transparent; border: 1px solid rgba(245,241,232,.22);
+  color: var(--hero-ink, var(--gh-panel-ink)); background: transparent; border: 1px solid rgba(245,241,232,.22);
   padding: 9px 16px; border-radius: 999px; transition: 0.18s;
 }
 .ghome .agent-preview-edit:hover { border-color: var(--hero-gold); }
 .ghome .agent-preview-run {
   display: inline-flex; align-items: center; justify-content: center; cursor: pointer; border: none; text-decoration: none;
-  font-family: var(--font-sans); font-size: 13px; font-weight: 700; color: #2a1c0a; background: var(--hero-gold);
+  font-family: var(--font-sans); font-size: 13px; font-weight: 700; color: var(--gh-accent-ink); background: var(--hero-gold);
   padding: 9px 18px; border-radius: 999px; box-shadow: 0 10px 24px -12px color-mix(in oklab, var(--hero-gold) 80%, transparent); transition: 0.2s;
 }
 .ghome .agent-preview-run:hover { filter: brightness(1.06); transform: translateY(-1px); }
 /* 亮青柠生成按钮（API CTA 区共用） */
 .ghome .gen-btn {
   flex: none; display: inline-flex; align-items: center; gap: 7px; cursor: pointer; border: none;
-  background: var(--lime-bright); color: #08120a; font-weight: 700; font-size: 14px;
+  background: var(--lime-bright); color: var(--gh-lime-ink); font-weight: 700; font-size: 14px;
   padding: 11px 22px; border-radius: 999px; text-decoration: none;
   box-shadow: 0 12px 30px -12px color-mix(in oklab, var(--lime-bright) 70%, transparent);
   transition: 0.2s;
@@ -602,7 +625,7 @@ html:not(.dark) .ghome { --ghome-glow: #f6b669; }
 }
 .ghome .code-card .cm { color: #7f8aa3; }
 .ghome .code-card .ck { color: #d6f2ac; }
-.ghome .code-card .cs { color: #f7bf77; }
+.ghome .code-card .cs { color: var(--gh-accent-soft); }
 .ghome .code-card .cp { color: #8fd0ff; }
 
 /* ============================================================
@@ -610,7 +633,7 @@ html:not(.dark) .ghome { --ghome-glow: #f6b669; }
    ============================================================ */
 .ghome .home-closing {
   position: relative; isolation: isolate; overflow: hidden;
-  background: var(--hero-screen, #030b0f); color: var(--hero-ink, #f5f1e8);
+  background: var(--hero-screen, var(--gh-panel)); color: var(--hero-ink, var(--gh-panel-ink));
   margin: 8px 8px 0; /* 顶部直角贴 CTA 上沿，底部圆角收尾 */
   border-radius: var(--home-radius);
 }
@@ -622,21 +645,21 @@ html:not(.dark) .ghome { --ghome-glow: #f6b669; }
 .ghome .home-closing-panel::after {
   content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
   background:
-    linear-gradient(180deg, var(--hero-screen, #030b0f) 0%, transparent 30%, transparent 60%, var(--hero-screen, #030b0f) 100%),
-    linear-gradient(90deg, color-mix(in oklab, var(--hero-screen, #030b0f) 78%, transparent), transparent 40%);
+    linear-gradient(180deg, var(--hero-screen, var(--gh-panel)) 0%, transparent 30%, transparent 60%, var(--hero-screen, var(--gh-panel)) 100%),
+    linear-gradient(90deg, color-mix(in oklab, var(--hero-screen, var(--gh-panel)) 78%, transparent), transparent 40%);
 }
 .ghome .home-closing-inner { position: relative; z-index: 2; max-width: 34rem; }
 .ghome .home-closing-kicker {
   display: inline-flex; align-items: center; gap: 0.5rem; margin: 0 0 12px;
   font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; font-weight: 600;
-  color: var(--hero-gold, #f7bf77);
+  color: var(--hero-gold, var(--gh-accent-soft));
 }
 .ghome .home-closing-kicker svg { width: 1rem; height: 1rem; }
 .ghome .home-closing-title {
   font-family: var(--font-serif); font-size: clamp(28px, 3.6vw, 40px);
   line-height: 1.1; margin: 0 0 12px; font-weight: 600; letter-spacing: -0.015em;
 }
-.ghome .home-closing-lede { color: color-mix(in oklab, var(--hero-ink, #f5f1e8) 78%, transparent); font-size: 15px; margin: 0 0 26px; max-width: 28rem; }
+.ghome .home-closing-lede { color: color-mix(in oklab, var(--hero-ink, var(--gh-panel-ink)) 78%, transparent); font-size: 15px; margin: 0 0 26px; max-width: 28rem; }
 .ghome .home-closing-actions { display: flex; flex-wrap: wrap; gap: 0.75rem; }
 
 /* ============================================================
@@ -658,12 +681,21 @@ html:not(.dark) .ghome { --ghome-glow: #f6b669; }
   .ghome .agent-preview-steps { grid-template-columns: repeat(2, 1fr); }
   .ghome .agent-head { grid-template-columns: 1fr; gap: 14px; align-items: start; }
   .ghome .agent-head-lead { margin: 0; }
+  .ghome .agent-head { margin-bottom: 28px; }
+  .ghome .agent-body { margin-top: 52px; }
   .ghome .home-hero { margin: 0 6px 6px; min-height: clamp(36rem, calc(100svh - 6px), 56rem); }
   .ghome .hero-card { right: 1.25rem; top: 4.5rem; width: min(17rem, 42vw); }
   .ghome .hero-card-title { font-size: 0.875rem; }
 }
 @media (max-width: 720px) {
   .ghome .section { padding: 60px 0; }
+  .ghome .agent-chips {
+    /* 窄屏：chips 不换行堆叠，改为横向滑动，避免占掉整屏高度 */
+    flex-wrap: nowrap; overflow-x: auto; justify-content: flex-start;
+    padding-bottom: 4px; scrollbar-width: none;
+  }
+  .ghome .agent-chips::-webkit-scrollbar { display: none; }
+  .ghome .agent-chip { flex: none; }
   .ghome .model-stats { gap: 36px; }
   .ghome .model-ticker { margin-top: 40px; }
   .ghome .home-hero-inner { padding: 4.5rem 1rem 4.75rem; }
@@ -677,4 +709,30 @@ html:not(.dark) .ghome { --ghome-glow: #f6b669; }
   .ghome .hero-ticker-prefix { font-size: 0.75rem; }
   .ghome .home-closing-panel { padding: 32px 20px; min-height: auto; flex-direction: column; align-items: flex-start; }
   .ghome .home-closing-art { opacity: 0.55; }
+}
+
+/* 超窄屏（≤480）：继续压缩标题与 Padding，保证不出现横向滚动 */
+@media (max-width: 480px) {
+  .ghome .container { padding-inline: 1rem; }
+  .ghome .section { padding: 48px 0; }
+  .ghome .agent-head h2 { font-size: clamp(24px, 8vw, 30px); }
+  .ghome .agent-composer { padding: 12px 12px 10px; border-radius: 14px; }
+  .ghome .agent-composer > input { font-size: 14px; min-height: 40px; }
+  .ghome .agent-composer-bar { gap: 6px; margin-top: 10px; }
+  .ghome .agent-helper { order: 3; flex-basis: 100%; min-width: 0; font-size: 12px; }
+  .ghome .agent-send { width: 34px; height: 34px; margin-left: auto; }
+  .ghome .agent-preview-actions { flex-direction: column; align-items: stretch; }
+  .ghome .agent-features li { padding: 14px 0; }
+  .ghome .home-closing-panel { padding: 24px 16px; }
+  .ghome .model-stats { gap: 24px; flex-wrap: wrap; }
+}
+
+/* 尊重系统「减少动效」偏好 */
+@media (prefers-reduced-motion: reduce) {
+  .ghome .hero-ticker-track,
+  .ghome .marquee-track,
+  .ghome .agent-attach svg {
+    animation: none !important;
+    transition: none !important;
+  }
 }
