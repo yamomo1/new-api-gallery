@@ -48,11 +48,14 @@ ADD go.mod go.sum ./
 # relaykit / tokenkit 是 go.mod 里 replace 引用的本地子模块,需先提供其 go.mod
 ADD relaykit/go.mod ./relaykit/go.mod
 ADD tokenkit/go.mod ./tokenkit/go.mod
-RUN go mod download
+# BuildKit 缓存挂载:模块缓存持久化,go mod download 命中后秒过(不重复下依赖)
+RUN --mount=type=cache,target=/go/pkg/mod go mod download
 
 COPY . .
 COPY --from=builder /build/web/dist ./web/dist
-RUN go build -pgo="$(go list -m -f '{{.Dir}}' github.com/Calcium-Ion/moejs)/default.pgo" -ldflags "-s -w -X 'github.com/QuantumNous/new-api/common.Version=$(cat VERSION)'" -o new-api
+# BuildKit 缓存挂载:Go 编译缓存持久化 → 二次起 go build 走增量(没改的包复用),
+# 改代码后 rebuild 从「从零全量编译几分钟」降到「增量 1~2 分钟」。
+RUN --mount=type=cache,target=/root/.cache/go-build go build -pgo="$(go list -m -f '{{.Dir}}' github.com/Calcium-Ion/moejs)/default.pgo" -ldflags "-s -w -X 'github.com/QuantumNous/new-api/common.Version=$(cat VERSION)'" -o new-api
 
 # ---- 阶段 3:运行时 ----
 ARG REGISTRY
