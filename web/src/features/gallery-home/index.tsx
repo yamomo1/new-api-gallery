@@ -164,6 +164,10 @@ export function GalleryHome() {
       ? null
       : (h.agent.skills.find((s) => s.key === agentSkill) ?? null)
 
+  // 输入框占位：选中某技能时显示该技能的示例文案（淡显 placeholder），否则走通用占位。
+  // 用户一旦输入，真实文字即为 var(--foreground)（变亮），placeholder 自动让位。
+  const inputPlaceholder = activeSkill?.preset || h.agent.placeholder
+
   // Hero 配色 → CSS 变量（后台改数据即改色）
   const c = h.hero.colors
   const heroVars = {
@@ -285,17 +289,18 @@ export function GalleryHome() {
 
             {/* 大输入面板：参考图 + 技能下拉 + helper + 圆形发送（对标站同款） */}
             <div className='agent-composer'>
-              <input
+              <textarea
                 value={agentQ}
                 onChange={(e) => setAgentQ(e.target.value)}
-                placeholder={h.agent.placeholder}
-                aria-label={h.agent.placeholder}
-              />
-              <div className='agent-composer-bar'>
+                placeholder={inputPlaceholder}
+                aria-label={inputPlaceholder}
+                rows={1}
+              ></textarea>
+              <div className='agent-composer-bar' ref={skillMenuRef}>
                 <button type='button' className='agent-attach' aria-label={h.agent.attachLabel} title={h.agent.attachLabel}>
                   <Paperclip size={16} />
                 </button>
-                <div className='agent-skill' ref={skillMenuRef} data-open={skillMenuOpen}>
+                <div className='agent-skill' data-open={skillMenuOpen}>
                   <button
                     type='button'
                     className='agent-auto'
@@ -318,46 +323,6 @@ export function GalleryHome() {
                     )}
                     <ChevronDown size={13} className='agent-caret' />
                   </button>
-                  {skillMenuOpen && (
-                    <div className='agent-skill-menu' role='listbox'>
-                      <span className='agent-skill-menu-title'>
-                        {h.agent.skillsMenuTitle}
-                      </span>
-                      <button
-                        type='button'
-                        role='option'
-                        aria-selected={agentSkill === 'auto'}
-                        className={agentSkill === 'auto' ? 'on' : ''}
-                        onClick={() => {
-                          setAgentSkill('auto')
-                          setSkillMenuOpen(false)
-                        }}
-                      >
-                        <Sparkles size={14} /> {h.agent.autoLabel}
-                        {agentSkill === 'auto' && <Check size={14} />}
-                      </button>
-                      {h.agent.skills.map((s) => {
-                        const Icon = ICONS[s.icon] || Sparkles
-                        const on = agentSkill === s.key
-                        return (
-                          <button
-                            type='button'
-                            key={s.key}
-                            role='option'
-                            aria-selected={on}
-                            className={on ? 'on' : ''}
-                            onClick={() => {
-                              setAgentSkill(s.key)
-                              setSkillMenuOpen(false)
-                            }}
-                          >
-                            <Icon size={14} /> {s.label}
-                            {on && <Check size={14} />}
-                          </button>
-                        )
-                      })}
-                    </div>
-                  )}
                 </div>
                 <span className='agent-helper'>
                   <ShieldCheck size={14} aria-hidden='true' /> {h.agent.helperLabel}
@@ -365,6 +330,49 @@ export function GalleryHome() {
                 <Nav className='agent-send' to='/prompt-gallery' aria-label={h.agent.sendLabel}>
                   <ArrowUp size={18} />
                 </Nav>
+                {skillMenuOpen && (
+                  <div className='agent-skill-menu' role='listbox'>
+                    <span className='agent-skill-menu-title'>
+                      {h.agent.skillsMenuTitle}
+                    </span>
+                    <button
+                      type='button'
+                      role='option'
+                      aria-selected={agentSkill === 'auto'}
+                      className={agentSkill === 'auto' ? 'on' : ''}
+                      onClick={() => {
+                        setAgentSkill('auto')
+                        setSkillMenuOpen(false)
+                      }}
+                    >
+                      <span className='agent-skill-ico'><Sparkles size={14} /></span>
+                      <span className='agent-skill-label'>{h.agent.autoLabel}</span>
+                      {agentSkill === 'auto' && <Check size={14} className='agent-skill-check' />}
+                    </button>
+                    <span className='agent-skill-divider' aria-hidden='true' />
+                    {h.agent.skills.map((s) => {
+                      const Icon = ICONS[s.icon] || Sparkles
+                      const on = agentSkill === s.key
+                      return (
+                        <button
+                          type='button'
+                          key={s.key}
+                          role='option'
+                          aria-selected={on}
+                          className={on ? 'on' : ''}
+                          onClick={() => {
+                            setAgentSkill(s.key)
+                            setSkillMenuOpen(false)
+                          }}
+                        >
+                          <span className='agent-skill-ico'><Icon size={14} /></span>
+                          <span className='agent-skill-label'>{s.label}</span>
+                          {on && <Check size={14} className='agent-skill-check' />}
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
               </div>
             </div>
 

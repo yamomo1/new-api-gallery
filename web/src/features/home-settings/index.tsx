@@ -34,6 +34,7 @@ import {
   Check,
   ChevronDown,
   Eraser,
+  Film,
   Loader2,
   Plus,
   RotateCcw,
@@ -606,6 +607,7 @@ export function HomeSettings() {
   }
 
   return (
+    <div className='h-full w-full overflow-y-auto'>
     <div className='mx-auto w-full max-w-4xl space-y-5 p-4 pb-20'>
       {/* 头部 */}
       <div className='flex flex-wrap items-start justify-between gap-3'>
@@ -766,14 +768,25 @@ export function HomeSettings() {
           </CollapsibleTrigger>
           <CollapsibleContent>
             <CardContent className='space-y-4 border-t'>
-              {/* 视频轮播 */}
-              <div className='space-y-2'>
-                <div className='flex items-center justify-between'>
-                  <Label className='text-xs'>{t('Hero video playlist')}</Label>
-                  <Badge variant='secondary'>
+              {/* 视频轮播：醒目的独立面板，一眼看到「在这里添加视频」 */}
+              <div className='space-y-3 rounded-lg border bg-muted/20 p-4'>
+                <div className='flex flex-wrap items-center justify-between gap-2'>
+                  <div className='flex items-center gap-2'>
+                    <span className='flex size-8 items-center justify-center rounded-md bg-primary/10 text-primary'>
+                      <Film className='size-4' />
+                    </span>
+                    <div className='flex flex-col'>
+                      <Label className='text-sm font-medium'>{t('Hero video playlist')}</Label>
+                      <span className='text-xs text-muted-foreground'>
+                        {t('Video source for the homepage hero background; add as many clips as you need.')}
+                      </span>
+                    </div>
+                  </div>
+                  <Badge variant='secondary' className='tabular-nums'>
                     {videos.length} {t('clips')}
                   </Badge>
                 </div>
+                <div className='space-y-2'>
                 {videos.map((v, i) => (
                   <div key={i} className='flex items-center gap-2'>
                     <Badge variant='outline' className='w-12 justify-center'>
@@ -827,6 +840,7 @@ export function HomeSettings() {
                 <p className='text-xs text-muted-foreground'>
                   {t('Use a path under the site root (for example /videos/hero-video.mp4, stored in web/public/videos/). Clips loop in order; add as many as you need.')}
                 </p>
+                </div>
               </div>
 
               {SHARED_GROUPS.map((group) => {
@@ -856,6 +870,7 @@ export function HomeSettings() {
           {t('Save')}
         </Button>
       </div>
+    </div>
     </div>
   )
 }

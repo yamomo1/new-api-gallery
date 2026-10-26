@@ -58,6 +58,7 @@ const agentSkillSchema = z.object({
   key: short(40),
   label: short(60),
   icon: short(40),
+  preset: z.string().max(240).optional(), // 选中该技能时输入框展示的示例文案（可后台覆盖）
 })
 
 const agentFeatureSchema = z.object({

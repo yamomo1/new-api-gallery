@@ -2,16 +2,8 @@
  * GalleryHome 首页样式（移植自 gallery-frontend，作用域 .ghome 防污染）
  * 颜色变量：缺失的补在 .ghome 根类；同名的（--background 等）继承 New API 主题 → 换肤联动
  */
-@font-face {
-  font-family: "Public Sans";
-  src: url("./fonts/PublicSans-var.woff2") format("woff2");
-  font-weight: 400 800; font-style: normal; font-display: swap;
-}
-@font-face {
-  font-family: "Lora";
-  src: url("./fonts/Lora-var.woff2") format("woff2");
-  font-weight: 500 700; font-style: normal; font-display: swap;
-}
+/* 字体策略：全站主用系统黑体，不加载商业/网页字体（Public Sans、Lora 已停用）。
+   下方两个 token 直接走系统字体栈（黑体）；旧 woff2 文件保留但不 @font-face 引入。 */
 
 .ghome {
   /* ============================================================
@@ -33,6 +25,14 @@
   --gh-glow: #f6b669; /* 区块顶部辉光（浅色下用亮金） */
   --gh-glow-strength: 14%; /* 辉光透明度（对标站原值） */
 
+  /* Agent 预览卡（右栏）主题令牌：浅色=浅色卡、深色=电影感深卡（跟随主题切换） */
+  --agent-panel-bg: #fbfaf7;
+  --agent-panel-ink: #1a1a1f;
+  --agent-panel-muted: #6a6f76;
+  --agent-panel-line: rgba(0, 0, 0, 0.12);
+  --agent-panel-soft: rgba(0, 0, 0, 0.05);
+  --agent-panel-glow: rgba(226, 160, 86, 0.16);
+
   /* 补齐 gallery-frontend 有而 New API 无的变量 */
   --muted: var(--muted-foreground, #6a6f76);
   --border: var(--border, #e3e0da);
@@ -51,8 +51,10 @@
   --home-radius: clamp(1.1rem, 2vw, 1.75rem);
   --maxw: 1200px;
   --maxw-wide: 1280px;
-  --font-sans: "Public Sans", system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
-  --font-serif: "Lora", Georgia, "PingFang SC", "Microsoft YaHei", sans-serif;
+  /* 全站系统黑体栈：不加载商业/网页字体，中文走苹方/微软雅黑，英文走 system-ui */
+  --font-sans: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "微软雅黑", system-ui, "Segoe UI", Roboto, sans-serif;
+  /* 标题原用 Lora（网页衬线），现改系统黑体加粗，仍保持与正文的字重层级 */
+  --font-serif: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "微软雅黑", system-ui, "Segoe UI", Roboto, sans-serif;
   font-family: var(--font-sans);
   background: var(--gh-page); /* 页面底色（对标站 --background） */
   color: var(--foreground);
@@ -65,6 +67,13 @@ html.dark .ghome {
   --gh-page: #050507; /* 对标站深色 --background */
   --gh-glow: #a56217; /* 对标站 --home-gold（深色模式） */
   --gh-glow-strength: 14%;
+  /* Agent 预览卡（深色）：恒深电影感面板 */
+  --agent-panel-bg: #030b0f;
+  --agent-panel-ink: #f5f1e8;
+  --agent-panel-muted: rgba(245, 241, 232, 0.66);
+  --agent-panel-line: rgba(255, 255, 255, 0.14);
+  --agent-panel-soft: rgba(245, 241, 232, 0.06);
+  --agent-panel-glow: rgba(247, 191, 119, 0.14);
 }
 html:not(.dark) .ghome {
   --gh-glow: #f6b669;
@@ -375,7 +384,7 @@ html:not(.dark) .ghome {
 /* 非对称头部：大标题两行居左（第二行灰）+ lead 右侧窄列（对标站比例） */
 .ghome .agent-head {
   display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, 380px);
-  gap: 20px 56px; align-items: end; margin-bottom: 40px;
+  gap: 20px 56px; align-items: end; margin-bottom: 30px;
 }
 .ghome .agent-head h2 {
   text-align: left; margin: 12px 0 0;
@@ -387,10 +396,11 @@ html:not(.dark) .ghome {
 
 /* 大输入面板（对标：顶部一行输入 + 底部工具条 参考图/自动/helper/圆形发送） */
 .ghome .agent-composer {
+  position: relative;
   max-width: 720px; margin: 0 auto;
   background: var(--card);
   border: 1px solid color-mix(in oklab, var(--foreground) 14%, transparent);
-  border-radius: 18px; padding: 16px 16px 14px;
+  border-radius: 18px; padding: 7px 16px 14px;
   box-shadow:
     0 24px 70px -30px rgba(0, 0, 0, 0.6),
     0 0 46px -18px color-mix(in oklab, var(--ghome-glow, var(--gh-glow)) 30%, transparent);
@@ -402,14 +412,18 @@ html:not(.dark) .ghome {
     0 24px 70px -30px rgba(0, 0, 0, 0.6),
     0 0 60px -16px color-mix(in oklab, var(--ghome-glow, var(--gh-glow)) 45%, transparent);
 }
-.ghome .agent-composer > input {
+.ghome .agent-composer > textarea {
   width: 100%; background: transparent; border: 0; outline: none; resize: none; display: block;
-  color: var(--foreground); font-size: 15px; line-height: 1.6; font-family: var(--font-sans);
-  min-height: 48px;
+  color: var(--foreground); font-size: 15px; line-height: 1.6; font-family: var(--font-sans); font-weight: 500;
+  min-height: 100px;
+  /* 首行文字到面板顶缘距离 ≈ 容器上 padding(7px) + 此 padding-top；想让文字离顶更近就调小、更远就调大。当前 13px ≈ 20px 视觉留白 */
+  padding: 13px 0 0;
 }
-.ghome .agent-composer > input::placeholder { color: var(--muted); }
+/* 未输入时预设/占位文字淡显，输入后真实文字为 var(--foreground)（自动变亮） */
+.ghome .agent-composer > textarea::placeholder { color: color-mix(in oklab, var(--muted) 62%, transparent); }
 .ghome .agent-composer-bar {
   display: flex; align-items: center; gap: 10px; margin-top: 12px; flex-wrap: wrap;
+  position: relative; /* 下拉菜单左缘对齐工具栏左缘（纸回针） */
 }
 .ghome .agent-attach, .ghome .agent-auto {
   display: inline-flex; align-items: center; gap: 6px; flex: none; cursor: pointer;
@@ -429,23 +443,67 @@ html:not(.dark) .ghome {
 .ghome .agent-auto .agent-caret { transition: transform 0.18s; opacity: 0.7; }
 .ghome .agent-skill[data-open='true'] .agent-caret { transform: rotate(180deg); }
 .ghome .agent-skill-menu {
-  position: absolute; z-index: 30; top: calc(100% + 8px); left: 0; min-width: 220px;
-  background: var(--card); border: 1px solid var(--border); border-radius: 14px;
-  box-shadow: var(--shadow, 0 24px 60px -24px rgba(0,0,0,.55)); padding: 8px;
+  position: absolute; z-index: 30; top: calc(100% + 12px); left: 0; min-width: 264px;
+  /* 比 composer 更深的悬浮暗面：上亮下暗的纵向渐变 + 向近黑收敛，暗色下更深邃、亮色下仍协调 */
+  background:
+    linear-gradient(180deg, color-mix(in oklab, var(--card) 46%, var(--background)), color-mix(in oklab, var(--card) 30%, var(--background)));
+  border: 1px solid color-mix(in oklab, var(--foreground) 13%, transparent);
+  border-radius: 18px;
+  box-shadow:
+    0 1px 0 0 color-mix(in oklab, var(--foreground) 6%, transparent) inset,
+    0 32px 84px -26px rgba(0, 0, 0, 0.78),
+    0 0 0 1px color-mix(in oklab, var(--background) 65%, transparent);
+  padding: 8px 10px 10px;
   display: flex; flex-direction: column; gap: 2px;
+  animation: gskill-in 0.18s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+@keyframes gskill-in {
+  from { opacity: 0; transform: translateY(-6px) scale(0.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 .ghome .agent-skill-menu-title {
-  font-size: 11.5px; color: var(--muted); padding: 6px 10px 4px; letter-spacing: 0.02em;
+  font-size: 10px; color: color-mix(in oklab, var(--muted) 62%, var(--foreground)); padding: 7px 13px 9px; letter-spacing: 0.15em;
+  font-weight: 700; text-transform: uppercase;
 }
 .ghome .agent-skill-menu button {
   appearance: none; border: 0; background: transparent; cursor: pointer; text-align: left;
-  display: flex; align-items: center; gap: 9px; font-family: var(--font-sans);
-  font-size: 13.5px; color: var(--foreground); padding: 9px 10px; border-radius: 9px; transition: 0.15s;
+  display: flex; align-items: center; gap: 10px; font-family: var(--font-sans);
+  font-size: 13.5px; color: color-mix(in oklab, var(--foreground) 84%, transparent);
+  padding: 10px 13px; border-radius: 11px; transition: background 0.16s, color 0.16s; position: relative;
 }
-.ghome .agent-skill-menu button:hover { background: var(--card-2); }
-.ghome .agent-skill-menu button.on { color: var(--hero-gold); font-weight: 600; }
-.ghome .agent-skill-menu button svg { flex: none; opacity: 0.85; }
-.ghome .agent-skill-menu button svg:last-child { margin-left: auto; color: var(--hero-gold); }
+/* 图标列：固定宽度让每行图标+文字真正左对齐（不因选中/未选中而漂移） */
+.ghome .agent-skill-ico { flex: none; width: 18px; display: flex; align-items: center; justify-content: center; }
+.ghome .agent-skill-ico svg { opacity: 0.76; color: color-mix(in oklab, var(--muted) 80%, var(--foreground)); transition: color 0.16s, opacity 0.16s; }
+/* 文字区占满剩余宽度，把右侧勾选推到最右 */
+.ghome .agent-skill-label { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ghome .agent-skill-check { flex: none; color: var(--hero-gold); }
+/* 「自动（推荐）」与技能列表之间的分隔线：独立元素，中央提亮、两端淡出的渐变高光线。
+   不挂在任何 button 上，因此选择「多页」时它不会被一并选中/高亮。 */
+.ghome .agent-skill-divider {
+  position: relative; height: 1px; margin: 8px 13px 10px; flex: none;
+  background: linear-gradient(90deg, transparent,
+    color-mix(in oklab, var(--foreground) 18%, transparent) 16%,
+    color-mix(in oklab, var(--hero-gold, var(--gh-glow)) 52%, transparent) 50%,
+    color-mix(in oklab, var(--foreground) 18%, transparent) 84%,
+    transparent);
+}
+.ghome .agent-skill-menu button:hover {
+  background: color-mix(in oklab, var(--foreground) 7%, transparent);
+  color: var(--foreground);
+}
+.ghome .agent-skill-menu button:hover .agent-skill-ico svg { opacity: 1; }
+.ghome .agent-skill-menu button.on {
+  color: var(--hero-gold); font-weight: 600;
+  background: color-mix(in oklab, var(--hero-gold) 12%, transparent);
+}
+.ghome .agent-skill-menu button.on .agent-skill-ico svg { opacity: 1; color: var(--hero-gold); }
+.ghome .agent-skill-menu button.on .agent-skill-label { color: var(--hero-gold); }
+/* 选中项左侧金色竖条：贴在按钮左缘内侧，与内容对齐 */
+.ghome .agent-skill-menu button.on::before {
+  content: ''; position: absolute; left: 3px; top: 50%; transform: translateY(-50%);
+  width: 3px; height: 18px; border-radius: 3px;
+  background: linear-gradient(180deg, var(--gh-accent-hi, #f6d29a), var(--hero-gold));
+}
 .ghome .agent-helper { flex: 1; min-width: 120px; color: var(--muted); font-size: 12.5px; display: flex; align-items: center; gap: 6px; }
 .ghome .agent-helper svg { flex: none; opacity: 0.7; }
 .ghome .agent-send {
@@ -471,14 +529,37 @@ html:not(.dark) .ghome {
   color: var(--hero-gold); font-weight: 600;
 }
 .ghome .agent-chip.on svg { opacity: 1; }
-/* 两栏：左特性列表（收窄，对标约 4:5）+ 右预览卡 */
+/* 两栏：左特性列表（收窄，对标约 4:5）+ 右预览卡（相对左栏上下居中） */
 .ghome .agent-body {
   display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 5fr); gap: 40px;
-  align-items: start; margin-top: 76px;
+  align-items: center; margin-top: 76px;
 }
-.ghome .agent-features { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
-.ghome .agent-features li { display: flex; gap: 14px; padding: 18px 0; border-top: 1px solid color-mix(in oklab, var(--border) 55%, transparent); }
+.ghome .agent-features {
+  list-style: none; margin: 0; padding: 22px 0; display: flex; flex-direction: column;
+  position: relative;
+}
+/* 顶部线：与 li 中线一致的「两端淡出、中央提亮」，用 ::before 叠在 li 中线之上 */
+.ghome .agent-features::before,
+.ghome .agent-features::after {
+  content: ''; position: absolute; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, color-mix(in oklab, var(--foreground) 32%, transparent) 20%, color-mix(in oklab, var(--foreground) 58%, transparent) 50%, color-mix(in oklab, var(--foreground) 32%, transparent) 80%, transparent);
+}
+.ghome .agent-features::before { top: 0; }
+.ghome .agent-features::after { bottom: 0; }
+.ghome .agent-features li {
+  display: flex; gap: 16px; padding: 22px 0;
+  border-top: 1px solid color-mix(in oklab, var(--foreground) 24%, transparent);
+  position: relative;
+}
+/* 中央高光分隔线：两侧淡出、中间提亮，比纯 border 更精致醒目 */
+.ghome .agent-features li::before {
+  content: ''; position: absolute; top: -1px; left: 50%; transform: translateX(-50%);
+  width: 96px; height: 1px;
+  background: linear-gradient(90deg, transparent, color-mix(in oklab, var(--foreground) 55%, transparent), transparent);
+}
 .ghome .agent-features li:first-child { border-top: 0; padding-top: 0; }
+.ghome .agent-features li:first-child::before { display: none; }
+.ghome .agent-features li:last-child { padding-bottom: 0; }
 .ghome .agent-feature-ico {
   /* 裸 SVG 图标（对标站 .home-agent-feature>svg：1.25rem，金色，无包装盒） */
   flex: none; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center;
@@ -487,31 +568,34 @@ html:not(.dark) .ghome {
 }
 .ghome .agent-features h3 { margin: 2px 0 6px; font-size: 16px; font-weight: 650; }
 .ghome .agent-features p { margin: 0; color: var(--muted); font-size: 13.5px; line-height: 1.65; }
-/* 右栏「画布 Agent」预览卡（恒暗色，与 hero 一致） */
+/* 右栏「画布 Agent」预览卡（主题自适应：浅色模式浅卡 / 深色模式电影感深卡，走 --agent-panel-* 令牌） */
 .ghome .agent-preview {
-  position: relative; border-radius: var(--home-radius); padding: 22px; overflow: hidden;
-  background: radial-gradient(120% 90% at 85% 0%, rgba(247,191,119,.14), transparent 55%), var(--hero-screen, var(--gh-panel));
-  border: 1px solid rgba(247,191,119,.22); box-shadow: var(--shadow, 0 24px 60px -28px rgba(0,0,0,.7));
+  position: relative; border-radius: var(--home-radius); padding: 20px; overflow: hidden;
+  min-height: 330px;
+  background: radial-gradient(120% 90% at 85% 0%, var(--agent-panel-glow), transparent 55%), var(--agent-panel-bg);
+  border: 1px solid color-mix(in oklab, var(--hero-gold) 24%, transparent);
+  box-shadow: 0 28px 72px -34px rgba(0, 0, 0, 0.4);
 }
+.ghome .agent-preview > .agent-preview-bubble { margin-bottom: 14px; }
 .ghome .agent-preview-bubble {
-  align-self: flex-start; width: fit-content; max-width: 92%; margin-bottom: 16px;
-  padding: 9px 15px; border-radius: 12px; font-size: 13.5px; line-height: 1.5; color: var(--hero-ink, var(--gh-panel-ink));
-  background: rgba(245,241,232,.07); border: 1px solid rgba(245,241,232,.14);
+  align-self: flex-start; width: fit-content; max-width: 92%;
+  padding: 8px 14px; border-radius: 12px; font-size: 13px; line-height: 1.5; color: var(--agent-panel-ink);
+  background: var(--agent-panel-soft); border: 1px solid var(--agent-panel-line);
 }
-.ghome .agent-preview-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
-.ghome .agent-preview-title { display: inline-flex; align-items: center; gap: 7px; font-weight: 700; font-size: 15px; color: var(--hero-ink, var(--gh-panel-ink)); }
+.ghome .agent-preview-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 11px; }
+.ghome .agent-preview-title { display: inline-flex; align-items: center; gap: 7px; font-weight: 700; font-size: 15px; color: var(--agent-panel-ink); }
 .ghome .agent-preview-title svg { color: var(--hero-gold); }
 .ghome .agent-preview-badge { font-size: 11px; font-weight: 700; letter-spacing: .02em; color: var(--hero-gold);
   background: color-mix(in oklab, var(--hero-gold) 18%, transparent); border: 1px solid color-mix(in oklab, var(--hero-gold) 40%, transparent);
   padding: 4px 9px; border-radius: 999px; white-space: nowrap; }
-.ghome .agent-preview-plan { list-style: none; margin: 0 0 18px; padding: 0; display: flex; flex-direction: column; gap: 10px; }
-.ghome .agent-preview-plan li { display: flex; align-items: center; gap: 9px; font-size: 13.5px; color: rgba(245,241,232,.82); line-height: 1.45; }
+.ghome .agent-preview-plan { list-style: none; margin: 0 0 14px; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.ghome .agent-preview-plan li { display: flex; align-items: center; gap: 9px; font-size: 13px; color: var(--agent-panel-muted); line-height: 1.4; }
 .ghome .agent-preview-plan li svg { flex: none; color: var(--hero-gold); }
-.ghome .agent-preview-steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 18px; }
+.ghome .agent-preview-steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 14px; }
 .ghome .agent-preview-steps button {
   appearance: none; text-align: left; cursor: pointer; font-family: var(--font-sans);
-  background: rgba(245,241,232,.05); border: 1px solid rgba(245,241,232,.12); border-radius: 11px;
-  padding: 10px 11px; display: flex; align-items: center; gap: 8px; color: var(--hero-ink, var(--gh-panel-ink)); font-size: 12.5px; transition: 0.18s;
+  background: var(--agent-panel-soft); border: 1px solid var(--agent-panel-line); border-radius: 11px;
+  padding: 10px 11px; display: flex; align-items: center; gap: 8px; color: var(--agent-panel-ink); font-size: 12.5px; transition: 0.18s;
 }
 .ghome .agent-preview-steps button i { font-style: normal; font-size: 11px; font-weight: 800; color: var(--hero-gold);
   font-family: var(--font-serif); min-width: 18px; }
@@ -519,7 +603,7 @@ html:not(.dark) .ghome {
 .ghome .agent-preview-actions { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
 .ghome .agent-preview-edit {
   appearance: none; cursor: pointer; font-family: var(--font-sans); font-size: 13px; font-weight: 600;
-  color: var(--hero-ink, var(--gh-panel-ink)); background: transparent; border: 1px solid rgba(245,241,232,.22);
+  color: var(--agent-panel-ink); background: transparent; border: 1px solid var(--agent-panel-line);
   padding: 9px 16px; border-radius: 999px; transition: 0.18s;
 }
 .ghome .agent-preview-edit:hover { border-color: var(--hero-gold); }
@@ -717,7 +801,7 @@ html:not(.dark) .ghome {
   .ghome .section { padding: 48px 0; }
   .ghome .agent-head h2 { font-size: clamp(24px, 8vw, 30px); }
   .ghome .agent-composer { padding: 12px 12px 10px; border-radius: 14px; }
-  .ghome .agent-composer > input { font-size: 14px; min-height: 40px; }
+  .ghome .agent-composer > textarea { font-size: 14px; min-height: 90px; padding: 8px 0 0; }
   .ghome .agent-composer-bar { gap: 6px; margin-top: 10px; }
   .ghome .agent-helper { order: 3; flex-basis: 100%; min-width: 0; font-size: 12px; }
   .ghome .agent-send { width: 34px; height: 34px; margin-left: auto; }

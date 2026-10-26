@@ -207,12 +207,12 @@ export const HOME_DATA = {
     sendLabel: 'Send',
     // Skills shared by the dropdown and the chips below (matched by key)
     skills: [
-      { key: 'book', label: 'Picture book', icon: 'BookOpen' },
-      { key: 'comic', label: 'Comic panels', icon: 'LayoutGrid' },
-      { key: 'character', label: 'Character sheet', icon: 'User' },
-      { key: 'poster', label: 'Poster series', icon: 'Images' },
-      { key: 'storyboard', label: 'Storyboard', icon: 'Film' },
-      { key: 'video', label: 'Multi-shot video', icon: 'Video' },
+      { key: 'book', label: 'Picture book', icon: 'BookOpen', preset: 'A six-page watercolor picture book about a little fox learning to share, soft warm palette' },
+      { key: 'comic', label: 'Comic panels', icon: 'LayoutGrid', preset: 'A four-panel comic about a robot and a stray cat becoming friends, clean line art, expressive faces' },
+      { key: 'character', label: 'Character sheet', icon: 'User', preset: 'A hero character sheet: front, side and back views, with a full body and three expression close-ups' },
+      { key: 'poster', label: 'Poster series', icon: 'Images', preset: 'Three summer coffee promo posters in a fresh blue-white style, bold typography, clean layout' },
+      { key: 'storyboard', label: 'Storyboard', icon: 'Film', preset: 'A six-shot storyboard: a girl finds a lost kitten in the rain and brings it home, warm cinematic light' },
+      { key: 'video', label: 'Multi-shot video', icon: 'Video', preset: 'An astronaut cat exploring a misty night city, three shots of five seconds each, cinematic feel' },
     ],
     // Left column: feature list (icon + title + description)
     features: [
