@@ -57,7 +57,12 @@ RUN go build -pgo="$(go list -m -f '{{.Dir}}' github.com/Calcium-Ion/moejs)/defa
 # ---- 阶段 3:运行时 ----
 ARG REGISTRY
 FROM ${REGISTRY}/debian:bookworm-slim
-RUN apt-get update \
+# apt 也走国内源(bookworm 用 deb822 格式的 debian.sources;两个文件都尝试替换,缺失则忽略)
+RUN set -eux; \
+    for f in /etc/apt/sources.list /etc/apt/sources.list.d/debian.sources; do \
+        [ -f "$f" ] && sed -i -e 's|https\?://deb.debian.org|https://mirrors.aliyun.com|g' "$f" || true; \
+    done; \
+    apt-get update \
     && apt-get install -y --no-install-recommends ca-certificates tzdata libasan8 wget \
     && rm -rf /var/lib/apt/lists/* \
     && update-ca-certificates
