@@ -223,6 +223,15 @@ func GetHomePageContent(c *gin.Context) {
 	serveRevalidatedJSON(c, homePageContent)
 }
 
+// GetHomeConfig 返回画廊首页的自定义配置（JSON 字符串，后台「二开设置 → 首页设置」维护）。
+// 未配置时返回空串，前端以内置默认数据渲染。
+func GetHomeConfig(c *gin.Context) {
+	common.OptionMapRWMutex.RLock()
+	homeConfig := common.OptionMap["HomeConfig"]
+	common.OptionMapRWMutex.RUnlock()
+	serveRevalidatedJSON(c, homeConfig)
+}
+
 func SendEmailVerification(c *gin.Context) {
 	email, err := service.ValidateAccountEmail(c.Query("email"))
 	if err != nil {
