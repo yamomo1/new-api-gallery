@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/QuantumNous/new-api/common"
 	"github.com/QuantumNous/new-api/constant"
@@ -47,6 +48,12 @@ func GetStatus(c *gin.Context) {
 
 	legalSetting := system_setting.GetLegalSettings()
 
+	// 站点默认主题（后台「站点设置 → 主题外观」可配；空值回退 default）
+	themePreset := common.OptionMap["ThemePreset"]
+	if strings.TrimSpace(themePreset) == "" {
+		themePreset = "default"
+	}
+
 	data := gin.H{
 		"version":                     common.Version,
 		"start_time":                  common.StartTime,
@@ -61,7 +68,7 @@ func GetStatus(c *gin.Context) {
 		"telegram_oauth":              common.TelegramOAuthEnabled,
 		"telegram_oauth_configured":   oauth.TelegramConfigurationError() == nil,
 		"telegram_bot_name":           common.TelegramBotName,
-		"theme":                       "default",
+		"theme":                       themePreset,
 		"system_name":                 common.SystemName,
 		"logo":                        common.Logo,
 		"footer_html":                 common.Footer,

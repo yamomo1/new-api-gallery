@@ -43,6 +43,19 @@ func SetApiRouter(router *gin.Engine) {
 			perfMetricsRoute.GET("", controller.GetPerfMetrics)
 		}
 		apiRouter.GET("/rankings", middleware.HeaderNavModuleAuth("rankings"), controller.GetRankings)
+		// Prompt Gallery（二开新增：公开画廊 + 我的作品 + 管理员审核）
+		promptGalleryRoute := apiRouter.Group("/prompt-gallery/v1")
+		{
+			promptGalleryRoute.GET("/prompts", controller.GetPromptGalleryList)
+			promptGalleryRoute.GET("/prompts/:id", controller.GetPromptGalleryDetail)
+			promptGalleryRoute.GET("/facets", controller.GetPromptGalleryFacets)
+			promptGalleryRoute.GET("/mine", middleware.UserAuth(), controller.GetMyPromptGalleries)
+			promptGalleryRoute.POST("/mine", middleware.UserAuth(), controller.CreateMyPromptGallery)
+			promptGalleryRoute.PUT("/mine/:id", middleware.UserAuth(), controller.UpdateMyPromptGallery)
+			promptGalleryRoute.DELETE("/mine/:id", middleware.UserAuth(), controller.DeleteMyPromptGallery)
+			promptGalleryRoute.GET("/admin/prompts", middleware.AdminAuth(), controller.AdminListPromptGalleries)
+			promptGalleryRoute.POST("/admin/prompts/:id/status", middleware.AdminAuth(), controller.AdminSetPromptGalleryStatus)
+		}
 		apiRouter.GET("/verification", middleware.EmailVerificationRateLimit(), middleware.TurnstileCheck(), controller.SendEmailVerification)
 		apiRouter.GET("/reset_password", middleware.CriticalRateLimit(), middleware.TurnstileCheck(), controller.SendPasswordResetEmail)
 		apiRouter.POST("/user/reset", middleware.CriticalRateLimit(), anonymousRequestBodyLimit, controller.ResetPassword)
