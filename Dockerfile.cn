@@ -57,14 +57,14 @@ RUN go build -pgo="$(go list -m -f '{{.Dir}}' github.com/Calcium-Ion/moejs)/defa
 # ---- 阶段 3:运行时 ----
 ARG REGISTRY
 FROM ${REGISTRY}/debian:bookworm-slim
-# apt 走国内源:直接覆盖 sources 配置(bookworm-slim 默认用 deb822 的 debian.sources,
-# 且可能没有经典 sources.list)。删除官方源文件,统一写入阿里云 aliyun 源,再 update。
-# 不用 sed 正则替换(Docker 多层转义会把 \? 弄坏,导致匹配失败 → apt exit 100)。
+# apt 走国内源:直接覆盖 sources 配置(bookworm-slim 默认用 deb822 的 debian.sources)。
+# 关键:必须用 http://(官方 debian 源即 http)。用 https:// 时,slim 镜像里
+# ca-certificates 尚未生效,apt 对 https 源 TLS 校验不过 → apt-get update exit 100。
+# 组件只留 main(ca-certificates/tzdata/libasan8/wget 全在 main),降低 404 风险。
 RUN set -eux; \
     rm -f /etc/apt/sources.list.d/debian.sources /etc/apt/sources.list.d/*.list 2>/dev/null || true; \
     printf '%s\n' \
-        'deb https://mirrors.aliyun.com/debian/ bookworm main' \
-        'deb https://mirrors.aliyun.com/debian/ bookworm-updates main' \
+        'deb http://mirrors.aliyun.com/debian/ bookworm main' \
         > /etc/apt/sources.list; \
     apt-get update \
     && apt-get install -y --no-install-recommends ca-certificates tzdata libasan8 wget \
