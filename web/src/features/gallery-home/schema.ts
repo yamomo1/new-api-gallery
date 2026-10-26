@@ -29,6 +29,8 @@ For commercial licensing, please contact support@quantumnous.com
 
 import { z } from 'zod'
 
+import { HOME_FALLBACK_LOCALE } from './locales'
+
 /** 首屏视频轮播：任意段数，按顺序循环播放 */
 export const heroVideoSchema = z.object({
   enabled: z.boolean().optional(),
@@ -214,4 +216,82 @@ export function parseHomeConfig(raw: unknown): HomeConfig | null {
     return null
   }
   return result.data
+}
+
+/* ------------------------------------------------------------------
+ * v2：按语种分桶
+ * ------------------------------------------------------------------
+ * v1 的配置是「一份覆盖打全站」——后台用哪个界面语言改，写进去的就是
+ * 哪种语言的字符串，前台切到别的语种也显示它（改过的字段被锁死）。
+ *
+ * v2 结构：
+ *   { version: 2,
+ *     locales: { en: {...}, zhCN: {...}, ... },  // 文案，按语种各存一份
+ *     shared:  { motion: {...}, hero: { primaryUrl } } }  // 视频/链接/开关，跨语种共用
+ *
+ * 合并顺序（见 api.ts）：内置默认 → locales.en → locales[当前语种] → shared
+ * - shared 放最后：它是「所有语种都用同一份」的资源，优先级最高
+ * - locales.en 兜底：某语种没填时先用英文，而不是直接掉回内置默认
+ */
+
+export const homeConfigV2Schema = z
+  .object({
+    version: z.literal(2).optional(),
+    locales: z.record(z.string(), homeConfigSchema).optional(),
+    shared: homeConfigSchema.optional(),
+  })
+  .passthrough()
+
+export type HomeConfigV2 = z.infer<typeof homeConfigV2Schema>
+
+/**
+ * 把任意历史格式归一化成 v2。
+ * - 已是 v2 → 校验后直接返回
+ * - v1 / 未知结构 → 整份覆盖搬进 locales[en]（保留旧行为，不丢数据），
+ *   motion 搬到 shared（视频列表本就跨语种）
+ * 坏数据不抛错：返回空 v2，前台走内置默认值。
+ */
+export function normalizeHomeConfig(raw: unknown): HomeConfigV2 {
+  const empty: HomeConfigV2 = { version: 2, locales: {}, shared: {} }
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return empty
+
+  const input = raw as Record<string, unknown>
+  const looksV2 =
+    input.version === 2 || !!input.locales || !!input.shared
+
+  if (looksV2) {
+    const parsed = homeConfigV2Schema.safeParse(input)
+    if (!parsed.success) {
+      warnInvalid(parsed.error.issues)
+      return empty
+    }
+    return parsed.data
+  }
+
+  const { motion, ...rest } = input
+  const locales: Record<string, HomeConfig> = {}
+  const parsedRest = homeConfigSchema.safeParse(rest)
+  if (!parsedRest.success) {
+    warnInvalid(parsedRest.error.issues)
+  } else if (Object.keys(rest).length > 0) {
+    locales[HOME_FALLBACK_LOCALE] = parsedRest.data
+  }
+
+  const shared: HomeConfig = {}
+  if (motion !== undefined) {
+    const parsedMotion = motionSchema.safeParse(motion)
+    if (parsedMotion.success) {
+      shared.motion = parsedMotion.data
+    } else {
+      warnInvalid(parsedMotion.error.issues)
+    }
+  }
+
+  return { version: 2, locales, shared }
+}
+
+function warnInvalid(issues: unknown) {
+  if (import.meta.env?.DEV) {
+    console.warn('[gallery-home] home_config 校验失败，已忽略异常分支', issues)
+  }
 }

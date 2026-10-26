@@ -31,7 +31,8 @@ For commercial licensing, please contact support@quantumnous.com
  * - RAW_KEYS 里的字段是路径/色值/品牌名/图标名，不参与翻译
  */
 
-import type { HomeConfig } from './schema'
+import { HOME_FALLBACK_LOCALE } from './locales'
+import type { HomeConfig, HomeConfigV2 } from './schema'
 
 export type Translate = (key: string) => string
 
@@ -514,4 +515,33 @@ export function mergeHomeConfig<T>(base: T, override: unknown): T {
     }
   }
   return out as T
+}
+
+type MotionOverride = NonNullable<HomeConfigV2['shared']>['motion']
+
+/**
+ * 按语种挑出要叠加的覆盖层（v2 结构）。
+ *
+ * 文案顺序：locales[en] → locales[lang] → shared
+ * - 先铺英文兜底，再用当前语种覆盖它
+ * - shared 放最后：视频、链接这类跨语种资源应当盖过任何语种的文案覆盖
+ * - 语言缺失/无法识别时只铺英文，等同「回退到英文」
+ *
+ * motion 单独合并（locales 里只会出现 heroTicker.prefix 这类文案），
+ * 交给 buildMotionData 处理视频段数。
+ */
+export function resolveHomeOverride(
+  cfg: HomeConfigV2,
+  lang: string,
+): { layers: unknown[]; motion: MotionOverride } {
+  const en = cfg.locales?.[HOME_FALLBACK_LOCALE]
+  const locale = lang === HOME_FALLBACK_LOCALE ? undefined : cfg.locales?.[lang]
+  const shared = cfg.shared
+
+  let motion: MotionOverride = {}
+  if (en?.motion) motion = mergeHomeConfig(motion, en.motion)
+  if (locale?.motion) motion = mergeHomeConfig(motion, locale.motion)
+  if (shared?.motion) motion = mergeHomeConfig(motion, shared.motion)
+
+  return { layers: [en, locale, shared].filter(Boolean), motion }
 }

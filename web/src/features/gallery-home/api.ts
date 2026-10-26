@@ -28,21 +28,33 @@ import { useQuery } from '@tanstack/react-query'
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { buildHomeData, buildMotionData, mergeHomeConfig } from './data'
-import { parseHomeConfig, type HomeConfig } from './schema'
+import {
+  buildHomeData,
+  buildMotionData,
+  mergeHomeConfig,
+  resolveHomeOverride,
+} from './data'
+import { normalizeHomeLocale } from './locales'
+import { normalizeHomeConfig, type HomeConfigV2 } from './schema'
 import type { HomeContent, MotionContent } from './types'
 
 const HOME_CONFIG_KEY = ['gallery-home', 'home-config'] as const
 
 /** 后台返回的 {success, data:"<json>"} 中提取原始对象；空/坏数据返回 null */
-async function fetchRawHomeConfig(): Promise<HomeConfig | null> {
+async function fetchRawHomeConfig(): Promise<HomeConfigV2 | null> {
   const res = await fetch('/api/home_config', { headers: { Accept: 'application/json' } })
   if (!res.ok) return null
   const body = (await res.json()) as { success?: boolean; data?: unknown }
   const raw = body?.data
   if (typeof raw !== 'string' || raw.trim() === '' || raw === 'null') return null
-  return parseHomeConfig(JSON.parse(raw))
+  try {
+    return normalizeHomeConfig(JSON.parse(raw))
+  } catch {
+    return null
+  }
 }
+
+type MotionOverride = NonNullable<HomeConfigV2['shared']>['motion']
 
 export type GalleryHomeContent = {
   home: HomeContent
@@ -55,7 +67,8 @@ export type GalleryHomeContent = {
  * 后台没配置时 data 为 null → 结果就是完整默认值，不会白屏。
  */
 export function useGalleryHomeContent(): GalleryHomeContent {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const lang = normalizeHomeLocale(i18n.language)
   const { data, isLoading } = useQuery({
     queryKey: HOME_CONFIG_KEY,
     queryFn: fetchRawHomeConfig,
@@ -64,12 +77,19 @@ export function useGalleryHomeContent(): GalleryHomeContent {
   })
 
   return useMemo(() => {
-    const defaults = buildHomeData(t)
-    const home = data ? mergeHomeConfig(defaults, data) : defaults
+    let home = buildHomeData(t)
+    let motion: MotionOverride = {}
+    if (data) {
+      const resolved = resolveHomeOverride(data, lang)
+      for (const layer of resolved.layers) {
+        home = mergeHomeConfig(home, layer)
+      }
+      motion = resolved.motion
+    }
     return {
       home,
-      motion: buildMotionData(t, data?.motion),
+      motion: buildMotionData(t, motion),
       isLoading,
     }
-  }, [data, isLoading, t])
+  }, [data, isLoading, lang, t])
 }
