@@ -52,6 +52,14 @@ const NEW_API_FOOTER_ATTRIBUTION_KEY = [
 // 若你之后把仓库改名，只需改这里一处即可。
 const FORK_SOURCE_URL = 'https://github.com/yamomo1/new-api-gallery'
 
+// 备案信息（中国大陆合规：ICP 备案号须带下划线并链接到工信部备案系统，
+// 点击即可在 https://beian.miit.gov.cn/ 查询/核验该备案）。改备案只改这一处。
+const BEIAN = {
+  company: '成都亚默默科技有限公司',
+  icp: '蜀ICP备18009444号-1',
+  icpHref: 'https://beian.miit.gov.cn/',
+}
+
 function FooterLinkItem(props: { link: FooterLink }) {
   const { t } = useTranslation()
   const isExternal = props.link.href.startsWith('http')
@@ -162,6 +170,25 @@ function ProjectAttribution(props: { currentYear: number; inline?: boolean }) {
   )
 }
 
+// ICP 备案信息（中国大陆合规展示）：公司名 + 带下划线的备案号，
+// 备案号可点击跳转到工信部备案系统查询/核验。两行，居中，弱视觉权重。
+function BeianInfo() {
+  return (
+    <div className='text-muted-foreground/45 flex flex-col items-center gap-1 text-center text-xs leading-relaxed'>
+      <span className='text-muted-foreground/60'>{BEIAN.company}</span>
+      <a
+        href={BEIAN.icpHref}
+        target='_blank'
+        rel='noopener noreferrer'
+        title='点击到工信部备案系统查询该备案'
+        className='text-muted-foreground/60 underline decoration-dotted underline-offset-2 transition-colors duration-200 hover:text-foreground'
+      >
+        {BEIAN.icp}
+      </a>
+    </div>
+  )
+}
+
 export function Footer(props: FooterProps) {
   const { t } = useTranslation()
   const {
@@ -254,6 +281,9 @@ export function Footer(props: FooterProps) {
               <ProjectAttribution currentYear={currentYear} inline />
             </div>
           </div>
+          <div className='mt-4'>
+            <BeianInfo />
+          </div>
         </div>
       </footer>
     )
@@ -314,6 +344,11 @@ export function Footer(props: FooterProps) {
             <LegalLinks leadingSeparator />
           </div>
           <ProjectAttribution currentYear={currentYear} />
+        </div>
+
+        {/* 备案信息：公司名 + 带下划线的 ICP 备案号（可点击到工信部系统查询） */}
+        <div className='mt-6 border-t border-border/30 pt-4'>
+          <BeianInfo />
         </div>
       </div>
     </footer>
