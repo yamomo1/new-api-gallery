@@ -736,3 +736,18 @@ html:not(.dark) .ghome {
     transition: none !important;
   }
 }
+
+/* ================================================================== */
+/* 后台 Puck 可视化搭建编辑器容器                                     */
+/* ================================================================== */
+.ghome-puck-builder {
+  height: 78vh;
+  min-height: 560px;
+  border: 1px solid var(--hero-line, rgba(255, 255, 255, 0.14));
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--background, #0b0b0f);
+}
+.ghome-puck-builder .puck {
+  height: 100%;
+}

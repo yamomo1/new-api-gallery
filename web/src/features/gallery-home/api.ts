@@ -35,7 +35,7 @@ import {
   resolveHomeOverride,
 } from './data'
 import { normalizeHomeLocale } from './locales'
-import { normalizeHomeConfig, type HomeConfigV2 } from './schema'
+import { normalizeHomeConfig, type HomeConfigV2, type PuckData } from './schema'
 import type { HomeContent, MotionContent } from './types'
 
 const HOME_CONFIG_KEY = ['gallery-home', 'home-config'] as const
@@ -59,6 +59,8 @@ type MotionOverride = NonNullable<HomeConfigV2['shared']>['motion']
 export type GalleryHomeContent = {
   home: HomeContent
   motion: MotionContent
+  /** Puck 可视化搭建布局（null = 用默认 8 区块顺序） */
+  puck: PuckData | null
   isLoading: boolean
 }
 
@@ -89,6 +91,7 @@ export function useGalleryHomeContent(): GalleryHomeContent {
     return {
       home,
       motion: buildMotionData(t, motion),
+      puck: (data?.puck as PuckData | undefined) ?? null,
       isLoading,
     }
   }, [data, isLoading, lang, t])

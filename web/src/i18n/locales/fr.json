@@ -7501,6 +7501,8 @@
     "Button label": "Libellé du bouton",
     "Loading…": "Chargement…",
     "Home settings": "Réglages de l’accueil",
+    "Page builder": "Constructeur de page",
+    "Page builder hint": "Glissez les blocs pour réordonner la page d’accueil, affichez ou masquez une section, ou insérez un texte ou bandeau personnalisé. Cliquez sur Publish dans l’éditeur pour enregistrer la mise en page. Le texte des blocs se modifie par langue dans l’onglet Contenu.",
     "The hero playlist accepts any number of clips played in order; text changes show up after refreshing the homepage.": "La playlist d’accueil accepte n’importe quel nombre de clips lus à la suite ; les modifications de texte apparaissent après un rechargement de la page d’accueil.",
     "Hero video playlist": "Playlist vidéo d’accueil",
     "clips": "clips",

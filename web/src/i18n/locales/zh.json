@@ -7501,6 +7501,8 @@
     "Button label": "按钮文字",
     "Loading…": "加载中…",
     "Home settings": "首页设置",
+    "Page builder": "页面搭建",
+    "Page builder hint": "拖拽区块可调整首页顺序、显示或隐藏某个区块，或插入自定义文本/横幅。在编辑器内点击 Publish 保存布局。区块文案请在「内容」标签页按语种编辑。",
     "The hero playlist accepts any number of clips played in order; text changes show up after refreshing the homepage.": "视频轮播支持任意个数、按顺序循环播放；文字改动保存后前台刷新即生效。",
     "Hero video playlist": "首屏视频轮播",
     "clips": "段",

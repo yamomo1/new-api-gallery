@@ -7501,6 +7501,8 @@
     "Button label": "Chữ trên nút",
     "Loading…": "Đang tải…",
     "Home settings": "Cài đặt trang chủ",
+    "Page builder": "Trình xây dựng trang",
+    "Page builder hint": "Kéo các khối để sắp xếp lại trang chủ, hiện hoặc ẩn một mục, hoặc thêm văn bản hay biểu ngữ tùy chỉnh. Bấm Publish trong trình soạn thảo để lưu bố cục. Văn bản khối được chỉnh sửa theo ngôn ngữ trong tab Nội dung.",
     "The hero playlist accepts any number of clips played in order; text changes show up after refreshing the homepage.": "Danh sách video đầu trang hỗ trợ số lượng tùy ý, phát theo thứ tự; thay đổi chữ sẽ hiển thị sau khi tải lại trang chủ.",
     "Hero video playlist": "Danh sách video đầu trang",
     "clips": "đoạn",
