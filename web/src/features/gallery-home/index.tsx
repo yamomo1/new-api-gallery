@@ -14,21 +14,25 @@
  * 样式：gallery-home.css（作用域 .ghome，颜色继承 New API 主题变量 → 换肤联动）
  */
 import type { CSSProperties } from 'react'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link as TanstackLink } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import {
   ArrowRight,
   ArrowUp,
+  BookOpen,
   Check,
   ChevronDown,
   ChevronRight,
+  Film,
   Images,
   LayoutGrid,
   Paperclip,
   Play,
   ShieldCheck,
   Sparkles,
+  User,
+  Video,
 } from 'lucide-react'
 
 import { PublicLayout } from '@/components/layout'
@@ -39,7 +43,7 @@ import {
   HeroVideoStage,
   ModelTicker,
 } from './components'
-import { HOME_DATA, MOTION_DATA } from './data'
+import { HOME_DATA, MOTION_DATA, fetchHomeConfig, mergeHomeConfig } from './data'
 import './gallery-home.css'
 
 const ICONS: Record<string, typeof LayoutGrid> = {
@@ -47,7 +51,14 @@ const ICONS: Record<string, typeof LayoutGrid> = {
   Sparkles,
   Images,
   ShieldCheck,
+  BookOpen,
+  Film,
+  User,
+  Video,
 }
+
+/** 技能选中态 key：'auto' = 自动（推荐），其余为 skills[].key */
+type AgentSkillKey = string
 
 /** 站内跳转用 TanStack Link（SPA 无刷新）；外链/空值用 <a> */
 function Nav({
@@ -103,9 +114,62 @@ function renderHeroTitle(title: string, accent?: string) {
 
 export function GalleryHome() {
   const { t } = useTranslation()
-  const h = HOME_DATA
-  const m = MOTION_DATA
+
+  // 首页数据：内置默认 + 后台「二开设置 → 首页设置」(GET /api/home_config) 深合并
+  const [homeData, setHomeData] = useState(HOME_DATA)
+  const [motionData, setMotionData] = useState(MOTION_DATA)
+  useEffect(() => {
+    let alive = true
+    fetchHomeConfig().then((cfg) => {
+      if (!alive || !cfg) return
+      setHomeData(mergeHomeConfig(HOME_DATA, cfg))
+      const motion = (cfg as { motion?: { heroVideo?: { videos?: unknown } } }).motion
+      const videos = motion?.heroVideo?.videos
+      if (Array.isArray(videos) && videos.length) {
+        const list = videos.filter((v): v is string => typeof v === 'string' && v.trim() !== '')
+        if (list.length) {
+          setMotionData((prev) => ({
+            ...prev,
+            heroVideo: { ...prev.heroVideo, videos: list },
+          }))
+        }
+      }
+    })
+    return () => {
+      alive = false
+    }
+  }, [])
+
+  const h = homeData
+  const m = motionData
   const [agentQ, setAgentQ] = useState('')
+  const [agentSkill, setAgentSkill] = useState<AgentSkillKey>('auto')
+  const [skillMenuOpen, setSkillMenuOpen] = useState(false)
+  const skillMenuRef = useRef<HTMLDivElement>(null)
+
+  // 下拉菜单：点击外部 / Esc 关闭
+  useEffect(() => {
+    if (!skillMenuOpen) return
+    const onDown = (e: MouseEvent) => {
+      if (skillMenuRef.current && !skillMenuRef.current.contains(e.target as Node)) {
+        setSkillMenuOpen(false)
+      }
+    }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setSkillMenuOpen(false)
+    }
+    document.addEventListener('mousedown', onDown)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('mousedown', onDown)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [skillMenuOpen])
+
+  const activeSkill =
+    agentSkill === 'auto'
+      ? null
+      : (h.agent.skills.find((s) => s.key === agentSkill) ?? null)
 
   // Hero 配色 → CSS 变量（后台改数据即改色）
   const c = h.hero.colors
@@ -210,15 +274,23 @@ export function GalleryHome() {
         {/* ============ 2. Canvas Agent ============ */}
         <section className='section section--tinted' id='home-agent'>
           <div className='container'>
-            <div className='section-head'>
-              <span className='eyebrow'>
-                <span className='sec-index'>{h.agent.index}</span>
-                {h.agent.eyebrow}
-              </span>
-              <h2>{h.agent.title}</h2>
-              <p>{h.agent.lead}</p>
+            {/* 非对称头部：大标题两行居左（第二行灰）+ lead 右侧窄列 */}
+            <div className='agent-head'>
+              <div className='agent-head-copy'>
+                <span className='eyebrow'>
+                  <span className='sec-index'>{h.agent.index}</span>
+                  {h.agent.eyebrow}
+                </span>
+                <h2>
+                  {h.agent.titleLine1}
+                  <br />
+                  <span className='agent-head-dim'>{h.agent.titleLine2}</span>
+                </h2>
+              </div>
+              <p className='agent-head-lead'>{h.agent.lead}</p>
             </div>
-            {/* 大输入面板：参考图 + 自动模式 + helper + 圆形发送（对标站同款） */}
+
+            {/* 大输入面板：参考图 + 技能下拉 + helper + 圆形发送（对标站同款） */}
             <div className='agent-composer'>
               <input
                 value={agentQ}
@@ -230,9 +302,70 @@ export function GalleryHome() {
                 <button type='button' className='agent-attach' aria-label={h.agent.attachLabel}>
                   <Paperclip size={15} /> {h.agent.attachLabel}
                 </button>
-                <button type='button' className='agent-auto'>
-                  <Sparkles size={14} /> {h.agent.autoLabel} <ChevronDown size={13} />
-                </button>
+                <div className='agent-skill' ref={skillMenuRef} data-open={skillMenuOpen}>
+                  <button
+                    type='button'
+                    className='agent-auto'
+                    aria-haspopup='listbox'
+                    aria-expanded={skillMenuOpen}
+                    onClick={() => setSkillMenuOpen((v) => !v)}
+                  >
+                    {activeSkill ? (
+                      <>
+                        {(() => {
+                          const Icon = ICONS[activeSkill.icon] || Sparkles
+                          return <Icon size={14} />
+                        })()}
+                        {activeSkill.label}
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles size={14} /> {h.agent.autoLabel}
+                      </>
+                    )}
+                    <ChevronDown size={13} className='agent-caret' />
+                  </button>
+                  {skillMenuOpen && (
+                    <div className='agent-skill-menu' role='listbox'>
+                      <span className='agent-skill-menu-title'>
+                        {h.agent.skillsMenuTitle}
+                      </span>
+                      <button
+                        type='button'
+                        role='option'
+                        aria-selected={agentSkill === 'auto'}
+                        className={agentSkill === 'auto' ? 'on' : ''}
+                        onClick={() => {
+                          setAgentSkill('auto')
+                          setSkillMenuOpen(false)
+                        }}
+                      >
+                        <Sparkles size={14} /> {h.agent.autoLabel}
+                        {agentSkill === 'auto' && <Check size={14} />}
+                      </button>
+                      {h.agent.skills.map((s) => {
+                        const Icon = ICONS[s.icon] || Sparkles
+                        const on = agentSkill === s.key
+                        return (
+                          <button
+                            type='button'
+                            key={s.key}
+                            role='option'
+                            aria-selected={on}
+                            className={on ? 'on' : ''}
+                            onClick={() => {
+                              setAgentSkill(s.key)
+                              setSkillMenuOpen(false)
+                            }}
+                          >
+                            <Icon size={14} /> {s.label}
+                            {on && <Check size={14} />}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
                 <span className='agent-helper'>
                   <i aria-hidden='true' /> {h.agent.helperLabel}
                 </span>
@@ -242,13 +375,23 @@ export function GalleryHome() {
               </div>
             </div>
 
-            {/* 快捷意图 chips */}
+            {/* 快捷技能 chips（与下拉框双向联动：key 同步选中） */}
             <div className='agent-chips'>
-              {h.agent.chips.map((c) => (
-                <button type='button' key={c} className='agent-chip'>
-                  {c}
-                </button>
-              ))}
+              {h.agent.skills.map((s) => {
+                const Icon = ICONS[s.icon] || Sparkles
+                const on = agentSkill === s.key
+                return (
+                  <button
+                    type='button'
+                    key={s.key}
+                    className={on ? 'agent-chip on' : 'agent-chip'}
+                    aria-pressed={on}
+                    onClick={() => setAgentSkill(on ? 'auto' : s.key)}
+                  >
+                    <Icon size={14} /> {s.label}
+                  </button>
+                )
+              })}
             </div>
 
             {/* 两栏：左特性列表 + 右「画布 Agent」预览卡（对标站同款） */}

@@ -79,22 +79,25 @@ export const HOME_DATA = {
   agent: {
     index: '01',
     eyebrow: 'Canvas Agent',
-    title: '说出想法，画布自动生成。',
+    // 头部非对称布局：大标题两行居左（第二行灰），lead 右侧窄列
+    titleLine1: '说出想法，',
+    titleLine2: '画布自动生成。',
     lead: '用一句话描述你想要什么。Canvas Agent 挑选模型、写好每个 prompt、接好参考图，并在你确认前展示价格。',
     // 大输入面板（对标：参考图纸 + 自动模式 + helper + 圆形发送）
     placeholder: '描述你想创作的内容，例如「一本 6 页水彩绘本，讲述小狐狸学习分享的故事」',
     attachLabel: '参考图',
     autoLabel: '自动（推荐）',
+    skillsMenuTitle: 'Agent 技能',
     helperLabel: '生成前需你确认方案',
     sendLabel: '发送',
-    // 输入面板下方的快捷意图 chips
-    chips: [
-      '多页绘本',
-      '漫画分镜',
-      '角色设定表',
-      '系列海报',
-      '分镜海报',
-      '多镜头短视频',
+    // 技能列表：下拉框与下方 chips 共用，双向联动（key 对应）
+    skills: [
+      { key: 'book', label: '多页绘本', icon: 'BookOpen' },
+      { key: 'comic', label: '漫画分镜', icon: 'LayoutGrid' },
+      { key: 'character', label: '角色设定表', icon: 'User' },
+      { key: 'poster', label: '系列海报', icon: 'Images' },
+      { key: 'storyboard', label: '分镜海报', icon: 'Film' },
+      { key: 'video', label: '多镜头短视频', icon: 'Video' },
     ],
     // 左栏：特性列表（图标 + 标题 + 说明，竖排）
     features: [
@@ -319,7 +322,7 @@ export const HOME_DATA = {
 }
 
 export const MOTION_DATA = {
-  // 首屏视频：两段顺序播放（第一段播完接第二段，再循环）
+  // 首屏视频：两段顺序播放（第一段播完接第二段，再循环）；后台可配 N 段
   heroVideo: {
     enabled: true,
     videos: ['/videos/hero-video.mp4', '/videos/gallery-video.mp4'],
@@ -347,4 +350,41 @@ export const MOTION_DATA = {
     'HappyHorse',
   ],
   tickerSec: 30,
+}
+
+/* ------------------------------------------------------------------
+ * 后台「二开设置 → 首页设置」动态配置
+ * 存储为 HomeConfig option（JSON 字符串），公开接口 GET /api/home_config。
+ * 对象深合并、数组/字符串整体覆盖，未配置的字段走内置默认值。
+ * ------------------------------------------------------------------ */
+function isPlainObj(v: unknown): v is Record<string, unknown> {
+  return !!v && typeof v === 'object' && !Array.isArray(v)
+}
+
+export function mergeHomeConfig<T>(base: T, override: unknown): T {
+  if (!isPlainObj(override)) return base
+  const out: Record<string, unknown> = { ...(base as Record<string, unknown>) }
+  for (const [k, v] of Object.entries(override)) {
+    if (v === undefined || v === null || v === '') continue
+    if (isPlainObj(v) && isPlainObj(out[k])) {
+      out[k] = mergeHomeConfig(out[k], v)
+    } else {
+      out[k] = v
+    }
+  }
+  return out as T
+}
+
+/** 后端返回的 {success, data:"<json>"} 里提取配置对象；空/坏数据返回 null */
+export async function fetchHomeConfig(): Promise<unknown> {
+  try {
+    const res = await fetch('/api/home_config', { headers: { Accept: 'application/json' } })
+    if (!res.ok) return null
+    const body = (await res.json()) as { success?: boolean; data?: unknown }
+    const raw = body?.data
+    if (typeof raw !== 'string' || raw.trim() === '' || raw === 'null') return null
+    return JSON.parse(raw)
+  } catch {
+    return null
+  }
 }
