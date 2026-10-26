@@ -77,36 +77,65 @@ export const HOME_DATA = {
     } as HeroCardConfig,
   },
   agent: {
+    index: '01',
     eyebrow: 'Canvas Agent',
     title: '说出想法，画布自动生成。',
     lead: '用一句话描述你想要什么。Canvas Agent 挑选模型、写好每个 prompt、接好参考图，并在你确认前展示价格。',
-    placeholder: '描述你想创作的内容',
-    autoLabel: 'Auto（推荐）',
-    genLabel: '生成',
+    // 大输入面板（对标：参考图纸 + 自动模式 + helper + 圆形发送）
+    placeholder: '描述你想创作的内容，例如「一本 6 页水彩绘本，讲述小狐狸学习分享的故事」',
+    attachLabel: '参考图',
+    autoLabel: '自动（推荐）',
+    helperLabel: '生成前需你确认方案',
+    sendLabel: '发送',
+    // 输入面板下方的快捷意图 chips
+    chips: [
+      '多页绘本',
+      '漫画分镜',
+      '角色设定表',
+      '系列海报',
+      '分镜海报',
+      '多镜头短视频',
+    ],
+    // 左栏：特性列表（图标 + 标题 + 说明，竖排）
     features: [
       {
         icon: 'LayoutGrid',
-        title: '规划整个工作流',
-        desc: '模型、prompt、节点与连接在画布上为你排布好，随时可运行。',
+        title: '一句话规划完整工作流',
+        desc: '模型、提示词、节点与连线自动铺在画布上，随时可运行。',
       },
       {
         icon: 'Sparkles',
-        title: '常见任务的技能',
-        desc: '多页绘本、漫画分镜、角色表、海报系列、多镜头视频与商品套装，一句话搞定。',
+        title: '常用创作技能',
+        desc: '绘本、漫画、角色设定、海报系列、多镜头视频和商品套装，一句话即可开始。',
       },
       {
         icon: 'Images',
-        title: '与你的参考图协作',
-        desc: '选择图片或 @ 提及节点；Agent 让角色与商品在每一帧保持一致。',
+        title: '支持你的参考素材',
+        desc: '选图片或用 @ 引用节点，Agent 会让角色和商品在每个镜头中保持一致。',
       },
       {
         icon: 'ShieldCheck',
         title: '一切由你掌控',
-        desc: '先查看方案与预估价格。在你确认之前，不会生成任何内容。',
+        desc: '先查看方案和预估价格，确认之前不会生成任何内容。',
       },
     ],
+    // 右栏：「画布 Agent」产品预览卡（对标 .agent-preview）
+    preview: {
+      bubble: '宇航员登夜晚探索城市，三个各 5 秒的镜头，电影感',
+      title: '画布 Agent',
+      badge: '方案已就绪',
+      plan: [
+        '角色参考图，保证画面一致',
+        '三个镜头的提示词写好并连接',
+        '运行前先显示预估价格',
+      ],
+      steps: ['角色定案', '镜头 1', '镜头 2', '镜头 3'],
+      editLabel: '修改方案',
+      runLabel: '确认并运行',
+    },
   },
   studios: {
+    index: '02',
     eyebrow: '一个想法。每种创作方式。',
     title: '一个想法。每种创作方式。',
     lead: '用于探索的视觉工作区、用于提速的专注工作室，以及当想法成为产品时稳定的模型接入。',
@@ -138,6 +167,7 @@ export const HOME_DATA = {
     ],
   },
   gallery: {
+    index: '03',
     eyebrow: '一点灵感。无限可能。',
     title: '一点灵感。无限可能。',
     lead: '好想法值得被分享。浏览作品、发现 prompt，带去新的地方。',
@@ -179,6 +209,7 @@ export const HOME_DATA = {
     ],
   },
   models: {
+    index: '04',
     eyebrow: '顶尖模型，没有迷宫。',
     title: '顶尖模型，没有迷宫。',
     lead: '从最常被用到的模型开始。准备好时，随时对比价格与能力。',
@@ -258,6 +289,7 @@ export const HOME_DATA = {
     ],
   },
   cta: {
+    index: '05',
     title: '用一个兼容的 API 上线。',
     lead: '用一套一致的 API 调用对话、图像与视频模型，在一个地方完成接入、路由与使用记录。',
     features: ['OpenAI 兼容路由', '一个密钥，所有模型', '透明的计费'],
@@ -272,6 +304,17 @@ export const HOME_DATA = {
     genLabel: '生成',
     connectLabel: '立即连接',
     connectUrl: '/pricing',
+  },
+  closing: {
+    kicker: '下一个灵感，从这里开始',
+    title: '有格调地创作，无阻力地扩展。',
+    lead:
+      '从画布开始视觉创作，进入快捷工作室，或把同一批模型接入自己的产品。',
+    primaryLabel: '开始创作',
+    primaryUrl: '/prompt-gallery',
+    secondaryLabel: '开始使用',
+    secondaryUrl: '/sign-up',
+    art: '/images/home/closing-horizon-v3.webp',
   },
 }
 

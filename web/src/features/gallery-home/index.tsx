@@ -19,9 +19,13 @@ import { Link as TanstackLink } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import {
   ArrowRight,
+  ArrowUp,
+  Check,
+  ChevronDown,
   ChevronRight,
   Images,
   LayoutGrid,
+  Paperclip,
   Play,
   ShieldCheck,
   Sparkles,
@@ -207,36 +211,99 @@ export function GalleryHome() {
         <section className='section section--tinted' id='home-agent'>
           <div className='container'>
             <div className='section-head'>
-              <span className='eyebrow'>{h.agent.eyebrow}</span>
+              <span className='eyebrow'>
+                <span className='sec-index'>{h.agent.index}</span>
+                {h.agent.eyebrow}
+              </span>
               <h2>{h.agent.title}</h2>
               <p>{h.agent.lead}</p>
             </div>
-            <div className='agent-field'>
-              <span className='auto-pill'>{h.agent.autoLabel}</span>
+            {/* 大输入面板：参考图 + 自动模式 + helper + 圆形发送（对标站同款） */}
+            <div className='agent-composer'>
               <input
                 value={agentQ}
                 onChange={(e) => setAgentQ(e.target.value)}
                 placeholder={h.agent.placeholder}
                 aria-label={h.agent.placeholder}
               />
-              <Nav className='gen-btn' to='/prompt-gallery'>
-                <Sparkles size={16} /> {h.agent.genLabel}
-              </Nav>
+              <div className='agent-composer-bar'>
+                <button type='button' className='agent-attach' aria-label={h.agent.attachLabel}>
+                  <Paperclip size={15} /> {h.agent.attachLabel}
+                </button>
+                <button type='button' className='agent-auto'>
+                  <Sparkles size={14} /> {h.agent.autoLabel} <ChevronDown size={13} />
+                </button>
+                <span className='agent-helper'>
+                  <i aria-hidden='true' /> {h.agent.helperLabel}
+                </span>
+                <Nav className='agent-send' to='/prompt-gallery' aria-label={h.agent.sendLabel}>
+                  <ArrowUp size={18} />
+                </Nav>
+              </div>
             </div>
 
-            <div className='agent-grid'>
-              {h.agent.features.map((f) => {
-                const Icon = ICONS[f.icon] || Sparkles
-                return (
-                  <div className='feature' key={f.title}>
-                    <div className='feature-ico'>
-                      <Icon size={20} />
-                    </div>
-                    <h3>{f.title}</h3>
-                    <p>{f.desc}</p>
-                  </div>
-                )
-              })}
+            {/* 快捷意图 chips */}
+            <div className='agent-chips'>
+              {h.agent.chips.map((c) => (
+                <button type='button' key={c} className='agent-chip'>
+                  {c}
+                </button>
+              ))}
+            </div>
+
+            {/* 两栏：左特性列表 + 右「画布 Agent」预览卡（对标站同款） */}
+            <div className='agent-body'>
+              <ul className='agent-features'>
+                {h.agent.features.map((f) => {
+                  const Icon = ICONS[f.icon] || Sparkles
+                  return (
+                    <li key={f.title}>
+                      <span className='agent-feature-ico'>
+                        <Icon size={18} />
+                      </span>
+                      <div>
+                        <h3>{f.title}</h3>
+                        <p>{f.desc}</p>
+                      </div>
+                    </li>
+                  )
+                })}
+              </ul>
+
+              <div className='agent-preview'>
+                <div className='agent-preview-bubble'>
+                  {h.agent.preview.bubble}
+                </div>
+                <div className='agent-preview-head'>
+                  <span className='agent-preview-title'>
+                    <Sparkles size={14} /> {h.agent.preview.title}
+                  </span>
+                  <span className='agent-preview-badge'>{h.agent.preview.badge}</span>
+                </div>
+                <ul className='agent-preview-plan'>
+                  {h.agent.preview.plan.map((p) => (
+                    <li key={p}>
+                      <Check size={14} /> {p}
+                    </li>
+                  ))}
+                </ul>
+                <div className='agent-preview-steps'>
+                  {h.agent.preview.steps.map((s, i) => (
+                    <button type='button' key={s} className={i === 0 ? 'on' : ''}>
+                      <i>{String(i + 1).padStart(2, '0')}</i>
+                      {s}
+                    </button>
+                  ))}
+                </div>
+                <div className='agent-preview-actions'>
+                  <button type='button' className='agent-preview-edit'>
+                    {h.agent.preview.editLabel}
+                  </button>
+                  <Nav className='agent-preview-run' to='/prompt-gallery'>
+                    {h.agent.preview.runLabel}
+                  </Nav>
+                </div>
+              </div>
             </div>
           </div>
         </section>
@@ -245,7 +312,10 @@ export function GalleryHome() {
         <section className='section'>
           <div className='container'>
             <div className='section-head'>
-              <span className='eyebrow'>{h.studios.eyebrow}</span>
+              <span className='eyebrow'>
+                <span className='sec-index'>{h.studios.index}</span>
+                {h.studios.eyebrow}
+              </span>
               <h2>{h.studios.title}</h2>
               <p>{h.studios.lead}</p>
             </div>
@@ -274,7 +344,10 @@ export function GalleryHome() {
           <div className='container'>
             <div className='gallery-head'>
               <div>
-                <span className='eyebrow'>{h.gallery.eyebrow}</span>
+                <span className='eyebrow'>
+                  <span className='sec-index'>{h.gallery.index}</span>
+                  {h.gallery.eyebrow}
+                </span>
                 <h2
                   style={{
                     fontFamily: 'var(--font-serif)',
@@ -347,7 +420,10 @@ export function GalleryHome() {
         <section className='section'>
           <div className='container'>
             <div className='section-head'>
-              <span className='eyebrow'>{h.models.eyebrow}</span>
+              <span className='eyebrow'>
+                <span className='sec-index'>{h.models.index}</span>
+                {h.models.eyebrow}
+              </span>
               <h2>{h.models.title}</h2>
               <p>{h.models.lead}</p>
             </div>
@@ -390,6 +466,7 @@ export function GalleryHome() {
           <div className='container'>
             <div className='cta-inner'>
               <span className='eyebrow' style={{ color: 'var(--hero-gold)' }}>
+                <span className='sec-index'>{h.cta.index}</span>
                 YMM · You Make Moments
               </span>
               <h2>{h.cta.title}</h2>
@@ -440,7 +517,37 @@ export function GalleryHome() {
           </div>
         </section>
 
-        {/* ============ 7. 页脚上方模型滚动条 ============ */}
+        {/* ============ 7. 落幕 CTA（对标 .home-closing：地平线背景 + 双按钮收尾） ============ */}
+        <section className='home-closing' aria-labelledby='home-closing-title'>
+          <div className='home-closing-panel'>
+            <img
+              className='home-closing-art'
+              src={h.closing.art}
+              alt=''
+              loading='lazy'
+              decoding='async'
+            />
+            <div className='home-closing-inner'>
+              <p className='home-closing-kicker'>
+                <Sparkles size={16} /> {h.closing.kicker}
+              </p>
+              <h2 id='home-closing-title' className='home-closing-title'>
+                {h.closing.title}
+              </h2>
+              <p className='home-closing-lede'>{h.closing.lead}</p>
+              <div className='home-closing-actions'>
+                <Nav className='hero-btn-primary' to={h.closing.primaryUrl}>
+                  {h.closing.primaryLabel}
+                </Nav>
+                <Nav className='hero-btn-ghost' to={h.closing.secondaryUrl}>
+                  {h.closing.secondaryLabel}
+                </Nav>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ============ 8. 页脚上方模型滚动条 ============ */}
         <ModelTicker />
       </div>
     </PublicLayout>
