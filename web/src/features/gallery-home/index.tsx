@@ -85,25 +85,42 @@ function Nav({
   )
 }
 
-/** Hero 大标题：titleAccent 句子包金色渐变 span；\n 转 <br> */
+/**
+ * Hero 大标题：\n 转 <br>；金色强调句（titleAccent）两种情形：
+ * 1) 强调句是标题的子串 → 原地包金色 span；
+ * 2) 强调句独立成行（后台是单独一个字段）→ 追加为标题之后的独立金色行。
+ */
 function renderHeroTitle(title: string, accent?: string) {
-  let parts: (string | { accent: string })[] = [title]
-  if (accent && title.includes(accent)) {
-    const i = title.indexOf(accent)
-    parts = [title.slice(0, i), { accent }, title.slice(i + accent.length)]
+  const accentStr = accent?.trim()
+  const embedded = !!accentStr && title.includes(accentStr)
+  let parts: (string | { accent: string; leading: boolean })[] = [title]
+  if (embedded) {
+    // 情形 1：强调句内嵌在标题里，原地高亮（不换行）
+    const i = title.indexOf(accentStr!)
+    parts = [
+      title.slice(0, i),
+      { accent: accentStr!, leading: false },
+      title.slice(i + accentStr!.length),
+    ]
+  } else if (accentStr) {
+    // 情形 2：强调句是独立字段，作为标题之后的金色行（前补换行）
+    parts = [title, { accent: accentStr, leading: true }]
   }
   return parts.flatMap((p, pi) => {
-    const text = typeof p === 'string' ? p : p.accent
+    const isAccent = typeof p !== 'string'
+    const text = isAccent ? p.accent : p
     const nodes = text.split('\n').map((line, li) =>
-      typeof p === 'string' ? (
-        line
-      ) : (
+      isAccent ? (
         <span key={`${pi}-${li}`} className='home-hero-title-accent'>
           {line}
         </span>
+      ) : (
+        line
       ),
     )
     const withBreaks: React.ReactNode[] = []
+    // 独立金色行之前补一个换行，与上一行（标题末行）分行显示
+    if (isAccent && p.leading) withBreaks.push(<br key={`br-accent-lead-${pi}`} />)
     nodes.forEach((n, ni) => {
       if (ni > 0) withBreaks.push(<br key={`br-${pi}-${ni}`} />)
       withBreaks.push(n)

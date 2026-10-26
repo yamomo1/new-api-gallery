@@ -94,6 +94,7 @@ import {
   type Field,
   type FieldGroup,
 } from './field-groups'
+import { TranslateCard } from './translate-card'
 
 const HOME_CONFIG_KEY = 'HomeConfig'
 
@@ -379,6 +380,22 @@ export function HomeSettings() {
     })
     toast.success(t('Overrides cleared for this language'))
   }, [lang, patch, t])
+
+  /** 自动翻译用：把译文写进「指定语种」桶的某字段（不经过当前编辑语种） */
+  const writeField = useCallback(
+    (locale: string, path: string, value: unknown) => {
+      patch((prev) => {
+        const bucket = prev.locales[locale] ?? {}
+        const cleaned = prune(value)
+        const next =
+          cleaned === undefined || cleaned === ''
+            ? ((deletePath(bucket, path.split('.')) as Cfg) ?? {})
+            : (setPath(bucket, path.split('.'), cleaned) as Cfg)
+        return { ...prev, locales: { ...prev.locales, [locale]: next } }
+      })
+    },
+    [patch],
+  )
 
   /* ---------------------------- 保存 / 重置 ---------------------------- */
 
@@ -692,6 +709,14 @@ export function HomeSettings() {
           </p>
         </CardContent>
       </Card>
+
+      {/* 自动翻译：用本站模型把源语种铺到目标语种的空白字段 */}
+      <TranslateCard
+        locales={draft.locales}
+        currentLang={lang}
+        writeField={writeField}
+        markDirty={() => setDirty(true)}
+      />
 
       {/* 文案分组 */}
       {TEXT_GROUPS.map((group) => {
