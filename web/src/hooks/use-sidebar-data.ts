@@ -23,6 +23,8 @@ import {
   CreditCard,
   FileText,
   FlaskConical,
+  FolderOpen,
+  Images,
   Key,
   LayoutDashboard,
   ListTodo,
@@ -61,6 +63,11 @@ export function useSidebarData(): SidebarData {
             title: t('Playground'),
             url: '/playground',
             icon: FlaskConical,
+          },
+          {
+            title: t('Prompt Gallery'),
+            url: '/prompt-gallery',
+            icon: Images,
           },
           {
             title: t('Chat'),
@@ -122,6 +129,11 @@ export function useSidebarData(): SidebarData {
             icon: User,
           },
           {
+            title: t('My works'),
+            url: '/my-works',
+            icon: FolderOpen,
+          },
+          {
             title: t('Security & Access'),
             url: '/security',
             icon: ShieldCheck,
@@ -156,6 +168,11 @@ export function useSidebarData(): SidebarData {
             title: t('Subscriptions'),
             url: '/subscriptions',
             icon: CreditCard,
+          },
+          {
+            title: t('Gallery review'),
+            url: '/admin/prompt-gallery',
+            icon: Images,
           },
           {
             title: t('System Info'),
