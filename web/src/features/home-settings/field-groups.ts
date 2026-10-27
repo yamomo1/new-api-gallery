@@ -165,6 +165,15 @@ export const TEXT_GROUPS: FieldGroup[] = [
 /** 共享分组：不分语种，改一次全站生效 */
 export const SHARED_GROUPS: FieldGroup[] = [
   {
+    key: 'beian',
+    title: 'ICP filing (footer bottom)',
+    fields: [
+      { path: 'footer.beian.company', label: 'Company name' },
+      { path: 'footer.beian.icp', label: 'ICP number' },
+      { path: 'footer.beian.icpHref', label: 'ICP link' },
+    ],
+  },
+  {
     key: 'links',
     title: 'Buttons and links',
     fields: [

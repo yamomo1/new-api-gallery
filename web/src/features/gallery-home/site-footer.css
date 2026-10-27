@@ -1,0 +1,52 @@
+/* ============ 页脚（对标 aliyun.com 2025：多栏导航 + 法律行 + 版权行） ============ */
+.site-footer {
+  border-top: 1px solid var(--border);
+  background: color-mix(in oklab, var(--card) 55%, transparent);
+  margin-top: 4.5rem;
+}
+.site-footer-main { max-width: var(--maxw, 1200px); margin: 0 auto; padding: 3.25rem 1.5rem 2.5rem; }
+.site-footer-cols {
+  display: grid; gap: 2.5rem 2rem;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)) minmax(240px, 1.4fr);
+}
+.site-footer-col-title { margin: 0 0 0.9rem; font-size: 0.875rem; font-weight: 700; color: var(--foreground); }
+.site-footer-col ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.55rem; }
+.site-footer-link {
+  font-size: 0.8125rem; color: var(--muted); text-decoration: none;
+  transition: color 0.3s ease-out;
+}
+.site-footer-link:hover { color: var(--accent-gold, #e9b872); }
+.site-footer-about-desc { margin: 0 0 0.8rem; font-size: 0.8125rem; line-height: 1.7; color: var(--muted); max-width: 30em; }
+.site-footer-about-contact { margin: 0; font-size: 0.8125rem; color: var(--muted); }
+
+.site-footer-bottom { border-top: 1px solid var(--border); }
+.site-footer-bottom-inner {
+  max-width: var(--maxw, 1200px); margin: 0 auto;
+  padding: 1.1rem 1.5rem 1.4rem;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1.5rem;
+}
+.site-footer-legal { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem 0; }
+.site-footer-legal-item { display: inline-flex; align-items: center; }
+.site-footer-legal-item + .site-footer-legal-item::before {
+  content: ''; width: 1px; height: 0.7rem; margin: 0 0.8rem;
+  background: var(--border); display: inline-block;
+}
+.site-footer-copyright { margin: 0; font-size: 0.75rem; color: var(--muted); opacity: 0.85; }
+
+@media (max-width: 720px) {
+  .site-footer-cols { grid-template-columns: repeat(2, 1fr); }
+  .site-footer-about { grid-column: 1 / -1; }
+  .site-footer-main { padding: 2.5rem 1.25rem 2rem; }
+}
+
+.ghome .site-footer { margin-top: 4.5rem; }
+.site-footer-beian {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 1.25rem;
+  padding: 0 0 1.25rem;
+}
+.site-footer-beian-company { font-size: 0.75rem; color: var(--muted); opacity: 0.85; }
+.site-footer-beian-link {
+  font-size: 0.75rem; color: var(--muted); text-decoration: underline;
+  text-underline-offset: 3px; transition: color 0.3s ease-out;
+}
+.site-footer-beian-link:hover { color: var(--accent-gold, #e9b872); }

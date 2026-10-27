@@ -25,7 +25,7 @@ import {
 } from '@tanstack/react-router'
 import { useEffect } from 'react'
 
-import { BeianBar } from '@/components/layout/components/beian-bar'
+import { SiteFooter } from '@/features/gallery-home/footer'
 import { NavigationProgress } from '@/components/navigation-progress'
 import { Toaster } from '@/components/ui/sonner'
 import { ThemeCustomizationProvider } from '@/context/theme-customization-provider'
@@ -96,7 +96,7 @@ function RootComponent() {
       <NavigationProgress />
       <Outlet />
       {/* 二开：全站备案信息条（每个页面底部都显示，含电影感画廊首页） */}
-      <BeianBar />
+      <SiteFooter />
       <Toaster closeButton duration={5000} position='top-center' richColors />
     </ThemeCustomizationProvider>
   )

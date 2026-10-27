@@ -18,19 +18,22 @@ For commercial licensing, please contact support@quantumnous.com
 */
 
 /**
- * SiteFooter —— 首页底部多栏页脚（布局对标 aliyun.com 2025）
+ * SiteFooter —— 全站页脚（布局对标 aliyun.com 2025）
  * ------------------------------------------------------------------
+ * 挂在根布局 __root.tsx（替代原 BeianBar 的位置）：每个页面底部都有，
+ * 备案信息（公司名 + ICP 号）整合进页脚最底部一行，点击 ICP 号可查工信部。
+ *
  * 结构：多栏导航（栏目标题 + 链接）+ 右侧「关于我们」块
- *      → 分隔线 → 法律声明行 → 版权行
- * 备案号由根布局 BeianBar 负责，这里不重复。
- * 内容来自 HomeConfig.footer（后台「二开设置 → 首页设置」可编辑），
- * 没配置时走内置默认值。
+ *      → 分隔线 → 法律声明行 → 版权行 → 备案行
+ *
+ * 内容来自 HomeConfig.footer（后台「二开设置 → 首页设置 → 页脚」可编辑），
+ * 组件内部自己拉配置（与首页同一套层级解析），没配置时走内置默认值。
  */
 import { Link as TanstackLink } from '@tanstack/react-router'
 
-import type { HomeConfig } from './schema'
+import { useSiteFooter } from './api'
+import './site-footer.css'
 
-type FooterData = NonNullable<HomeConfig['footer']>
 type FooterLink = { label: string; href: string }
 
 const isExternal = (href: string) => /^https?:\/\//i.test(href)
@@ -55,7 +58,8 @@ function FooterLinkItem({ item }: { item: FooterLink }) {
   )
 }
 
-export function SiteFooter({ data }: { data?: FooterData | null }) {
+export function SiteFooter() {
+  const data = useSiteFooter()
   if (!data || data.enabled === false) return null
 
   const columns = (data.columns ?? []).filter(
@@ -63,6 +67,7 @@ export function SiteFooter({ data }: { data?: FooterData | null }) {
   )
   const legal = data.legal ?? []
   const about = data.about
+  const beian = data.beian
 
   return (
     <footer className='site-footer'>
@@ -99,7 +104,7 @@ export function SiteFooter({ data }: { data?: FooterData | null }) {
         </nav>
       </div>
 
-      {(legal.length > 0 || data.copyright) && (
+      {(legal.length > 0 || data.copyright || beian) && (
         <div className='site-footer-bottom'>
           <div className='site-footer-bottom-inner'>
             {legal.length > 0 && (
@@ -113,6 +118,25 @@ export function SiteFooter({ data }: { data?: FooterData | null }) {
             )}
             {data.copyright && (
               <p className='site-footer-copyright'>{data.copyright}</p>
+            )}
+            {beian && (beian.company || beian.icp) && (
+              <div className='site-footer-beian'>
+                {beian.company && (
+                  <span className='site-footer-beian-company'>
+                    {beian.company}
+                  </span>
+                )}
+                {beian.icp && (
+                  <a
+                    className='site-footer-beian-link'
+                    href={beian.icpHref ?? 'https://beian.miit.gov.cn/'}
+                    target='_blank'
+                    rel='noreferrer'
+                  >
+                    {beian.icp}
+                  </a>
+                )}
+              </div>
             )}
           </div>
         </div>

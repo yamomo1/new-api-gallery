@@ -140,8 +140,16 @@ const footerSchema = z.object({
     .optional(),
   /** 法律声明行：服务条款 / 隐私政策 等 */
   legal: z.array(footerLinkSchema).max(10).optional(),
-  /** 版权行文案（备案号由全局 BeianBar 负责，不在这里重复） */
+  /** 版权行文案 */
   copyright: text(300).optional(),
+  /** 备案信息（页脚最底部一行，替代原 BeianBar） */
+  beian: z
+    .object({
+      company: short(60).optional(),
+      icp: short(120).optional(),
+      icpHref: text(300).optional(),
+    })
+    .optional(),
 })
 
 export const homeConfigSchema = z

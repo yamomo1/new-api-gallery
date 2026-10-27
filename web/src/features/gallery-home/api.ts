@@ -35,7 +35,11 @@ import {
   resolveHomeOverride,
 } from './data'
 import { normalizeHomeLocale } from './locales'
-import { normalizeHomeConfig, type HomeConfigV2 } from './schema'
+import {
+  normalizeHomeConfig,
+  type HomeConfig,
+  type HomeConfigV2,
+} from './schema'
 import type { HomeContent, MotionContent } from './types'
 
 const HOME_CONFIG_KEY = ['gallery-home', 'home-config'] as const
@@ -184,4 +188,35 @@ export function useGalleryHomeContent(): GalleryHomeContent {
       isLoading,
     }
   }, [data, isLoading, lang, t])
+}
+
+/**
+ * 全站页脚（根布局 __root 用）：HomeConfig.footer 深合并内置默认。
+ * 层级与首页一致：locales[en] → locales[lang] → shared → 内置默认值兜底。
+ */
+export function useSiteFooter(): NonNullable<HomeConfig['footer']> {
+  const { t, i18n } = useTranslation()
+  const lang = normalizeHomeLocale(i18n.language)
+  const { data } = useQuery({
+    queryKey: HOME_CONFIG_KEY,
+    queryFn: fetchRawHomeConfig,
+    staleTime: 5 * 60 * 1000,
+    retry: 1,
+  })
+
+  return useMemo(() => {
+    let footer =
+      (buildHomeData(t) as { footer?: NonNullable<HomeConfig['footer']> })
+        .footer ?? {}
+    if (data) {
+      const { layers } = resolveHomeOverride(data, lang)
+      for (const layer of layers) {
+        footer = mergeHomeConfig(
+          footer,
+          (layer as { footer?: NonNullable<HomeConfig['footer']> }).footer ?? {},
+        )
+      }
+    }
+    return footer
+  }, [data, lang, t])
 }

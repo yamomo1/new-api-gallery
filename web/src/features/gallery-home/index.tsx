@@ -164,7 +164,6 @@ function GalleryCard({
 
 import { PublicLayout } from '@/components/layout'
 import { StudioScene } from '@/features/canvas-landing/scene'
-import { SiteFooter } from './footer'
 import { useScrollReveal } from '@/hooks/use-scroll-reveal'
 import { ensureFxGlowBound } from '@/lib/fx-glow'
 
@@ -1075,9 +1074,6 @@ export function GalleryHome() {
           <ModelTicker models={m.ticker} tickerSec={m.tickerSec} />
         </div>
       </div>
-
-      {/* ============ 9. 页脚（后台「二开设置 → 首页设置 → Footer」可编辑） ============ */}
-      <SiteFooter data={h.footer} />
     </PublicLayout>
   )
 }

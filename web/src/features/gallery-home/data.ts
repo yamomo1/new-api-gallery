@@ -66,6 +66,9 @@ export type HeroCardConfig = {
 /** 不参与翻译的字段（路径、色值、品牌名、代码、枚举） */
 const RAW_KEYS = new Set([
   'href',
+  'company',
+  'icp',
+  'icpHref',
   'url',
   'primaryUrl',
   'secondaryUrl',
@@ -599,6 +602,11 @@ console.log(resp.choices[0].message.content)`,
       { label: 'About', href: '/about' },
     ],
     copyright: '© 2026 cdymm.com. All rights reserved.',
+    beian: {
+      company: '成都亚默默科技有限公司',
+      icp: '蜀ICP备18009444号-1',
+      icpHref: 'https://beian.miit.gov.cn/',
+    },
   },
   closing: {
     kicker: 'Your next idea starts here',

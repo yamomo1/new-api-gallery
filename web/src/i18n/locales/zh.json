@@ -7735,6 +7735,10 @@
     "Column title": "栏目标题",
     "Legal row (bottom)": "法律声明行（底部）",
     "No columns yet. Add one to fill the footer.": "还没有栏目，添加一个来填充页脚。",
-    "No legal links yet.": "还没有法律声明链接。"
+    "No legal links yet.": "还没有法律声明链接。",
+    "ICP filing (footer bottom)": "备案信息（页脚底部）",
+    "Company name": "公司名称",
+    "ICP number": "ICP 备案号",
+    "ICP link": "备案查询链接"
   }
 }
