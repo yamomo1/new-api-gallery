@@ -1,23 +1,49 @@
 /* ============ 页脚（对标 aliyun.com 2025：多栏导航 + 法律行 + 版权行） ============ */
+/* 文字色统一走「文字」token：标题 --foreground、正文/链接 --muted-foreground；
+   背景用 --muted（浅底 token），明暗主题下都能保持清晰对比。 */
 .site-footer {
+  position: relative;
   border-top: 1px solid var(--border);
-  background: color-mix(in oklab, var(--card) 55%, transparent);
+  background:
+    radial-gradient(58% 120% at 50% 0%, color-mix(in oklab, var(--accent-gold, #e9b872) 7%, transparent), transparent 60%),
+    color-mix(in oklab, var(--muted) 55%, transparent);
   margin-top: 4.5rem;
+}
+/* 顶部金色发丝线：居中渐隐，像幕布的一道光 */
+.site-footer::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 8%,
+    color-mix(in oklab, var(--accent-gold, #e9b872) 55%, transparent) 50%,
+    transparent 92%
+  );
 }
 .site-footer-main { max-width: var(--maxw, 1200px); margin: 0 auto; padding: 3.25rem 1.5rem 2.5rem; }
 .site-footer-cols {
   display: grid; gap: 2.5rem 2rem;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)) minmax(240px, 1.4fr);
 }
-.site-footer-col-title { margin: 0 0 0.9rem; font-size: 0.875rem; font-weight: 700; color: var(--foreground); }
-.site-footer-col ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.55rem; }
+.site-footer-col-title {
+  margin: 0 0 0.9rem; font-size: 0.875rem; font-weight: 700;
+  letter-spacing: 0.01em; color: var(--foreground);
+}
+.site-footer-col ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.6rem; }
 .site-footer-link {
-  font-size: 0.8125rem; color: var(--muted); text-decoration: none;
+  font-size: 0.8125rem; color: var(--muted-foreground); text-decoration: none;
   transition: color 0.3s ease-out;
 }
 .site-footer-link:hover { color: var(--accent-gold, #e9b872); }
-.site-footer-about-desc { margin: 0 0 0.8rem; font-size: 0.8125rem; line-height: 1.7; color: var(--muted); max-width: 30em; }
-.site-footer-about-contact { margin: 0; font-size: 0.8125rem; color: var(--muted); }
+.site-footer-about-desc {
+  margin: 0 0 0.8rem; font-size: 0.8125rem; line-height: 1.75;
+  color: var(--muted-foreground); max-width: 30em;
+}
+.site-footer-about-contact { margin: 0; font-size: 0.8125rem; color: var(--muted-foreground); }
 
 .site-footer-bottom { border-top: 1px solid var(--border); }
 .site-footer-bottom-inner {
@@ -31,7 +57,7 @@
   content: ''; width: 1px; height: 0.7rem; margin: 0 0.8rem;
   background: var(--border); display: inline-block;
 }
-.site-footer-copyright { margin: 0; font-size: 0.75rem; color: var(--muted); opacity: 0.85; }
+.site-footer-copyright { margin: 0; font-size: 0.75rem; color: var(--muted-foreground); }
 
 @media (max-width: 720px) {
   .site-footer-cols { grid-template-columns: repeat(2, 1fr); }
@@ -44,9 +70,9 @@
   display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 1.25rem;
   padding: 0 0 1.25rem;
 }
-.site-footer-beian-company { font-size: 0.75rem; color: var(--muted); opacity: 0.85; }
+.site-footer-beian-company { font-size: 0.75rem; color: var(--muted-foreground); }
 .site-footer-beian-link {
-  font-size: 0.75rem; color: var(--muted); text-decoration: underline;
+  font-size: 0.75rem; color: var(--muted-foreground); text-decoration: underline;
   text-underline-offset: 3px; transition: color 0.3s ease-out;
 }
 .site-footer-beian-link:hover { color: var(--accent-gold, #e9b872); }
