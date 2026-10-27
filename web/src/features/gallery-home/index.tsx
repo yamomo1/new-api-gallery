@@ -144,6 +144,24 @@ export function GalleryHome() {
   const skillMenuRef = useRef<HTMLDivElement>(null)
   /** 03 提示词画廊筛选：0=全部 1=图片 2=视频（与 h.gallery.tabs 对齐） */
   const [galleryTab, setGalleryTab] = useState(0)
+  /** 胶囊滑动高亮块：跟随当前选中项的位置与宽度（真实测量，适配任意语种文案） */
+  const galleryTabRefs = useRef<Array<HTMLButtonElement | null>>([])
+  const [tabThumb, setTabThumb] = useState({ x: 0, w: 0 })
+
+  useEffect(() => {
+    const measure = () => {
+      const el = galleryTabRefs.current[galleryTab]
+      if (el) setTabThumb({ x: el.offsetLeft, w: el.offsetWidth })
+    }
+    measure()
+    const ro = new ResizeObserver(measure)
+    galleryTabRefs.current.forEach((el) => el && ro.observe(el))
+    window.addEventListener('resize', measure)
+    return () => {
+      ro.disconnect()
+      window.removeEventListener('resize', measure)
+    }
+  }, [galleryTab, h])
 
   // 下拉菜单：点击外部 / Esc 关闭
   useEffect(() => {
@@ -520,24 +538,48 @@ export function GalleryHome() {
             {/* 工具行：左侧筛选胶囊（可点，真实过滤）+ 右侧「探索画廊」 */}
             <div className='gallery-toolbar' data-reveal>
               <div className='gallery-tabs' role='group'>
+                {/* 滑动高亮块：跟随选中的胶囊，切换时带弹性位移 + 光晕 */}
+                <span
+                  className='gallery-tabs-thumb'
+                  aria-hidden='true'
+                  style={{
+                    transform: `translateX(${tabThumb.x}px)`,
+                    width: tabThumb.w,
+                    opacity: tabThumb.w ? 1 : 0,
+                  }}
+                >
+                  <span className='gallery-tabs-sheen' key={galleryTab} />
+                </span>
                 {h.gallery.tabs.map((tab, i) => (
                   <button
                     key={tab}
+                    ref={(el) => {
+                      galleryTabRefs.current[i] = el
+                    }}
                     type='button'
                     aria-pressed={galleryTab === i}
                     onClick={() => setGalleryTab(i)}
                   >
-                    {tab}
+                    <span>{tab}</span>
                   </button>
                 ))}
               </div>
               <Nav className='gallery-explore' to='/prompt-gallery'>
-                {h.gallery.exploreLabel} <ArrowUpRight size={14} />
+                <span className='gallery-explore-label'>
+                  {h.gallery.exploreLabel}
+                </span>
+                <ArrowUpRight size={14} />
               </Nav>
             </div>
 
             {/* 作品网格：首卡跨 2×2，其余 1×1（对标站布局）；文字浮在图上 */}
-            <div className='gallery-grid' data-reveal-group data-reveal-step='95'>
+            {/* key 跟随筛选变化：切换时整组重新挂载，卡片逐个淡入（配合 reveal 错峰） */}
+            <div
+              className='gallery-grid'
+              key={galleryTab}
+              data-reveal-group
+              data-reveal-step='95'
+            >
               {h.gallery.items
                 .filter(
                   (g) =>
@@ -547,7 +589,11 @@ export function GalleryHome() {
                 )
                 .map((g, i) => (
                   <Nav
-                    className={i === 0 ? 'gcard gcard--big' : 'gcard'}
+                    className={
+                      galleryTab === 0 && i === 0
+                        ? 'gcard gcard--big'
+                        : 'gcard'
+                    }
                     to={g.url}
                     key={g.title}
                   >

@@ -124,10 +124,11 @@
 /* ============ 两栏 ============ */
 .ctlp-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.32fr) minmax(0, 1fr);
+  /* 对标实测：左 719.7 / 右 508.3 → 1.416 : 1，间距 16 */
+  grid-template-columns: minmax(0, 1.416fr) minmax(0, 1fr);
   /* 拉伸对齐：左画布高度 = 右侧两卡整体高度，两者底边齐平 */
   align-items: stretch;
-  gap: 20px;
+  gap: 16px;
 }
 
 /* ============ 左：画布面板 ============ */
@@ -440,7 +441,7 @@
 .ctlp-stack {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 16px;
 }
 
 .ctlp-card {
@@ -449,11 +450,12 @@
   background: var(--ctlp-card);
   border: 1px solid var(--ctlp-line);
   border-radius: 16px;
-  /* 图满铺 + 文字浮层（对标站格式）：卡片零内边距、高度对半分右栏 */
+  /* 图满铺 + 文字浮层（对标站格式）：卡片零内边距、比例 508.3×400 */
   padding: 0;
   overflow: hidden;
-  flex: 1 1 0;
-  min-height: 280px;
+  flex: 0 0 auto;
+  aspect-ratio: 508 / 400;
+  min-height: 0;
   transition:
     transform 0.34s var(--ctlp-ease),
     border-color 0.28s,

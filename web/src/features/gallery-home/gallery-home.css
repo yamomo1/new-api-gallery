@@ -353,7 +353,7 @@ html:not(.dark) .ghome {
    通用区块（section）
    内容容器统一限宽 1280px（对标站 .container 规格，全局 .container 无 max-width）
    ============================================================ */
-.ghome .container { max-width: 80rem; }
+.ghome .container { max-width: 82rem; }
 .ghome .section { padding: 88px 0; }
 /* 顶部金色辉光（1:1 复刻对标站 .home-agent::before：
    radial-gradient 60%x70% at 50% 0%，金 14% 透明度渐隐 70%，高 28rem） */
@@ -657,27 +657,90 @@ html:not(.dark) .ghome {
 .ghome .gallery-title-dim { color: var(--muted); }
 .ghome .gallery-lead { max-width: 26em; margin: 0 0 26px; color: var(--muted); font-size: 17px; line-height: 1.7; }
 .ghome .gallery-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin-top: 30px; }
-.ghome .gallery-tabs { display: inline-flex; gap: 4px; padding: 4px; background: var(--card-2); border: 1px solid var(--border); border-radius: 999px; }
-.ghome .gallery-tabs button {
-  appearance: none; border: 0; background: transparent; color: var(--muted); font: inherit; cursor: pointer;
-  padding: 7px 18px; border-radius: 999px; font-size: 14px; font-weight: 500; transition: 0.15s;
+.ghome .gallery-tabs { position: relative; isolation: isolate; display: inline-flex; gap: 4px; padding: 4px; background: var(--card-2); border: 1px solid var(--border); border-radius: 999px; }
+/* 滑动高亮块：真实测量选中项位置，切换时弹簧位移 + 落地光晕 */
+.ghome .gallery-tabs-thumb {
+  position: absolute; left: 0; top: 4px; bottom: 4px; z-index: 0;
+  border-radius: 999px; overflow: hidden; pointer-events: none;
+  background: linear-gradient(180deg, color-mix(in oklab, var(--card) 92%, #fff 8%), var(--card));
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.28),
+    0 6px 18px -10px rgba(233, 184, 122, 0.55),
+    inset 0 0 0 1px rgba(233, 184, 122, 0.22);
+  transition:
+    transform 0.46s cubic-bezier(0.34, 1.42, 0.44, 1),
+    width 0.46s cubic-bezier(0.34, 1.42, 0.44, 1),
+    opacity 0.22s;
+  animation: gt-tab-land 0.52s ease-out;
 }
-.ghome .gallery-tabs button[aria-pressed="true"] { background: var(--card); color: var(--foreground); font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+/* 切换瞬间扫过一道高光（key 变化重挂 → 动画重播） */
+.ghome .gallery-tabs-sheen {
+  position: absolute; inset: 0; border-radius: inherit;
+  background: linear-gradient(105deg, transparent 34%, rgba(255, 255, 255, 0.22) 50%, transparent 66%);
+  transform: translateX(-130%);
+  animation: gt-tab-sheen 0.72s 0.06s cubic-bezier(0.33, 0, 0.2, 1);
+}
+@keyframes gt-tab-sheen {
+  to { transform: translateX(130%); }
+}
+@keyframes gt-tab-land {
+  0% { box-shadow: 0 0 0 0 rgba(233, 184, 122, 0.55), inset 0 0 0 1px rgba(233, 184, 122, 0.3); }
+  100% { box-shadow: 0 1px 2px rgba(0, 0, 0, 0.28), 0 6px 18px -10px rgba(233, 184, 122, 0.55), inset 0 0 0 1px rgba(233, 184, 122, 0.22); }
+}
+.ghome .gallery-tabs button {
+  position: relative; z-index: 1;
+  appearance: none; border: 0; background: transparent; color: var(--muted); font: inherit; cursor: pointer;
+  padding: 7px 18px; border-radius: 999px; font-size: 14px; font-weight: 500;
+  transition: color 0.24s, transform 0.24s;
+}
+.ghome .gallery-tabs button > span { position: relative; display: inline-block; transition: transform 0.3s cubic-bezier(0.34, 1.42, 0.44, 1); }
+.ghome .gallery-tabs button:hover { color: var(--foreground); }
+.ghome .gallery-tabs button:hover > span { transform: translateY(-1px); }
+.ghome .gallery-tabs button:active > span { transform: scale(0.94); }
+.ghome .gallery-tabs button[aria-pressed="true"] { color: var(--foreground); font-weight: 600; }
 .ghome .gallery-explore {
+  position: relative; isolation: isolate; overflow: hidden;
   display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 999px;
   border: 1px solid var(--border); background: var(--card); color: var(--foreground);
-  font-size: 14px; font-weight: 500; transition: border-color 0.25s, color 0.25s, transform 0.25s;
+  font-size: 14px; font-weight: 500; transition: border-color 0.25s, color 0.25s, transform 0.3s cubic-bezier(0.34, 1.42, 0.44, 1), box-shadow 0.3s;
 }
-.ghome .gallery-explore:hover { border-color: rgba(233, 184, 122, 0.45); color: var(--hero-gold); transform: translateY(-1px); }
+/* 悬停时的斜向扫光 */
+.ghome .gallery-explore::before {
+  content: ""; position: absolute; inset: -1px; z-index: 0; pointer-events: none;
+  background: linear-gradient(115deg, transparent 32%, rgba(233, 184, 122, 0.26) 48%, transparent 64%);
+  transform: translateX(-125%);
+  transition: transform 0.75s cubic-bezier(0.33, 0, 0.2, 1);
+}
+.ghome .gallery-explore:hover::before { transform: translateX(125%); }
+/* 悬停时的金色呼吸光环 */
+.ghome .gallery-explore::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  box-shadow: 0 0 0 0 rgba(233, 184, 122, 0.45);
+}
+.ghome .gallery-explore:hover::after { animation: gt-explore-ring 1.6s ease-out infinite; }
+@keyframes gt-explore-ring {
+  0% { box-shadow: 0 0 0 0 rgba(233, 184, 122, 0.4); }
+  70% { box-shadow: 0 0 0 9px rgba(233, 184, 122, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(233, 184, 122, 0); }
+}
+.ghome .gallery-explore-label { position: relative; z-index: 1; }
+.ghome .gallery-explore svg { position: relative; z-index: 1; transition: transform 0.34s cubic-bezier(0.34, 1.42, 0.44, 1); }
+.ghome .gallery-explore:hover {
+  border-color: rgba(233, 184, 122, 0.5); color: var(--hero-gold); transform: translateY(-2px);
+  box-shadow: 0 14px 32px -18px rgba(233, 184, 122, 0.75);
+}
+.ghome .gallery-explore:hover svg { transform: translate(3px, -3px) scale(1.08); }
 .ghome .gallery-link { color: var(--primary); font-weight: 600; font-size: 14px; display: inline-flex; align-items: center; gap: 6px; }
 .ghome .gallery-link:hover { text-decoration: underline; }
-.ghome .gallery-grid { display: grid; grid-template-columns: repeat(4, 1fr); grid-auto-rows: 205px; gap: 14px; margin-top: 22px; }
+.ghome .gallery-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 24px; }
 .ghome .gcard {
   position: relative; display: block; overflow: hidden; border-radius: 16px;
   border: 1px solid var(--border); background: var(--card-2);
+  /* 对标实测：小卡 300×375（竖版 0.8），大卡跨 2×2 自动成为 616×766 */
+  aspect-ratio: 300 / 375;
   transition: transform 0.34s cubic-bezier(0.22, 0.61, 0.36, 1), border-color 0.28s, box-shadow 0.34s;
 }
-.ghome .gcard--big { grid-column: span 2; grid-row: span 2; }
+.ghome .gcard--big { grid-column: span 2; grid-row: span 2; aspect-ratio: auto; }
 .ghome .gcard:hover { transform: translateY(-4px); border-color: rgba(233, 184, 122, 0.38); box-shadow: 0 24px 56px -34px rgba(0, 0, 0, 0.85); }
 .ghome .gcard-art { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform 0.9s cubic-bezier(0.22, 0.61, 0.36, 1); }
 .ghome .gcard:hover .gcard-art { transform: scale(1.05); }
@@ -791,7 +854,7 @@ html:not(.dark) .ghome {
 @media (max-width: 960px) {
   .ghome .studios { grid-template-columns: 1fr; }
   /* 03 画廊：4 列收 2 列，首卡仍跨 2×2（占满整行宽） */
-  .ghome .gallery-grid { grid-template-columns: repeat(2, 1fr); grid-auto-rows: 175px; }
+  .ghome .gallery-grid { grid-template-columns: repeat(2, 1fr); }
   .ghome .gallery-lead { margin: 0; }
   .ghome .agent-body { grid-template-columns: 1fr; gap: 26px; }
   .ghome .agent-preview-steps { grid-template-columns: repeat(2, 1fr); }
@@ -805,8 +868,9 @@ html:not(.dark) .ghome {
 }
 @media (max-width: 720px) {
   .ghome .section { padding: 60px 0; }
-  /* 03 画廊：单列，首卡取消跨行跨列 */
-  .ghome .gallery-grid { grid-template-columns: 1fr; grid-auto-rows: 200px; }
+  /* 03 画廊：单列，首卡取消跨行跨列，比例放宽避免手机上一屏一张 */
+  .ghome .gallery-grid { grid-template-columns: 1fr; }
+  .ghome .gcard { aspect-ratio: 4 / 3; }
   .ghome .gcard--big { grid-column: auto; grid-row: auto; }
   .ghome .gallery-toolbar { margin-top: 22px; }
   .ghome .agent-chips {
@@ -893,7 +957,11 @@ html:not(.dark) .ghome {
 @media (prefers-reduced-motion: reduce) {
   .ghome .hero-ticker-track,
   .ghome .marquee-track,
-  .ghome .agent-attach svg {
+  .ghome .agent-attach svg,
+  .ghome .gallery-tabs-thumb,
+  .ghome .gallery-tabs-sheen,
+  .ghome .gallery-explore::before,
+  .ghome .gallery-explore::after {
     animation: none !important;
     transition: none !important;
   }
