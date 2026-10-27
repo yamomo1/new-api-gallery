@@ -50,6 +50,8 @@ export function useScrollReveal(
       (entries) => {
         for (const e of entries) {
           if (e.isIntersecting) {
+            // data-revealed 记录「曾现身」：React 重渲染重写 className 时用于找回
+            ;(e.target as HTMLElement).dataset.revealed = '1'
             e.target.classList.add('in')
             io.unobserve(e.target)
           }
@@ -64,7 +66,24 @@ export function useScrollReveal(
       if (!el.classList.contains('in')) io.observe(el)
     })
 
-    return () => io.disconnect()
+    // 兜底：React 重渲染会重写受控 className，把命令式加上的 .in 冲掉
+    //（症状：首页 Agent 快捷 chips 点一下就消失——点选改变 className → 重渲染
+    //  抹掉 .in → [data-reveal]:not(.in) 回到 opacity:0，且 IO 已退订不再恢复）。
+    // 这里监听根子树 class 变化：曾现身（data-revealed="1"）却被抹掉 .in 的元素立即补回。
+    const mo = new MutationObserver((muts) => {
+      for (const m of muts) {
+        const t = m.target as HTMLElement
+        if (t.dataset && t.dataset.revealed === '1' && !t.classList.contains('in')) {
+          t.classList.add('in')
+        }
+      }
+    })
+    mo.observe(root, { subtree: true, attributes: true, attributeFilter: ['class'] })
+
+    return () => {
+      io.disconnect()
+      mo.disconnect()
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps)
 }
