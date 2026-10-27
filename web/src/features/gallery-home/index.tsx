@@ -20,6 +20,7 @@ import { useTranslation } from 'react-i18next'
 import {
   ArrowRight,
   ArrowUp,
+  ArrowUpRight,
   BookOpen,
   Check,
   ChevronDown,
@@ -141,6 +142,8 @@ export function GalleryHome() {
   const [agentSkill, setAgentSkill] = useState<AgentSkillKey>('auto')
   const [skillMenuOpen, setSkillMenuOpen] = useState(false)
   const skillMenuRef = useRef<HTMLDivElement>(null)
+  /** 03 提示词画廊筛选：0=全部 1=图片 2=视频（与 h.gallery.tabs 对齐） */
+  const [galleryTab, setGalleryTab] = useState(0)
 
   // 下拉菜单：点击外部 / Esc 关闭
   useEffect(() => {
@@ -164,7 +167,7 @@ export function GalleryHome() {
   // 滚动出现动画（scroll-reveal）：逻辑见 @/hooks/use-scroll-reveal
   //   1) [data-reveal]        单个元素淡入上浮（data-reveal-delay 毫秒错峰）
   //   2) [data-reveal-group]  盒子级：直接子元素自动逐个挂动画、按 data-reveal-step 错峰
-  useScrollReveal('.ghome', [h, m])
+  useScrollReveal('.ghome', [h, m, galleryTab])
 
   const activeSkill =
     agentSkill === 'auto'
@@ -488,59 +491,90 @@ export function GalleryHome() {
           </div>
         </section>
 
-        {/* ============ 4. 灵感画廊 ============ */}
-        <section className='section section--tinted'>
+        {/* ============ 4. 03 提示词画廊（对标站 1:1） ============ */}
+        <section className='section section--tinted' id='home-gallery'>
           <div className='container'>
+            {/* 头部：金色 03 眉标 + 两行大标题（第二行灰）+ 右侧窄列 lead */}
             <div className='gallery-head' data-reveal-group data-reveal-step='90'>
-              <div>
+              <div className='gallery-head-copy'>
                 <span className='eyebrow'>
                   <span className='sec-index'>{h.gallery.index}</span>
                   {h.gallery.eyebrow}
                 </span>
-                <h2
-                  style={{
-                    fontFamily: 'var(--font-serif)',
-                    fontSize: 'clamp(26px,3.4vw,38px)',
-                    margin: '10px 0 0',
-                    fontWeight: 600,
-                  }}
-                >
-                  {h.gallery.title}
+                <h2 className='gallery-title'>
+                  {h.gallery.title.split('\n').map((line, i, arr) => (
+                    <span key={i}>
+                      {i > 0 ? (
+                        <span className='gallery-title-dim'>{line}</span>
+                      ) : (
+                        line
+                      )}
+                      {i < arr.length - 1 && <br />}
+                    </span>
+                  ))}
                 </h2>
               </div>
+              <p className='gallery-lead'>{h.gallery.lead}</p>
+            </div>
+
+            {/* 工具行：左侧筛选胶囊（可点，真实过滤）+ 右侧「探索画廊」 */}
+            <div className='gallery-toolbar' data-reveal>
               <div className='gallery-tabs' role='group'>
                 {h.gallery.tabs.map((tab, i) => (
-                  <button key={tab} type='button' aria-pressed={i === 0}>
+                  <button
+                    key={tab}
+                    type='button'
+                    aria-pressed={galleryTab === i}
+                    onClick={() => setGalleryTab(i)}
+                  >
                     {tab}
                   </button>
                 ))}
               </div>
+              <Nav className='gallery-explore' to='/prompt-gallery'>
+                {h.gallery.exploreLabel} <ArrowUpRight size={14} />
+              </Nav>
             </div>
-            <p style={{ color: 'var(--muted)', marginTop: 14 }} data-reveal>
-              {h.gallery.lead}
-            </p>
 
+            {/* 作品网格：首卡跨 2×2，其余 1×1（对标站布局）；文字浮在图上 */}
             <div className='gallery-grid' data-reveal-group data-reveal-step='95'>
-              {h.gallery.items.map((g) => (
-                <Nav className='gcard' to={g.url} key={g.title}>
-                  <div className='gcard-cover'>
+              {h.gallery.items
+                .filter(
+                  (g) =>
+                    galleryTab === 0 ||
+                    (g.kind ?? 'image') ===
+                      (galleryTab === 1 ? 'image' : 'video'),
+                )
+                .map((g, i) => (
+                  <Nav
+                    className={i === 0 ? 'gcard gcard--big' : 'gcard'}
+                    to={g.url}
+                    key={g.title}
+                  >
                     {g.cover ? (
-                      <img src={g.cover} alt={g.title} loading='lazy' />
+                      <img
+                        className='gcard-art'
+                        src={g.cover}
+                        alt={g.title}
+                        loading='lazy'
+                      />
                     ) : (
-                      <span className='ph'>YMM</span>
+                      <span className='gcard-ph'>YMM</span>
                     )}
-                  </div>
-                  <div className='gcard-body'>
-                    <div className='gcard-title'>{g.title}</div>
-                    <div className='gcard-meta'>
-                      <span className='gcard-model'>{g.model}</span>
-                      <span className='gcard-view'>
-                        {t('View prompt')} <ChevronRight size={12} />
-                      </span>
+                    <div className='gcard-info'>
+                      <div className='gcard-title'>{g.title}</div>
+                      <div className='gcard-model'>{g.model}</div>
                     </div>
-                  </div>
-                </Nav>
-              ))}
+                  </Nav>
+                ))}
+              {galleryTab !== 0 &&
+                h.gallery.items.every(
+                  (g) =>
+                    (g.kind ?? 'image') !==
+                    (galleryTab === 1 ? 'image' : 'video'),
+                ) && (
+                  <div className='gallery-empty'>{t('No works yet')}</div>
+                )}
             </div>
 
             <div className='center' data-reveal>

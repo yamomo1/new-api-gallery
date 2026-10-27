@@ -89,6 +89,8 @@ const studioItemSchema = z.object({
 const galleryItemSchema = z.object({
   title: short(),
   model: short(80),
+  /** 作品类型：首页「全部/图片/视频」筛选用；缺省按 image 处理 */
+  kind: z.enum(['image', 'video']).optional(),
   cover: text(300),
   url: text(300),
 })
