@@ -86,6 +86,32 @@ export async function adminSetPromptGalleryStatus(
   return res.data
 }
 
+export async function adminUpdatePromptGallery(
+  id: number,
+  payload: PromptGallerySubmit
+): Promise<ApiEnvelope<null>> {
+  const res = await api.put(`/api/prompt-gallery/v1/admin/prompts/${id}`, payload)
+  return res.data
+}
+
+export async function adminDeletePromptGallery(
+  id: number
+): Promise<ApiEnvelope<null>> {
+  const res = await api.delete(`/api/prompt-gallery/v1/admin/prompts/${id}`)
+  return res.data
+}
+
+export async function adminSetPromptGalleryHome(
+  id: number,
+  home: boolean
+): Promise<ApiEnvelope<null>> {
+  const res = await api.post(
+    `/api/prompt-gallery/v1/admin/prompts/${id}/home`,
+    { home }
+  )
+  return res.data
+}
+
 export async function getAdminPromptGalleries(params: {
   status?: PromptGalleryStatus
   offset?: number

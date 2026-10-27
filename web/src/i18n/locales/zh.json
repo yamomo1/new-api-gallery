@@ -7684,6 +7684,22 @@
     "Hover video, optional (e.g. /videos/a.mp4)": "悬停视频，可选（例如 /videos/a.mp4）",
     "No published works in the gallery yet.": "画廊还没有已发布的作品。",
     "Published works only. Videos come with their cover and hover playback.": "只列出已发布的作品；视频会带封面与悬停播放。",
-    "Five works fill one group: one large card plus four small ones. Every extra five adds another group.": "5 条正好一组：一张大卡 + 四张小卡；每多 5 条会多一组。"
+    "Five works fill one group: one large card plus four small ones. Every extra five adds another group.": "5 条正好一组：一张大卡 + 四张小卡；每多 5 条会多一组。",
+    "Work": "作品",
+    "Works": "条作品",
+    "Stats": "数据",
+    "Show on homepage": "首页显示",
+    "On homepage": "已上首页",
+    "Review": "审核",
+    "Move back to review": "退回待审",
+    "Cover": "封面",
+    "Media (JSON array)": "媒体（JSON 数组）",
+    "This cannot be undone.": "此操作不可撤销。",
+    "Views": "浏览",
+    "Likes": "点赞",
+    "Shown on homepage": "已设为首页显示",
+    "Removed from homepage": "已取消首页显示",
+    "Changes go live immediately; the review status stays the same.": "修改立即生效，审核状态保持不变。",
+    "Publish it first to show it on the homepage.": "先通过审核才能上首页。"
   }
 }

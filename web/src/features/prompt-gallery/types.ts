@@ -30,6 +30,8 @@ export type PromptGalleryItem = {
   likes: number
   views: number
   status: PromptGalleryStatus
+  /** 后台「首页显示」标记：勾选后置顶到首页 03 画廊的自动来源 */
+  home: boolean
   created_at: number
   updated_at: number
 }

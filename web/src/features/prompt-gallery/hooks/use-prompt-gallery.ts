@@ -5,7 +5,10 @@ import i18next from 'i18next'
 import { requireServerSuccess } from '@/lib/server-error-message'
 
 import {
+  adminDeletePromptGallery,
+  adminSetPromptGalleryHome,
   adminSetPromptGalleryStatus,
+  adminUpdatePromptGallery,
   createMyPromptGallery,
   deleteMyPromptGallery,
   getAdminPromptGalleries,
@@ -116,6 +119,49 @@ export function useAdminSetPromptGalleryStatus() {
     onSuccess: () => {
       invalidateGallery(queryClient)
       toast.success(i18next.t('Status updated'))
+    },
+  })
+}
+
+export function useAdminUpdatePromptGallery() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({
+      id,
+      payload,
+    }: {
+      id: number
+      payload: PromptGallerySubmit
+    }) => requireServerSuccess(await adminUpdatePromptGallery(id, payload)).data,
+    onSuccess: () => {
+      invalidateGallery(queryClient)
+      toast.success(i18next.t('Updated'))
+    },
+  })
+}
+
+export function useAdminDeletePromptGallery() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: number) =>
+      requireServerSuccess(await adminDeletePromptGallery(id)).data,
+    onSuccess: () => {
+      invalidateGallery(queryClient)
+      toast.success(i18next.t('Deleted'))
+    },
+  })
+}
+
+export function useAdminSetPromptGalleryHome() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, home }: { id: number; home: boolean }) =>
+      requireServerSuccess(await adminSetPromptGalleryHome(id, home)).data,
+    onSuccess: (_data, vars) => {
+      invalidateGallery(queryClient)
+      toast.success(
+        i18next.t(vars.home ? 'Shown on homepage' : 'Removed from homepage')
+      )
     },
   })
 }

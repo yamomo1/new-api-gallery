@@ -7684,6 +7684,22 @@
     "Hover video, optional (e.g. /videos/a.mp4)": "Hover video, optional (e.g. /videos/a.mp4)",
     "No published works in the gallery yet.": "No published works in the gallery yet.",
     "Published works only. Videos come with their cover and hover playback.": "Published works only. Videos come with their cover and hover playback.",
-    "Five works fill one group: one large card plus four small ones. Every extra five adds another group.": "Five works fill one group: one large card plus four small ones. Every extra five adds another group."
+    "Five works fill one group: one large card plus four small ones. Every extra five adds another group.": "Five works fill one group: one large card plus four small ones. Every extra five adds another group.",
+    "Work": "Work",
+    "Works": "Works",
+    "Stats": "Stats",
+    "Show on homepage": "Show on homepage",
+    "On homepage": "On homepage",
+    "Review": "Review",
+    "Move back to review": "Move back to review",
+    "Cover": "Cover",
+    "Media (JSON array)": "Media (JSON array)",
+    "This cannot be undone.": "This cannot be undone.",
+    "Views": "Views",
+    "Likes": "Likes",
+    "Shown on homepage": "Shown on homepage",
+    "Removed from homepage": "Removed from homepage",
+    "Changes go live immediately; the review status stays the same.": "Changes go live immediately; the review status stays the same.",
+    "Publish it first to show it on the homepage.": "Publish it first to show it on the homepage."
   }
 }

@@ -56,6 +56,9 @@ func SetApiRouter(router *gin.Engine) {
 			promptGalleryRoute.DELETE("/mine/:id", middleware.UserAuth(), controller.DeleteMyPromptGallery)
 			promptGalleryRoute.GET("/admin/prompts", middleware.AdminAuth(), controller.AdminListPromptGalleries)
 			promptGalleryRoute.POST("/admin/prompts/:id/status", middleware.AdminAuth(), controller.AdminSetPromptGalleryStatus)
+			promptGalleryRoute.PUT("/admin/prompts/:id", middleware.AdminAuth(), controller.AdminUpdatePromptGallery)
+			promptGalleryRoute.DELETE("/admin/prompts/:id", middleware.AdminAuth(), controller.AdminDeletePromptGallery)
+			promptGalleryRoute.POST("/admin/prompts/:id/home", middleware.AdminAuth(), controller.AdminSetPromptGalleryHome)
 		}
 		apiRouter.GET("/verification", middleware.EmailVerificationRateLimit(), middleware.TurnstileCheck(), controller.SendEmailVerification)
 		apiRouter.GET("/reset_password", middleware.CriticalRateLimit(), middleware.TurnstileCheck(), controller.SendPasswordResetEmail)

@@ -24,8 +24,11 @@ type PromptGallery struct {
 	Likes     int    `json:"likes" gorm:"default:0"`
 	Views     int    `json:"views" gorm:"default:0"`
 	Status    string `json:"status" gorm:"type:varchar(16);index;default:published"` // draft / published / rejected
-	CreatedAt int64  `json:"created_at" gorm:"bigint"`
-	UpdatedAt int64  `json:"updated_at" gorm:"bigint"`
+	// Home 管理员「首页显示」标记：勾选后该作品在公开列表（latest）里置顶，
+	// 因此会优先出现在首页 03 画廊的自动来源里。
+	Home      bool  `json:"home" gorm:"default:false;index"`
+	CreatedAt int64 `json:"created_at" gorm:"bigint"`
+	UpdatedAt int64 `json:"updated_at" gorm:"bigint"`
 }
 
 func (PromptGallery) TableName() string {
@@ -76,13 +79,14 @@ func GetPublishedPromptGalleries(q PromptGalleryListQuery) ([]PromptGallery, int
 
 	switch q.Sort {
 	case "latest":
-		db = db.Order("created_at DESC, id DESC")
+		// 管理员标了「首页显示」的作品置顶，其次按发布时间
+		db = db.Order("home DESC, created_at DESC, id DESC")
 	case "popular":
 		db = db.Order("likes DESC, id DESC")
 	case "featured":
-		db = db.Order("likes DESC, views DESC, id DESC")
+		db = db.Order("home DESC, likes DESC, views DESC, id DESC")
 	default: // related
-		db = db.Order("id DESC")
+		db = db.Order("home DESC, id DESC")
 	}
 
 	var total int64
@@ -213,13 +217,62 @@ func AdminListPromptGalleries(status string, offset, limit int) ([]PromptGallery
 	return items, total, err
 }
 
-// AdminSetPromptGalleryStatus 管理员审核（发布/驳回）
+// AdminSetPromptGalleryStatus 管理员审核（发布/驳回/退回待审）
 func AdminSetPromptGalleryStatus(id int64, status string) error {
-	if status != PromptGalleryStatusPublished && status != PromptGalleryStatusRejected {
+	if status != PromptGalleryStatusPublished && status != PromptGalleryStatusRejected && status != PromptGalleryStatusDraft {
 		return common.NewMessage("Invalid gallery status")
 	}
 	res := DB.Model(&PromptGallery{}).Where("id = ?", id).Updates(map[string]any{
 		"status":     status,
+		"updated_at": common.GetTimestamp(),
+	})
+	if res.Error != nil {
+		return res.Error
+	}
+	if res.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
+}
+
+// AdminUpdatePromptGallery 管理员编辑作品（不限作者，不改审核状态）
+func AdminUpdatePromptGallery(id int64, update *PromptGallery) error {
+	res := DB.Model(&PromptGallery{}).Where("id = ?", id).Updates(map[string]any{
+		"title":      update.Title,
+		"prompt":     update.Prompt,
+		"model":      update.Model,
+		"type":       update.Type,
+		"cover":      update.Cover,
+		"media":      update.Media,
+		"category":   update.Category,
+		"tags":       update.Tags,
+		"updated_at": common.GetTimestamp(),
+	})
+	if res.Error != nil {
+		return res.Error
+	}
+	if res.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
+}
+
+// AdminDeletePromptGallery 管理员删除作品（不限作者）
+func AdminDeletePromptGallery(id int64) error {
+	res := DB.Where("id = ?", id).Delete(&PromptGallery{})
+	if res.Error != nil {
+		return res.Error
+	}
+	if res.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
+}
+
+// AdminSetPromptGalleryHome 管理员设置「首页显示」（置顶到首页画廊）
+func AdminSetPromptGalleryHome(id int64, home bool) error {
+	res := DB.Model(&PromptGallery{}).Where("id = ?", id).Updates(map[string]any{
+		"home":       home,
 		"updated_at": common.GetTimestamp(),
 	})
 	if res.Error != nil {

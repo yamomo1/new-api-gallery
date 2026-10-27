@@ -245,3 +245,84 @@ func AdminSetPromptGalleryStatus(c *gin.Context) {
 	}
 	common.ApiSuccessT(c, "Gallery status updated", nil)
 }
+
+// AdminUpdatePromptGallery 管理员编辑作品（不限作者，不改审核状态）
+// PUT /api/prompt-gallery/v1/admin/prompts/:id
+func AdminUpdatePromptGallery(c *gin.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		common.ApiErrorT(c, "Invalid gallery id")
+		return
+	}
+	var req struct {
+		Title    string `json:"title"`
+		Prompt   string `json:"prompt"`
+		Model    string `json:"model"`
+		Type     string `json:"type"`
+		Cover    string `json:"cover"`
+		Media    string `json:"media"`
+		Category string `json:"category"`
+		Tags     string `json:"tags"`
+	}
+	if err := common.UnmarshalJsonStr(c.PostForm("json"), &req); err != nil {
+		_ = c.ShouldBindJSON(&req)
+	}
+	if req.Title == "" || req.Prompt == "" {
+		common.ApiErrorT(c, "Title and prompt are required")
+		return
+	}
+	update := &model.PromptGallery{
+		Title:    req.Title,
+		Prompt:   req.Prompt,
+		Model:    req.Model,
+		Type:     req.Type,
+		Cover:    req.Cover,
+		Media:    req.Media,
+		Category: req.Category,
+		Tags:     req.Tags,
+	}
+	if update.Type == "" {
+		update.Type = "image"
+	}
+	if err := model.AdminUpdatePromptGallery(id, update); err != nil {
+		common.ApiError(c, err)
+		return
+	}
+	common.ApiSuccessT(c, "Gallery item updated", nil)
+}
+
+// AdminDeletePromptGallery 管理员删除作品（不限作者）
+// DELETE /api/prompt-gallery/v1/admin/prompts/:id
+func AdminDeletePromptGallery(c *gin.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		common.ApiErrorT(c, "Invalid gallery id")
+		return
+	}
+	if err := model.AdminDeletePromptGallery(id); err != nil {
+		common.ApiError(c, err)
+		return
+	}
+	common.ApiSuccessT(c, "Gallery item deleted", nil)
+}
+
+// AdminSetPromptGalleryHome 管理员「首页显示」开关
+// POST /api/prompt-gallery/v1/admin/prompts/:id/home
+func AdminSetPromptGalleryHome(c *gin.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		common.ApiErrorT(c, "Invalid gallery id")
+		return
+	}
+	var req struct {
+		Home bool `json:"home"`
+	}
+	if err := common.UnmarshalJsonStr(c.PostForm("json"), &req); err != nil {
+		_ = c.ShouldBindJSON(&req)
+	}
+	if err := model.AdminSetPromptGalleryHome(id, req.Home); err != nil {
+		common.ApiError(c, err)
+		return
+	}
+	common.ApiSuccessT(c, "Gallery home flag updated", nil)
+}
