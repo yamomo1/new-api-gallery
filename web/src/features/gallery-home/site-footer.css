@@ -7,7 +7,7 @@
   background:
     radial-gradient(58% 120% at 50% 0%, color-mix(in oklab, var(--accent-gold, #e9b872) 7%, transparent), transparent 60%),
     color-mix(in oklab, var(--muted) 55%, transparent);
-  margin-top: 4.5rem;
+  margin-top: 0;
 }
 /* 顶部金色发丝线：居中渐隐，像幕布的一道光 */
 .site-footer::before {
@@ -49,7 +49,7 @@
 .site-footer-bottom-inner {
   max-width: var(--maxw, 1200px); margin: 0 auto;
   padding: 1.1rem 1.5rem 1.4rem;
-  display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1.5rem;
+  display: flex; flex-direction: column; align-items: flex-start; gap: 0.5rem;
 }
 .site-footer-legal { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem 0; }
 .site-footer-legal-item { display: inline-flex; align-items: center; }
@@ -65,10 +65,10 @@
   .site-footer-main { padding: 2.5rem 1.25rem 2rem; }
 }
 
-.ghome .site-footer { margin-top: 4.5rem; }
+.ghome .site-footer { margin-top: 0; }
 .site-footer-beian {
   display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 1.25rem;
-  padding: 0 0 1.25rem;
+  padding: 0;
 }
 .site-footer-beian-company { font-size: 0.75rem; color: var(--muted-foreground); }
 .site-footer-beian-link {

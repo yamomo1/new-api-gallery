@@ -156,7 +156,7 @@ html:not(.dark) .ghome {
   position: relative; z-index: 2;
   display: flex; flex-direction: column; justify-content: flex-end;
   width: 100%; max-width: 80rem; margin-inline: auto;
-  padding: 7rem 1.25rem 5.5rem; /* 底部 5.5rem 给 hero 内滚动条留位 */
+  padding: 7rem 1.25rem 2.5rem;
 }
 .ghome .home-hero-copy { max-width: 38rem; }
 
@@ -186,7 +186,7 @@ html:not(.dark) .ghome {
       linear-gradient(180deg, transparent 72%, color-mix(in srgb, var(--hero-scrim-bottom, var(--gh-panel)) 92%, transparent) 100%),
       linear-gradient(180deg, var(--hero-scrim-top, rgba(3, 11, 15, 0.55)), transparent 8rem);
   }
-  .ghome .home-hero-inner { padding: 8.5rem 3rem 5.5rem; }
+  .ghome .home-hero-inner { padding: 8.5rem 3rem 2.5rem; }
   .ghome .home-hero-copy { max-width: min(40rem, 48%); margin-block: auto; }
   /* 桌面端：隐藏右上浮动卡（对标站桌面端首屏无此浮卡，视频+文字已构成完整画面）；
      浮卡仅在移动端（<720px）以「底部横条预览」形式出现。
@@ -355,7 +355,7 @@ html:not(.dark) .ghome {
    内容容器统一限宽 1280px（对标站 .container 规格，全局 .container 无 max-width）
    ============================================================ */
 .ghome .container { max-width: 82rem; }
-.ghome .section { padding: 88px 0; }
+.ghome .section { padding: 44px 0; }
 /* 顶部金色辉光（1:1 复刻对标站 .home-agent::before：
    radial-gradient 60%x70% at 50% 0%，金 14% 透明度渐隐 70%，高 28rem） */
 .ghome #home-agent { position: relative; isolation: isolate; }
@@ -1323,7 +1323,7 @@ html:not(.dark) .ghome {
   .ghome .hero-card-title { font-size: 0.875rem; }
 }
 @media (max-width: 720px) {
-  .ghome .section { padding: 60px 0; }
+  .ghome .section { padding: 36px 0; }
   /* 03 画廊：单列，首卡取消跨行跨列，比例放宽避免手机上一屏一张 */
   .ghome .gallery-grid { grid-template-columns: 1fr; }
   .ghome .gcard { aspect-ratio: 4 / 3; }

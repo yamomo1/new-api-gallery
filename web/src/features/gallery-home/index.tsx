@@ -8,7 +8,6 @@
  *   4. 灵感画廊：筛选 tabs + 作品网格 + 精选视频
  *   5. 模型亮点：295 模型 / 30 供应商 + 10 个模型列表
  *   6. 统一 API CTA：特性 + curl 代码示例
- *   7. 页脚上方模型滚动条（ModelTicker）
  *
  * 动效：home-settle 2.4s 落定 / home-rise 0.7s stagger 上浮 / home-bob 浮卡轻浮
  * 样式：gallery-home.css（作用域 .ghome，颜色继承 New API 主题变量 → 换肤联动）
@@ -171,7 +170,6 @@ import {
   HeroShowcaseCard,
   HeroTicker,
   HeroVideoStage,
-  ModelTicker,
 } from './components'
 import { useGalleryFeed, useGalleryHomeContent } from './api'
 import './gallery-home.css'
@@ -1069,10 +1067,6 @@ export function GalleryHome() {
           </div>
         </section>
 
-        {/* ============ 8. 页脚上方模型滚动条 ============ */}
-        <div data-reveal>
-          <ModelTicker models={m.ticker} tickerSec={m.tickerSec} />
-        </div>
       </div>
     </PublicLayout>
   )
