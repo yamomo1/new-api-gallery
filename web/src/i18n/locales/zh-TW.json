@@ -7816,6 +7816,25 @@
     "© 2026 cdymm.com. All rights reserved.": "© 2026 cdymm.com. All rights reserved.",
     "、": "、",
     "，": "，",
-    "，and ": "，並"
+    "，and ": "，並",
+    "Workspace": "工作臺",
+    "Canvas Studio": "畫布工作室",
+    "My Canvases": "我的畫布",
+    "Navigation links": "導覽連結",
+    "Top navigation": "頂部導覽",
+    "Add preset link": "新增預設連結",
+    "Add custom link": "新增自訂連結",
+    "Delete this canvas? This cannot be undone.": "確定刪除此畫布？此操作無法復原。",
+    "Canvas deleted": "畫布已刪除",
+    "Renamed": "已重新命名",
+    "No canvases yet.": "尚無畫布。",
+    "Your infinite-canvas documents.": "你的無限畫布文件。",
+    "Require login": "需要登入",
+    "No custom links yet.": "尚無自訂連結。",
+    "Save links": "儲存連結",
+    "Links shown in the site header next to Home / Console.": "顯示在站點頂部導覽「首頁 / 控制台」旁的連結。",
+    "Links appended to a \"Custom\" group in the user sidebar.": "附加到使用者側邊欄的「自訂」群組。",
+    "Link title": "連結標題",
+    "Title cannot be empty": "標題不能為空"
   }
 }

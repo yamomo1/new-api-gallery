@@ -7816,6 +7816,25 @@
     "© 2026 cdymm.com. All rights reserved.": "© 2026 cdymm.com. All rights reserved.",
     "、": "、",
     "，": "、",
-    "，and ": "、"
+    "，and ": "、",
+    "Workspace": "Workspace",
+    "Canvas Studio": "Canvas Studio",
+    "My Canvases": "My Canvases",
+    "Navigation links": "Navigation links",
+    "Top navigation": "Top navigation",
+    "Add preset link": "Add preset link",
+    "Add custom link": "Add custom link",
+    "Delete this canvas? This cannot be undone.": "Delete this canvas? This cannot be undone.",
+    "Canvas deleted": "Canvas deleted",
+    "Renamed": "Renamed",
+    "No canvases yet.": "No canvases yet.",
+    "Your infinite-canvas documents.": "Your infinite-canvas documents.",
+    "Require login": "Require login",
+    "No custom links yet.": "No custom links yet.",
+    "Save links": "Save links",
+    "Links shown in the site header next to Home / Console.": "Links shown in the site header next to Home / Console.",
+    "Links appended to a \"Custom\" group in the user sidebar.": "Links appended to a \"Custom\" group in the user sidebar.",
+    "Link title": "Link title",
+    "Title cannot be empty": "Title cannot be empty"
   }
 }

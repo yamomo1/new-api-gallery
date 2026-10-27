@@ -114,6 +114,8 @@ func GetStatus(c *gin.Context) {
 		// 模块管理配置
 		"HeaderNavModules":    common.OptionMap["HeaderNavModules"],
 		"SidebarModulesAdmin": common.OptionMap["SidebarModulesAdmin"],
+		// 二开：导航自定义链接（顶部导航 / 侧边栏，后台「站点设置 → 导航链接」维护）
+		"NavCustomLinks": common.OptionMap["NavCustomLinks"],
 
 		"oidc_enabled":                system_setting.GetOIDCSettings().Enabled,
 		"oidc_client_id":              system_setting.GetOIDCSettings().ClientId,

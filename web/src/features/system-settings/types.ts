@@ -155,6 +155,7 @@ export type SiteSettings = {
   HeaderNavModules: string
   SidebarModulesAdmin: string
   ThemePreset: string
+  NavCustomLinks: string
 }
 
 export type AuthSettings = {

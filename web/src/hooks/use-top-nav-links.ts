@@ -22,6 +22,7 @@ import { useTranslation } from 'react-i18next'
 import { useStatus } from '@/hooks/use-status'
 import { parseHeaderNavModulesFromStatus } from '@/lib/nav-modules'
 import { useAuthStore } from '@/stores/auth-store'
+import { useNavCustomLinks } from '@/hooks/use-nav-custom-links'
 
 export type TopNavLink = {
   title: string
@@ -99,6 +100,10 @@ export function useTopNavLinks(): TopNavLink[] {
   if (modules?.about !== false) {
     links.push({ title: t('About'), href: '/about' })
   }
+
+  // 二开：后台自定义链接（顶部导航）
+  const custom = useNavCustomLinks()
+  links.push(...custom.top)
 
   return links
 }

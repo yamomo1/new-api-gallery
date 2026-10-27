@@ -24,10 +24,12 @@ import {
   FileText,
   FlaskConical,
   FolderOpen,
+  Frame,
   Home,
   Images,
   Key,
   LayoutDashboard,
+  LayoutGrid,
   ListTodo,
   MessageSquare,
   PlugZap,
@@ -44,6 +46,7 @@ import { useTranslation } from 'react-i18next'
 
 import type { SidebarData } from '@/components/layout/types'
 import { ROLE } from '@/lib/roles'
+import { useNavCustomLinks } from '@/hooks/use-nav-custom-links'
 
 /**
  * Root navigation groups for the application sidebar.
@@ -54,8 +57,8 @@ import { ROLE } from '@/lib/roles'
 export function useSidebarData(): SidebarData {
   const { t } = useTranslation()
 
-  return {
-    navGroups: [
+  const custom = useNavCustomLinks()
+  const navGroups: SidebarData['navGroups'] = [
       {
         id: 'chat',
         title: t('Chat'),
@@ -139,6 +142,16 @@ export function useSidebarData(): SidebarData {
             url: '/security',
             icon: ShieldCheck,
           },
+          {
+            title: t('Workspace'),
+            url: '/workspace',
+            icon: LayoutGrid,
+          },
+          {
+            title: t('My Canvases'),
+            url: '/my-canvases',
+            icon: Frame,
+          },
         ],
       },
       {
@@ -207,6 +220,16 @@ export function useSidebarData(): SidebarData {
           },
         ],
       },
-    ],
+    ]
+
+  // 二开：后台自定义链接分组（侧边栏）
+  if (custom.sidebar.length) {
+    navGroups.push({
+      id: 'custom',
+      title: t('Custom'),
+      items: custom.sidebar,
+    })
   }
+
+  return { navGroups }
 }

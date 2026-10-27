@@ -39,6 +39,7 @@ const defaultSiteSettings: SiteSettings = {
   HeaderNavModules: '',
   SidebarModulesAdmin: '',
   ThemePreset: '',
+  NavCustomLinks: '',
 }
 
 export function SiteSettings() {
