@@ -200,13 +200,54 @@ func IncrPromptGalleryViews(id int64) {
 	DB.Model(&PromptGallery{}).Where("id = ?", id).UpdateColumn("views", gorm.Expr("views + 1"))
 }
 
-// AdminListPromptGalleries 管理员全量列表（含未审核/草稿/被拒）
-func AdminListPromptGalleries(status string, offset, limit int) ([]PromptGallery, int64, error) {
+// AdminPromptGalleryQuery 后台列表筛选条件
+// Status 审核状态 / Type 图片视频 / Model 模型 / Category 分类
+// Search 标题·提示词·模型·作者模糊搜索 / Sort newest|oldest|views|likes
+type AdminPromptGalleryQuery struct {
+	Status   string
+	Type     string
+	Model    string
+	Category string
+	Search   string
+	Sort     string
+}
+
+// AdminPromptGalleryFacet 后台筛选栏用的可选值（全量数据，不限状态）
+type AdminPromptGalleryFacet struct {
+	Models     []string `json:"models"`
+	Categories []string `json:"categories"`
+}
+
+// AdminListPromptGalleries 管理员全量列表（含未审核/草稿/被拒），支持筛选与排序
+func AdminListPromptGalleries(q AdminPromptGalleryQuery, offset, limit int) ([]PromptGallery, int64, error) {
 	db := DB.Model(&PromptGallery{})
-	if status != "" {
-		db = db.Where("status = ?", status)
+	if q.Status != "" {
+		db = db.Where("status = ?", q.Status)
 	}
-	db = db.Order("id DESC")
+	if q.Type != "" {
+		db = db.Where("type = ?", q.Type)
+	}
+	if q.Model != "" {
+		db = db.Where("model = ?", q.Model)
+	}
+	if q.Category != "" {
+		db = db.Where("category = ?", q.Category)
+	}
+	if q.Search != "" {
+		like := "%" + strings.TrimSpace(q.Search) + "%"
+		db = db.Where("title LIKE ? OR prompt LIKE ? OR model LIKE ? OR author LIKE ?", like, like, like, like)
+	}
+
+	switch q.Sort {
+	case "views":
+		db = db.Order("views DESC, id DESC")
+	case "likes":
+		db = db.Order("likes DESC, id DESC")
+	case "oldest":
+		db = db.Order("id ASC")
+	default: // newest
+		db = db.Order("id DESC")
+	}
 
 	var total int64
 	if err := db.Count(&total).Error; err != nil {
@@ -215,6 +256,22 @@ func AdminListPromptGalleries(status string, offset, limit int) ([]PromptGallery
 	var items []PromptGallery
 	err := db.Offset(offset).Limit(limit).Find(&items).Error
 	return items, total, err
+}
+
+// AdminPromptGalleryFacets 后台筛选栏的可选模型/分类（全量，不限审核状态）
+func AdminPromptGalleryFacets() (*AdminPromptGalleryFacet, error) {
+	facet := &AdminPromptGalleryFacet{Models: []string{}, Categories: []string{}}
+	if err := DB.Model(&PromptGallery{}).
+		Distinct("model").Where("model <> ''").Order("model ASC").
+		Pluck("model", &facet.Models).Error; err != nil {
+		return nil, err
+	}
+	if err := DB.Model(&PromptGallery{}).
+		Distinct("category").Where("category <> ''").Order("category ASC").
+		Pluck("category", &facet.Categories).Error; err != nil {
+		return nil, err
+	}
+	return facet, nil
 }
 
 // AdminSetPromptGalleryStatus 管理员审核（发布/驳回/退回待审）

@@ -19,6 +19,7 @@ import {
   type PromptGallerySubmit,
 } from '../api'
 import type {
+  PromptGalleryAdminParams,
   PromptGalleryFacets,
   PromptGalleryListParams,
   PromptGalleryListResult,
@@ -97,11 +98,11 @@ export function useDeletePromptGallery() {
   })
 }
 
-export function useAdminPromptGalleries(status?: PromptGalleryStatus) {
+export function useAdminPromptGalleries(params: PromptGalleryAdminParams) {
   return useQuery({
-    queryKey: ['prompt-gallery', 'admin', status ?? 'all'],
+    queryKey: ['prompt-gallery', 'admin', params],
     queryFn: async () =>
-      requireServerSuccess(await getAdminPromptGalleries({ status })).data,
+      requireServerSuccess(await getAdminPromptGalleries(params)).data,
     staleTime: 15 * 1000,
   })
 }

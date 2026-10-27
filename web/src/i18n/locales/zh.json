@@ -7700,6 +7700,14 @@
     "Shown on homepage": "已设为首页显示",
     "Removed from homepage": "已取消首页显示",
     "Changes go live immediately; the review status stays the same.": "修改立即生效，审核状态保持不变。",
-    "Publish it first to show it on the homepage.": "先通过审核才能上首页。"
+    "Publish it first to show it on the homepage.": "先通过审核才能上首页。",
+    "Search works": "搜索作品",
+    "Newest": "最新提交",
+    "Oldest": "最早提交",
+    "Most viewed": "浏览最多",
+    "Most liked": "点赞最多",
+    "Reset filters": "重置筛选",
+    "No works match these filters.": "没有符合条件的作品。",
+    "All statuses": "全部状态"
   }
 }

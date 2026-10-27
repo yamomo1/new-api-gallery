@@ -202,17 +202,29 @@ func DeleteMyPromptGallery(c *gin.Context) {
 
 // AdminListPromptGalleries 管理员全量列表
 // GET /api/prompt-gallery/v1/admin/prompts
+// 支持 status / type / model / category / search / sort / offset / limit
 func AdminListPromptGalleries(c *gin.Context) {
-	status := c.DefaultQuery("status", "")
 	offset, _ := strconv.Atoi(c.DefaultQuery("offset", "0"))
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
 	if limit <= 0 || limit > 100 {
 		limit = 20
 	}
-	items, total, err := model.AdminListPromptGalleries(status, offset, limit)
+	query := model.AdminPromptGalleryQuery{
+		Status:   c.Query("status"),
+		Type:     c.Query("type"),
+		Model:    c.Query("model"),
+		Category: c.Query("category"),
+		Search:   c.Query("search"),
+		Sort:     c.DefaultQuery("sort", "newest"),
+	}
+	items, total, err := model.AdminListPromptGalleries(query, offset, limit)
 	if err != nil {
 		common.ApiError(c, err)
 		return
+	}
+	facets, err := model.AdminPromptGalleryFacets()
+	if err != nil {
+		facets = &model.AdminPromptGalleryFacet{Models: []string{}, Categories: []string{}}
 	}
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
@@ -221,6 +233,7 @@ func AdminListPromptGalleries(c *gin.Context) {
 			"total":  total,
 			"offset": offset,
 			"limit":  limit,
+			"facets": facets,
 		},
 	})
 }

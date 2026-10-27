@@ -10,7 +10,7 @@
  * 后端接口：/api/prompt-gallery/v1/admin/prompts
  *   GET / POST :id/status / POST :id/home / PUT :id / DELETE :id
  */
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   Check,
@@ -18,6 +18,7 @@ import {
   Home,
   Pencil,
   RotateCcw,
+  Search,
   Trash2,
   X,
 } from 'lucide-react'
@@ -80,6 +81,22 @@ const STATUS_LABEL: Record<string, string> = {
   rejected: 'Rejected',
 }
 
+type AdminFilters = {
+  status: PromptGalleryStatus | 'all'
+  type: 'image' | 'video' | 'all'
+  model: string
+  sort: 'newest' | 'oldest' | 'views' | 'likes'
+  search: string
+}
+
+const DEFAULT_FILTERS: AdminFilters = {
+  status: 'draft',
+  type: 'all',
+  model: 'all',
+  sort: 'newest',
+  search: '',
+}
+
 const STATUS_BADGE: Record<
   string,
   'default' | 'secondary' | 'warning' | 'destructive'
@@ -89,14 +106,80 @@ const STATUS_BADGE: Record<
   rejected: 'destructive',
 }
 
+type FilterOption = { value: string; label: string }
+
+/** 筛选栏用的下拉（和表格里的「审核」下拉同一套组件，点选稳定） */
+function FilterSelect({
+  value,
+  options,
+  onChange,
+  className,
+}: {
+  value: string
+  options: FilterOption[]
+  onChange: (value: string) => void
+  className?: string
+}) {
+  const current = options.find((o) => o.value === value)
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        render={
+          <Button
+            variant='outline'
+            size='sm'
+            className={cn(
+              'h-8 justify-between gap-1 px-2 text-xs font-normal',
+              className
+            )}
+          >
+            <span className='truncate'>{current?.label ?? value}</span>
+            <ChevronDown className='size-3 shrink-0 opacity-60' />
+          </Button>
+        }
+      />
+      <DropdownMenuContent align='start' className='max-h-72 overflow-y-auto'>
+        {options.map((o) => (
+          <DropdownMenuItem key={o.value} onClick={() => onChange(o.value)}>
+            <Check
+              className={cn(
+                'size-3.5',
+                o.value === value ? 'opacity-100' : 'opacity-0'
+              )}
+            />
+            {o.label}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
+
 export function AdminPromptGalleryReview() {
   const { t } = useTranslation()
-  const [filter, setFilter] = useState<PromptGalleryStatus | 'all'>('draft')
+  const [filters, setFilters] = useState<AdminFilters>(DEFAULT_FILTERS)
+  const [searchInput, setSearchInput] = useState('')
   const [editing, setEditing] = useState<PromptGalleryItem | null>(null)
 
-  const { data, isLoading } = useAdminPromptGalleries(
-    filter === 'all' ? undefined : filter
-  )
+  // 搜索防抖：停顿 320ms 再查，避免每个按键都打一次接口
+  useEffect(() => {
+    const timer = setTimeout(
+      () =>
+        setFilters((f) =>
+          f.search === searchInput ? f : { ...f, search: searchInput }
+        ),
+      320
+    )
+    return () => clearTimeout(timer)
+  }, [searchInput])
+
+  const { data, isLoading } = useAdminPromptGalleries({
+    status: filters.status === 'all' ? undefined : filters.status,
+    type: filters.type === 'all' ? undefined : filters.type,
+    model: filters.model === 'all' ? undefined : filters.model,
+    search: filters.search.trim() || undefined,
+    sort: filters.sort,
+  })
   const setStatus = useAdminSetPromptGalleryStatus()
   const setHome = useAdminSetPromptGalleryHome()
   const update = useAdminUpdatePromptGallery()
@@ -104,6 +187,13 @@ export function AdminPromptGalleryReview() {
 
   const items = data?.items ?? []
   const total = data?.total ?? items.length
+  const models = data?.facets?.models ?? []
+  const filtersDirty =
+    filters.status !== DEFAULT_FILTERS.status ||
+    filters.type !== DEFAULT_FILTERS.type ||
+    filters.model !== DEFAULT_FILTERS.model ||
+    filters.sort !== DEFAULT_FILTERS.sort ||
+    filters.search.trim() !== ''
 
   const saveEdit = () => {
     if (!editing) return
@@ -128,7 +218,7 @@ export function AdminPromptGalleryReview() {
   return (
     <Main>
       <div className='container mx-auto max-w-7xl px-4 py-8'>
-        <div className='mb-6 flex flex-wrap items-end justify-between gap-3'>
+        <div className='mb-5 flex flex-wrap items-end justify-between gap-3'>
           <div>
             <h1 className='text-2xl font-bold tracking-tight'>
               {t('Gallery review')}
@@ -137,33 +227,100 @@ export function AdminPromptGalleryReview() {
               {t('Review and publish gallery submissions.')}
             </p>
           </div>
-          <div className='flex items-center gap-2'>
-            <Badge variant='outline' className='tabular-nums'>
-              {total} {t('Works')}
-            </Badge>
-            <Select
-              items={[
-                { value: 'draft', label: t('Pending review') },
-                { value: 'published', label: t('Published') },
-                { value: 'rejected', label: t('Rejected') },
-                { value: 'all', label: t('All') },
-              ]}
-              value={filter}
-              onValueChange={(v) =>
-                setFilter((v as PromptGalleryStatus | 'all') || 'all')
-              }
-            >
-              <SelectTrigger className='w-44'>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value='draft'>{t('Pending review')}</SelectItem>
-                <SelectItem value='published'>{t('Published')}</SelectItem>
-                <SelectItem value='rejected'>{t('Rejected')}</SelectItem>
-                <SelectItem value='all'>{t('All')}</SelectItem>
-              </SelectContent>
-            </Select>
+          <Badge variant='outline' className='tabular-nums'>
+            {total} {t('Works')}
+          </Badge>
+        </div>
+
+        {/* 筛选栏：搜索 / 状态 / 类型 / 模型 / 排序 */}
+        <div className='mb-4 flex flex-wrap items-center gap-2 rounded-xl border bg-card px-3 py-2.5'>
+          <div className='relative min-w-40 flex-1 sm:max-w-60'>
+            <Search className='absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground' />
+            <Input
+              className='h-8 pl-8'
+              value={searchInput}
+              placeholder={t('Search works')}
+              onChange={(e) => setSearchInput(e.target.value)}
+            />
           </div>
+
+          <FilterSelect
+            className='w-32'
+            value={filters.status}
+            onChange={(v) =>
+              setFilters({ ...filters, status: v as AdminFilters['status'] })
+            }
+            options={[
+              { value: 'draft', label: t('Pending review') },
+              { value: 'published', label: t('Published') },
+              { value: 'rejected', label: t('Rejected') },
+              { value: 'all', label: t('All statuses') },
+            ]}
+          />
+
+          {/* 图片 / 视频 分段筛选 */}
+          <div className='inline-flex items-center gap-0.5 rounded-lg border p-0.5'>
+            {(
+              [
+                { value: 'all', label: t('All') },
+                { value: 'image', label: t('Image') },
+                { value: 'video', label: t('Video') },
+              ] as const
+            ).map((opt) => (
+              <button
+                key={opt.value}
+                type='button'
+                onClick={() => setFilters({ ...filters, type: opt.value })}
+                className={cn(
+                  'rounded-md px-2.5 py-1 text-xs transition',
+                  filters.type === opt.value
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-muted-foreground hover:bg-muted'
+                )}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+
+          <FilterSelect
+            className='w-40'
+            value={filters.model}
+            onChange={(v) => setFilters({ ...filters, model: v })}
+            options={[
+              { value: 'all', label: t('All models') },
+              ...models.map((m) => ({ value: m, label: m })),
+            ]}
+          />
+
+          <FilterSelect
+            className='w-32'
+            value={filters.sort}
+            onChange={(v) =>
+              setFilters({ ...filters, sort: v as AdminFilters['sort'] })
+            }
+            options={[
+              { value: 'newest', label: t('Newest') },
+              { value: 'oldest', label: t('Oldest') },
+              { value: 'views', label: t('Most viewed') },
+              { value: 'likes', label: t('Most liked') },
+            ]}
+          />
+
+          {filtersDirty && (
+            <Button
+              variant='ghost'
+              size='sm'
+              className='h-8 gap-1 text-xs'
+              onClick={() => {
+                setFilters(DEFAULT_FILTERS)
+                setSearchInput('')
+              }}
+            >
+              <RotateCcw className='size-3.5' />
+              {t('Reset filters')}
+            </Button>
+          )}
         </div>
 
         {isLoading ? (
@@ -174,7 +331,9 @@ export function AdminPromptGalleryReview() {
           </div>
         ) : items.length === 0 ? (
           <div className='rounded-xl border border-dashed py-16 text-center text-muted-foreground'>
-            {t('Nothing to review')}
+            {filtersDirty
+              ? t('No works match these filters.')
+              : t('Nothing to review')}
           </div>
         ) : (
           <div className='overflow-hidden rounded-xl border bg-card'>
@@ -466,7 +625,9 @@ export function AdminPromptGalleryReview() {
                     }
                   >
                     <SelectTrigger>
-                      <SelectValue />
+                      <SelectValue>
+                        {editing.type === 'video' ? t('Video') : t('Image')}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value='image'>{t('Image')}</SelectItem>

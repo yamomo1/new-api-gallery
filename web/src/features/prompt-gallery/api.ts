@@ -1,6 +1,7 @@
 import { api } from '@/lib/api'
 
 import type {
+  PromptGalleryAdminParams,
   PromptGalleryFacets,
   PromptGalleryItem,
   PromptGalleryListParams,
@@ -112,11 +113,9 @@ export async function adminSetPromptGalleryHome(
   return res.data
 }
 
-export async function getAdminPromptGalleries(params: {
-  status?: PromptGalleryStatus
-  offset?: number
-  limit?: number
-}): Promise<ApiEnvelope<PromptGalleryListResult>> {
+export async function getAdminPromptGalleries(
+  params: PromptGalleryAdminParams
+): Promise<ApiEnvelope<PromptGalleryListResult>> {
   const res = await api.get('/api/prompt-gallery/v1/admin/prompts', { params })
   return res.data
 }

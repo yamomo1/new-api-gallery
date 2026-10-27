@@ -57,4 +57,18 @@ export type PromptGalleryListResult = {
   total: number
   offset: number
   limit: number
+  /** 后台列表附带的可选模型/分类（全量，不限审核状态） */
+  facets?: { models: string[]; categories: string[] }
+}
+
+/** 后台审核列表的筛选条件 */
+export type PromptGalleryAdminParams = {
+  status?: PromptGalleryStatus
+  type?: PromptGalleryType
+  model?: string
+  category?: string
+  search?: string
+  sort?: 'newest' | 'oldest' | 'views' | 'likes'
+  offset?: number
+  limit?: number
 }

@@ -7700,6 +7700,14 @@
     "Shown on homepage": "Shown on homepage",
     "Removed from homepage": "Removed from homepage",
     "Changes go live immediately; the review status stays the same.": "Changes go live immediately; the review status stays the same.",
-    "Publish it first to show it on the homepage.": "Publish it first to show it on the homepage."
+    "Publish it first to show it on the homepage.": "Publish it first to show it on the homepage.",
+    "Search works": "Search works",
+    "Newest": "Newest",
+    "Oldest": "Oldest",
+    "Most viewed": "Most viewed",
+    "Most liked": "Most liked",
+    "Reset filters": "Reset filters",
+    "No works match these filters.": "No works match these filters.",
+    "All statuses": "All statuses"
   }
 }
