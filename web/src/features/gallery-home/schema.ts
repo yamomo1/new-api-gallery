@@ -112,6 +112,38 @@ const modelItemSchema = z.object({
   url: text(300),
 })
 
+
+/** 页脚链接：文字 + 跳转地址 */
+const footerLinkSchema = z.object({
+  label: short(),
+  href: text(300),
+})
+
+/** 页脚导航栏的一列：栏目标题 + 链接列表 */
+const footerColumnSchema = z.object({
+  title: short(60).optional(),
+  items: z.array(footerLinkSchema).max(16).optional(),
+})
+
+/** 页脚（对标 aliyun.com 2025：多栏导航 + 法律声明行 + 版权行） */
+const footerSchema = z.object({
+  /** 关掉整个页脚（默认展示） */
+  enabled: z.boolean().optional(),
+  columns: z.array(footerColumnSchema).max(6).optional(),
+  /** 右侧「关于我们」块 */
+  about: z
+    .object({
+      title: short(60).optional(),
+      desc: text(400).optional(),
+      contact: short(120).optional(),
+    })
+    .optional(),
+  /** 法律声明行：服务条款 / 隐私政策 等 */
+  legal: z.array(footerLinkSchema).max(10).optional(),
+  /** 版权行文案（备案号由全局 BeianBar 负责，不在这里重复） */
+  copyright: text(300).optional(),
+})
+
 export const homeConfigSchema = z
   .object({
     hero: z
@@ -224,6 +256,7 @@ export const homeConfigSchema = z
       })
       .optional(),
     motion: motionSchema.optional(),
+    footer: footerSchema.optional(),
   })
   // 允许未来新增分支而不破坏既有配置（旧版本遗留字段直接透传合并）
   .passthrough()

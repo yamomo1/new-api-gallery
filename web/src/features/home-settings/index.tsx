@@ -95,6 +95,7 @@ import {
   type GallerySource,
   type GalleryWork,
 } from './gallery-items-card'
+import { FooterCard, type FooterColumn, type FooterLink } from './footer-card'
 
 const HOME_CONFIG_KEY = 'HomeConfig'
 
@@ -657,6 +658,19 @@ export function HomeSettings() {
       : (defaultGallery?.items ?? [])
   ) as GalleryWork[]
 
+  /** 页脚：多栏导航与法律声明行（shared），文案分组编辑 about/版权 */
+  const defaultFooter = (baseForLang as unknown as {
+    footer?: { columns?: FooterColumn[]; legal?: FooterLink[] }
+  }).footer
+  const sharedFooterColumns = getPath(draft.shared, 'footer.columns')
+  const sharedFooterLegal = getPath(draft.shared, 'footer.legal')
+  const footerColumns = (
+    Array.isArray(sharedFooterColumns) ? sharedFooterColumns : (defaultFooter?.columns ?? [])
+  ) as FooterColumn[]
+  const footerLegal = (
+    Array.isArray(sharedFooterLegal) ? sharedFooterLegal : (defaultFooter?.legal ?? [])
+  ) as FooterLink[]
+
   const filledInGroup = (group: FieldGroup) =>
     group.fields.filter((f) => {
       const v = getPath(localeDraft, f.path)
@@ -1049,6 +1063,19 @@ export function HomeSettings() {
                       setSharedValue('gallery.source', '')
                       setSharedValue('gallery.limit', '')
                     }}
+                  />
+                )}
+
+                {activeGroup.key === 'footer' && (
+                  <FooterCard
+                    columns={footerColumns}
+                    legal={footerLegal}
+                    columnsOverridden={Array.isArray(sharedFooterColumns)}
+                    legalOverridden={Array.isArray(sharedFooterLegal)}
+                    onChangeColumns={(items) => setSharedValue('footer.columns', items)}
+                    onChangeLegal={(items) => setSharedValue('footer.legal', items)}
+                    onResetColumns={() => setSharedValue('footer.columns', '')}
+                    onResetLegal={() => setSharedValue('footer.legal', '')}
                   />
                 )}
               </>

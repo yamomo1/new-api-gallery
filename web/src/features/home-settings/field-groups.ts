@@ -150,6 +150,16 @@ export const TEXT_GROUPS: FieldGroup[] = [
     title: 'Top ticker',
     fields: [{ path: 'motion.heroTicker.prefix', label: 'Ticker prefix' }],
   },
+  {
+    key: 'footer',
+    title: 'Footer',
+    fields: [
+      { path: 'footer.about.title', label: 'About column title' },
+      { path: 'footer.about.desc', label: 'About description', type: 'textarea' },
+      { path: 'footer.about.contact', label: 'Contact line' },
+      { path: 'footer.copyright', label: 'Copyright line' },
+    ],
+  },
 ]
 
 /** 共享分组：不分语种，改一次全站生效 */

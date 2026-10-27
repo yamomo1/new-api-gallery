@@ -65,6 +65,7 @@ export type HeroCardConfig = {
 
 /** 不参与翻译的字段（路径、色值、品牌名、代码、枚举） */
 const RAW_KEYS = new Set([
+  'href',
   'url',
   'primaryUrl',
   'secondaryUrl',
@@ -547,6 +548,57 @@ console.log(resp.choices[0].message.content)`,
     connectPrimaryLabel: 'Connect now',
     connectSecondaryLabel: 'View guide',
     connectSecondaryUrl: '/docs',
+  },
+  footer: {
+    enabled: true,
+    columns: [
+      {
+        title: 'Explore',
+        items: [
+          { label: 'Prompt gallery', href: '/prompt-gallery' },
+          { label: 'Canvas studio', href: '/canvas' },
+          { label: 'Model square', href: '/models' },
+          { label: 'Rankings', href: '/rankings' },
+        ],
+      },
+      {
+        title: 'Get started',
+        items: [
+          { label: 'Pricing', href: '/pricing' },
+          { label: 'Sign up', href: '/sign-up' },
+          { label: 'Console', href: '/console' },
+        ],
+      },
+      {
+        title: 'Resources',
+        items: [
+          { label: 'Documentation', href: 'https://docs.newapi.pro' },
+          { label: 'API reference', href: 'https://docs.newapi.pro/api/' },
+          { label: 'My works', href: '/my-works' },
+        ],
+      },
+      {
+        title: 'About',
+        items: [
+          { label: 'About us', href: '/about' },
+          { label: 'User agreement', href: '/user-agreement' },
+          { label: 'Privacy policy', href: '/privacy-policy' },
+          { label: 'Source code (AGPL-3.0)', href: 'https://github.com/yamomo1/new-api-gallery' },
+        ],
+      },
+    ],
+    about: {
+      title: 'About us',
+      desc:
+        'One gateway for chat, image and video models — create visually on the canvas, or wire the same models into your own product.',
+      contact: 'Contact us: 4000000000',
+    },
+    legal: [
+      { label: 'Terms', href: '/user-agreement' },
+      { label: 'Privacy', href: '/privacy-policy' },
+      { label: 'About', href: '/about' },
+    ],
+    copyright: '© 2026 cdymm.com. All rights reserved.',
   },
   closing: {
     kicker: 'Your next idea starts here',
