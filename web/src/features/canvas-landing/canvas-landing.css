@@ -25,8 +25,9 @@
   background: var(--ctlp-bg);
   color: var(--ctlp-ink);
   font-family:
-    -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB',
-    'Microsoft YaHei', system-ui, 'Segoe UI', Roboto, sans-serif;
+    'Alibaba PuHuiTi 3.0', -apple-system, BlinkMacSystemFont, 'PingFang SC',
+    'Hiragino Sans GB', 'Microsoft YaHei', system-ui, 'Segoe UI', Roboto,
+    sans-serif;
   padding: 7.5rem 0 6rem;
   overflow: clip;
   -webkit-font-smoothing: antialiased;
@@ -706,7 +707,7 @@
   gap: 7px;
   margin: 0 0 6px;
   /* 对标站：卡标题为金色 */
-  font-size: 15px;
+  font-size: 17px;
   font-weight: 600;
   color: var(--ctlp-gold);
   text-shadow: 0 1px 14px rgba(0, 0, 0, 0.5);
@@ -752,15 +753,15 @@
   align-items: center;
   gap: 9px;
   margin: 0 0 8px;
-  /* 发散式大标题：比对标卡片正文大两档，横贯画布 */
-  font-size: clamp(19px, 1.6vw, 24px);
+  /* 发散式大标题：与卡片标题统一金色（对标站标题为金色），稍大横贯画布 */
+  font-size: clamp(20px, 1.7vw, 26px);
   font-weight: 600;
   letter-spacing: 0.01em;
-  color: #f5f3f0;
+  color: var(--ctlp-gold);
   text-shadow: 0 2px 18px rgba(0, 0, 0, 0.55);
 }
 .ctlp-canvas-body h3 svg {
-  color: rgba(233, 194, 122, 0.9);
+  color: var(--ctlp-gold);
 }
 .ctlp-canvas-body p {
   margin: 0 0 12px;
@@ -948,4 +949,15 @@
     filter: none;
     transition: none;
   }
+}
+
+/* ============ 明亮模式适配（html 无 .dark） ============ */
+/* embed 进首页时区块底色透明：深色令牌的白字在浅底上会隐身（眉标/大标题/说明段）。
+   只翻头部文案用到的令牌；画布面板与卡片浮层文字都压在图片上，恒用白字不受影响。 */
+html:not(.dark) .ctlp.ctlp-embed {
+  --ctlp-ink: #1b1b21;
+  --ctlp-muted: #5e5e68;
+  --ctlp-dim: #8b8b93;
+  --ctlp-line: rgba(0, 0, 0, 0.12);
+  --ctlp-line-strong: rgba(0, 0, 0, 0.22);
 }
