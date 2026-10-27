@@ -1447,3 +1447,26 @@ html:not(.dark) .ghome {
     transition: none;
   }
 }
+
+/* ============ 动效借鉴：aliyun.com 2025 首页（只借效果，不动布局） ============ */
+/* 1) 鼠标跟随光晕（对标 .effect-highlight：radial 光斑跟手 + mix-blend overlay）。
+      坐标由 src/lib/fx-glow.ts 的全局 pointermove 写入 --mouse-x/--mouse-y。 */
+.ghome .fx-glow { position: relative; --mouse-x: -200px; --mouse-y: -200px; }
+.ghome .fx-glow::before {
+  content: ''; position: absolute; left: var(--mouse-x); top: var(--mouse-y);
+  width: 150px; height: 150px; border-radius: 50%;
+  background: radial-gradient(circle, #ffffff 0%, rgba(255, 255, 255, 0) 70%);
+  mix-blend-mode: overlay; opacity: 0; transform: translate(-50%, -50%);
+  pointer-events: none; z-index: 5; transition: opacity 0.3s ease-in-out;
+}
+.ghome .fx-glow:hover::before { opacity: 0.5; }
+.ghome .fx-glow:active::before { opacity: 0.6; }
+
+/* 2) 主按钮：光斑裁进胶囊内（对标 bg-ai-button 的 inset 内发光质感） */
+.ghome .hero-btn-primary.fx-glow { overflow: hidden; }
+
+/* 3) 画廊卡入场缓动带轻微回弹（对标 adcZoomIn 的 overshoot 手感） */
+.ghome .gcard[data-reveal] { --reveal-ease: cubic-bezier(0.34, 1.42, 0.44, 1); }
+
+/* 4) 卡片标题/链接颜色统一 .3s 过渡（对标全站 color .3s ease-out） */
+.ghome .gcard-title, .ghome .gcard-model { transition: color 0.3s ease-out, opacity 0.3s ease-out; }

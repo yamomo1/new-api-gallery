@@ -114,7 +114,7 @@ function GalleryCard({
   }
   return (
     <Nav
-      className={big ? 'gcard gcard--big' : 'gcard'}
+      className={big ? 'gcard gcard--big fx-glow' : 'gcard fx-glow'}
       to={item.url}
       onMouseEnter={play}
       onMouseLeave={stop}
@@ -165,6 +165,7 @@ function GalleryCard({
 import { PublicLayout } from '@/components/layout'
 import { StudioScene } from '@/features/canvas-landing/scene'
 import { useScrollReveal } from '@/hooks/use-scroll-reveal'
+import { ensureFxGlowBound } from '@/lib/fx-glow'
 
 import {
   HeroShowcaseCard,
@@ -314,6 +315,11 @@ export function GalleryHome() {
   const galleryTabRefs = useRef<Array<HTMLButtonElement | null>>([])
   const [tabThumb, setTabThumb] = useState({ x: 0, w: 0 })
 
+  // 鼠标跟随光晕：全局 pointermove 单例绑定（幂等）
+  useEffect(() => {
+    ensureFxGlowBound()
+  }, [])
+
   useEffect(() => {
     const measure = () => {
       const el = galleryTabRefs.current[galleryTab]
@@ -421,11 +427,11 @@ export function GalleryHome() {
                 className='home-hero-actions rise'
                 style={{ animationDelay: '240ms' }}
               >
-                <Nav className='hero-btn-primary' to={h.hero.primaryUrl}>
+                <Nav className='hero-btn-primary fx-glow' to={h.hero.primaryUrl}>
                   <Sparkles size={16} /> {h.hero.primaryLabel}
                 </Nav>
                 {h.hero.secondaryUrl && (
-                  <a className='hero-btn-ghost' href={h.hero.secondaryUrl}>
+                  <a className='hero-btn-ghost fx-glow' href={h.hero.secondaryUrl}>
                     <span className='hero-btn-play'>
                       <Play size={12} />
                     </span>

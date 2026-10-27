@@ -37,6 +37,7 @@ import {
 } from 'lucide-react'
 
 import './canvas-landing.css'
+import { ensureFxGlowBound } from '@/lib/fx-glow'
 
 type HeadingTag = 'h1' | 'h2'
 
@@ -226,6 +227,10 @@ export function StudioScene({
   links,
   canvasBody,
 }: StudioSceneProps) {
+  // 鼠标跟随光晕：进入页面时绑定一次全局监听（lib 内幂等）
+  useEffect(() => {
+    ensureFxGlowBound()
+  }, [])
   const [ref, seen] = useInViewOnce<HTMLDivElement>()
   // 落地页永远算「已进视口」；embed 模式等滚动到再开跑
   const live = embed ? seen : true
@@ -404,7 +409,7 @@ function StudioCardView({
   const Icon = card.icon
 
   return (
-    <article className='ctlp-card'>
+    <article className='ctlp-card fx-glow'>
       <span className='ctlp-card-tag'>{t(card.tagKey)}</span>
 
       <div className='ctlp-card-media'>

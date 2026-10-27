@@ -961,3 +961,43 @@ html:not(.dark) .ctlp.ctlp-embed {
   --ctlp-line: rgba(0, 0, 0, 0.12);
   --ctlp-line-strong: rgba(0, 0, 0, 0.22);
 }
+
+/* ============ 动效借鉴：aliyun.com 2025 首页（只借效果） ============ */
+/* 鼠标跟随光晕（/canvas 落地页与首页 embed 通用；坐标由 lib/fx-glow.ts 写入） */
+.ctlp .fx-glow { position: relative; --mouse-x: -200px; --mouse-y: -200px; }
+.ctlp .fx-glow::before {
+  content: ''; position: absolute; left: var(--mouse-x); top: var(--mouse-y);
+  width: 150px; height: 150px; border-radius: 50%;
+  background: radial-gradient(circle, #ffffff 0%, rgba(255, 255, 255, 0) 70%);
+  mix-blend-mode: overlay; opacity: 0; transform: translate(-50%, -50%);
+  pointer-events: none; z-index: 6; transition: opacity 0.3s ease-in-out;
+}
+.ctlp .fx-glow:hover::before { opacity: 0.5; }
+.ctlp .fx-glow:active::before { opacity: 0.6; }
+
+/* CTA 链接「渐变文字流动」（对标 .link:hover .text 的 textGradientScroll）：
+   文字恒为金色系渐变裁切，hover 时 2.5s 无限流动；箭头图标不受影响 */
+.ctlp .ctlp-card-link {
+  background-image: linear-gradient(
+    90deg,
+    #e8e6e2 0%,
+    var(--ctlp-gold) 28%,
+    #fff6e3 50%,
+    var(--ctlp-gold) 72%,
+    #e8e6e2 100%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+.ctlp .ctlp-card-link svg { color: var(--ctlp-gold); flex: none; }
+.ctlp .ctlp-card-link:hover {
+  animation: ctlp-text-gradient-scroll 2.5s linear infinite;
+}
+@keyframes ctlp-text-gradient-scroll {
+  0% { background-position-x: 100%; }
+  50% { background-position-x: 0%; }
+  100% { background-position-x: -100%; }
+}
