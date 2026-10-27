@@ -121,7 +121,9 @@ export function useGalleryFeed(
   limit: number,
 ): { items: GalleryCardItem[]; isLoading: boolean } {
   const enabled = source === 'latest' || source === 'popular'
-  const take = Math.min(Math.max(Number(limit) || 10, 1), 24)
+  const take = Math.min(Math.max(Number(limit) || 5, 1), 24)
+  /** 首页只展示 take 条，但要多取一些做池子，图片/视频筛选后才够各自的数量 */
+  const pool = Math.min(Math.max(take * 3, 15), 24)
   const { data, isLoading } = useQuery({
     queryKey: ['gallery-home', 'gallery-feed', source, take],
     enabled,
@@ -130,7 +132,7 @@ export function useGalleryFeed(
     queryFn: async () => {
       const params = new URLSearchParams({
         sort: source === 'popular' ? 'popular' : 'latest',
-        limit: String(take),
+        limit: String(pool),
         offset: '0',
       })
       const res = await fetch(`/api/prompt-gallery/v1/prompts?${params.toString()}`, {

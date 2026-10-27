@@ -288,12 +288,16 @@ export function GalleryHome() {
   const galleryItems = galleryFeed.items.length
     ? galleryFeed.items
     : h.gallery.items
-  /** 03 画廊：当前筛选下的可见作品；首卡永远是大卡，条目够多时（≥10）第 6 张也做大卡，正好铺满网格 */
-  const galleryVisible = galleryItems.filter(
-    (g) =>
-      galleryTab === 0 ||
-      (g.kind ?? 'image') === (galleryTab === 1 ? 'image' : 'video'),
-  )
+  /** 03 画廊：当前筛选下的可见作品；先按类型筛，再按后台「显示数量」截断。
+   *  默认 5 条 = 一张大卡 + 四张小卡，只有一组，不会再往下多出一组。 */
+  const galleryLimit = Math.min(Math.max(Number(h.gallery.limit) || 5, 1), 24)
+  const galleryVisible = galleryItems
+    .filter(
+      (g) =>
+        galleryTab === 0 ||
+        (g.kind ?? 'image') === (galleryTab === 1 ? 'image' : 'video'),
+    )
+    .slice(0, galleryLimit)
   /**
    * 大卡位置：4 列网格里每 5 张一个循环 —— 1 张跨 2×2 + 4 张小卡正好两行，
    * 所以 5 张放 1 张、10 张放 2 张、15 张放 3 张，网格永远铺满不空边。

@@ -311,50 +311,17 @@ export const HOME_DATA = {
      * 画廊还没有已发布作品时回退到下面的 items。
      */
     source: 'latest',
-    /** latest / popular 时取多少条（默认 10，正好铺成 2 行大卡 + 小卡） */
-    limit: 10,
+    /**
+     * 每个筛选（全部/图片/视频）最多显示多少条。
+     * 5 条 = 一张大卡 + 四张小卡，正好一组；每多 5 条会多一组。
+     */
+    limit: 5,
     items: [
       {
         title: '90s cool-tone fantasy portrait in emerald hanfu',
         model: 'gpt-image-2.5',
         kind: 'image',
         cover: '/images/home/model-image-v4.webp',
-        url: '/prompt-gallery',
-      },
-      {
-        title: 'Ultra-detailed 3D comic star collectible poster',
-        model: 'gpt-image-2.5',
-        kind: 'image',
-        cover: '/images/home/studio-portrait-v3.webp',
-        url: '/prompt-gallery',
-      },
-      {
-        title: 'Retro racing poster design prompt',
-        model: 'gpt-image-2.5',
-        kind: 'image',
-        cover: '/images/home/creative-studios.webp',
-        url: '/prompt-gallery',
-      },
-      {
-        title: 'Children’s science poster: meet the bees',
-        model: 'gpt-image-2.5',
-        kind: 'image',
-        cover: '/images/home/creative-workspace-hero.webp',
-        url: '/prompt-gallery',
-      },
-      {
-        title: 'Soft-lit iris study, macro still life',
-        model: 'seedream-5-pro',
-        kind: 'image',
-        cover: '/images/home/creative-canvas-artwork.webp',
-        url: '/prompt-gallery',
-      },
-      {
-        title: 'Chibi character sticker set prompt',
-        model: 'gpt-image-2.5',
-        kind: 'video',
-        cover: '/images/home/model-image-v3.webp',
-        video: '/videos/gallery-video.mp4',
         url: '/prompt-gallery',
       },
       {
@@ -366,11 +333,40 @@ export const HOME_DATA = {
         url: '/prompt-gallery',
       },
       {
+        title: 'Ultra-detailed 3D comic star collectible poster',
+        model: 'gpt-image-2.5',
+        kind: 'image',
+        cover: '/images/home/studio-portrait-v3.webp',
+        url: '/prompt-gallery',
+      },
+      {
         title: 'Neon city walk-through, three camera moves',
         model: 'seedance-2.0',
         kind: 'video',
-        cover: '/images/home/canvas-world-v3.webp',
+        cover: '/images/home/hero-world-v3.webp',
         video: '/videos/gallery-video.mp4',
+        url: '/prompt-gallery',
+      },
+      {
+        title: 'Retro racing poster design prompt',
+        model: 'gpt-image-2.5',
+        kind: 'image',
+        cover: '/images/home/creative-studios.webp',
+        url: '/prompt-gallery',
+      },
+      {
+        title: 'Chibi character sticker set prompt',
+        model: 'gpt-image-2.5',
+        kind: 'video',
+        cover: '/images/home/model-image-v3.webp',
+        video: '/videos/gallery-video.mp4',
+        url: '/prompt-gallery',
+      },
+      {
+        title: 'Children’s science poster: meet the bees',
+        model: 'gpt-image-2.5',
+        kind: 'image',
+        cover: '/images/home/creative-workspace-hero.webp',
         url: '/prompt-gallery',
       },
       {
@@ -379,6 +375,13 @@ export const HOME_DATA = {
         kind: 'video',
         cover: '/images/home/model-cinema-v3.webp',
         video: '/videos/hero-video.mp4',
+        url: '/prompt-gallery',
+      },
+      {
+        title: 'Soft-lit iris study, macro still life',
+        model: 'seedream-5-pro',
+        kind: 'image',
+        cover: '/images/home/creative-canvas-artwork.webp',
         url: '/prompt-gallery',
       },
       {
@@ -452,7 +455,7 @@ export const HOME_DATA = {
         name: 'Vidu',
         category: 'Video generation',
         capability: 'Text to video',
-        thumb: '/images/home/canvas-world-v3.webp',
+        thumb: '/images/home/hero-world-v3.webp',
         url: '/pricing',
       },
       {

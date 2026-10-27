@@ -650,7 +650,7 @@ export function HomeSettings() {
   const galleryLimit =
     typeof sharedGalleryLimit === 'number'
       ? sharedGalleryLimit
-      : (defaultGallery?.limit ?? 10)
+      : (defaultGallery?.limit ?? 5)
   const galleryItems = (
     Array.isArray(sharedGalleryItems)
       ? sharedGalleryItems

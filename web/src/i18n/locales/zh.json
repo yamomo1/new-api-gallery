@@ -7683,6 +7683,7 @@
     "Cover image (e.g. /images/home/a.webp)": "封面图（例如 /images/home/a.webp）",
     "Hover video, optional (e.g. /videos/a.mp4)": "悬停视频，可选（例如 /videos/a.mp4）",
     "No published works in the gallery yet.": "画廊还没有已发布的作品。",
-    "Published works only. Videos come with their cover and hover playback.": "只列出已发布的作品；视频会带封面与悬停播放。"
+    "Published works only. Videos come with their cover and hover playback.": "只列出已发布的作品；视频会带封面与悬停播放。",
+    "Five works fill one group: one large card plus four small ones. Every extra five adds another group.": "5 条正好一组：一张大卡 + 四张小卡；每多 5 条会多一组。"
   }
 }

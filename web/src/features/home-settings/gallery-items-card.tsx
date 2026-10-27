@@ -226,7 +226,7 @@ export function GalleryItemsCard({
                 onChange={(e) => {
                   const n = Number(e.target.value)
                   onLimitChange(
-                    Number.isFinite(n) ? Math.min(Math.max(Math.round(n), 1), 24) : 10,
+                    Number.isFinite(n) ? Math.min(Math.max(Math.round(n), 1), 24) : 5,
                   )
                 }}
               />
@@ -234,7 +234,7 @@ export function GalleryItemsCard({
             <p className='flex-1 text-[11px] leading-relaxed text-muted-foreground'>
               {source === 'manual'
                 ? t('Manual mode uses the list below, so the number here only applies to the automatic sources.')
-                : t('Ten works fill the grid exactly: two large cards plus eight small ones.')}
+                : t('Five works fill one group: one large card plus four small ones. Every extra five adds another group.')}
             </p>
           </div>
         </CardContent>
