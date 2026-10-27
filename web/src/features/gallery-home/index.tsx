@@ -478,6 +478,12 @@ export function GalleryHome() {
                 image: h.studios.items[1]?.url ?? '/prompt-gallery',
                 motion: h.studios.items[2]?.url ?? '/prompt-gallery',
               }}
+              canvasBody={{
+                title: h.studios.items[0]?.title ?? '',
+                desc: h.studios.items[0]?.desc ?? '',
+                cta: h.studios.items[0]?.cta ?? '',
+                to: h.studios.items[0]?.url ?? '/canvas',
+              }}
             />
           </div>
         </section>

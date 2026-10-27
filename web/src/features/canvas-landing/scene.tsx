@@ -64,6 +64,8 @@ export type StudioSceneProps = {
   media?: Partial<typeof DEFAULT_MEDIA>
   /** 两张卡的跳转地址 */
   links?: { image: string; motion: string }
+  /** 左画布面板下方正文：标题 + 描述 + 进入链接（来自首页 data.ts studios.items[0]） */
+  canvasBody?: { title: string; desc: string; cta: string; to: string }
 }
 
 /** 系统「减少动效」偏好（打字机 / 推拉镜头等持续动画在此关掉） */
@@ -222,6 +224,7 @@ export function StudioScene({
   embed = false,
   media,
   links,
+  canvasBody,
 }: StudioSceneProps) {
   const [ref, seen] = useInViewOnce<HTMLDivElement>()
   // 落地页永远算「已进视口」；embed 模式等滚动到再开跑
@@ -295,7 +298,7 @@ export function StudioScene({
         </div>
 
         <div className='ctlp-grid'>
-          <CanvasPanel image={img.canvas} />
+          <CanvasPanel image={img.canvas} body={canvasBody} />
 
           <div className='ctlp-stack' data-reveal-group data-reveal-step='140'>
             {cards.map((card) => (
@@ -308,53 +311,76 @@ export function StudioScene({
   )
 }
 
-/** 左侧：无边画布面板（主图 + 虚线选区 + 工具条 + 画布浮标） */
-function CanvasPanel({ image }: { image: string }) {
+/** 左侧：无边画布面板（主图 + 虚线选区 + 工具条 + 画布浮标）+ 下方正文 */
+function CanvasPanel({
+  image,
+  body,
+}: {
+  image: string
+  body?: { title: string; desc: string; cta: string; to: string }
+}) {
   const { t } = useTranslation()
   return (
     <div className='ctlp-canvas' data-reveal>
-      <img
-        className='ctlp-canvas-art'
-        src={image}
-        alt=''
-        loading='eager'
-        decoding='async'
-      />
+      <div className='ctlp-canvas-frame'>
+        <img
+          className='ctlp-canvas-art'
+          src={image}
+          alt=''
+          loading='eager'
+          decoding='async'
+        />
 
-      {/* 辅助线：从选区向画布边缘延伸 */}
-      <span className='ctlp-guide ctlp-guide-v' aria-hidden='true' />
-      <span className='ctlp-guide ctlp-guide-h' aria-hidden='true' />
+        {/* 辅助线：从选区向画布边缘延伸 */}
+        <span className='ctlp-guide ctlp-guide-v' aria-hidden='true' />
+        <span className='ctlp-guide ctlp-guide-h' aria-hidden='true' />
 
-      {/* 虚线选区 + 四角手柄（行军蚁 + 呼吸） */}
-      <div className='ctlp-sel' aria-hidden='true'>
-        <span className='ctlp-sel-edge ctlp-sel-t' />
-        <span className='ctlp-sel-edge ctlp-sel-r' />
-        <span className='ctlp-sel-edge ctlp-sel-b' />
-        <span className='ctlp-sel-edge ctlp-sel-l' />
-        <span className='ctlp-sel-handle ctlp-h-tl' />
-        <span className='ctlp-sel-handle ctlp-h-tr' />
-        <span className='ctlp-sel-handle ctlp-h-bl' />
-        <span className='ctlp-sel-handle ctlp-h-br' />
+        {/* 虚线选区 + 四角手柄（行军蚁 + 呼吸） */}
+        <div className='ctlp-sel' aria-hidden='true'>
+          <span className='ctlp-sel-edge ctlp-sel-t' />
+          <span className='ctlp-sel-edge ctlp-sel-r' />
+          <span className='ctlp-sel-edge ctlp-sel-b' />
+          <span className='ctlp-sel-edge ctlp-sel-l' />
+          <span className='ctlp-sel-handle ctlp-h-tl' />
+          <span className='ctlp-sel-handle ctlp-h-tr' />
+          <span className='ctlp-sel-handle ctlp-h-bl' />
+          <span className='ctlp-sel-handle ctlp-h-br' />
+        </div>
+
+        {/* 左侧竖向工具条 */}
+        <div className='ctlp-tools'>
+          <button type='button' aria-label={t('Move')}>
+            <Move size={14} />
+          </button>
+          <button type='button' aria-label={t('Type')}>
+            <Type size={14} />
+          </button>
+          <button type='button' aria-label={t('Image')}>
+            <ImageIcon size={14} />
+          </button>
+        </div>
+
+        {/* 左下「画布」浮标 */}
+        <span className='ctlp-canvas-badge'>
+          <ImageIcon size={13} />
+          {t('Canvas')}
+        </span>
       </div>
 
-      {/* 左侧竖向工具条 */}
-      <div className='ctlp-tools'>
-        <button type='button' aria-label={t('Move')}>
-          <Move size={14} />
-        </button>
-        <button type='button' aria-label={t('Type')}>
-          <Type size={14} />
-        </button>
-        <button type='button' aria-label={t('Image')}>
-          <ImageIcon size={14} />
-        </button>
-      </div>
-
-      {/* 左下「画布」浮标 */}
-      <span className='ctlp-canvas-badge'>
-        <ImageIcon size={13} />
-        {t('Canvas')}
-      </span>
+      {/* 画布下方正文：对标站左大图下方那段标题 + 描述 + 进入链接 */}
+      {body && (
+        <div className='ctlp-canvas-body'>
+          <h3>
+            <ImageIcon size={14} />
+            {body.title}
+          </h3>
+          <p>{body.desc}</p>
+          <TanstackLink className='ctlp-card-link' to={body.to}>
+            {body.cta}
+            <ArrowUpRight size={13} />
+          </TanstackLink>
+        </div>
+      )}
     </div>
   )
 }

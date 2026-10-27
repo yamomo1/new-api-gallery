@@ -261,9 +261,9 @@ export const HOME_DATA = {
       {
         image: '/images/home/creative-canvas-artwork.webp',
         kicker: 'Canvas',
-        title: 'Arrange on an infinite canvas',
-        desc: 'Lay out references, prompts, images, video and sound in one fluid visual workflow. Keep the whole idea in view.',
-        cta: 'Open the gallery',
+        title: 'Compose on an infinite canvas',
+        desc: 'Arrange references, prompts, images, video, and sound in one fluid visual workflow. Keep the whole idea in view.',
+        cta: 'Enter the canvas',
         url: '/canvas',
       },
       {
