@@ -600,6 +600,7 @@ console.log(resp.choices[0].message.content)`,
       { label: 'Terms', href: '/user-agreement' },
       { label: 'Privacy', href: '/privacy-policy' },
       { label: 'About', href: '/about' },
+      { label: 'Powered by New API', href: 'https://github.com/QuantumNous/new-api' },
     ],
     copyright: '© 2026 cdymm.com. All rights reserved.',
     beian: {

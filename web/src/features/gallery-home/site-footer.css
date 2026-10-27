@@ -67,7 +67,10 @@
 
 .ghome .site-footer { margin-top: 0; }
 .site-footer-beian {
-  display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 1.25rem;
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: center;
+  gap: 0.4rem 1.25rem;
+  width: 100%;
+  margin-top: 0.35rem;
   padding: 0;
 }
 .site-footer-beian-company { font-size: 0.75rem; color: var(--muted-foreground); }
