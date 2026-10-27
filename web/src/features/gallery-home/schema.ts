@@ -98,7 +98,12 @@ const galleryItemSchema = z.object({
 const modelItemSchema = z.object({
   rank: z.number().int().min(1).optional(),
   name: short(80),
-  type: short(120),
+  /** 分类徽章：视频生成 / 图片生成 / 聊天（注意不要叫 kind，会和画廊的 kind 枚举撞名而不翻译） */
+  category: short(60).optional(),
+  /** 能力标签：文生视频 / 文生图 / 图生视频 */
+  capability: short(60).optional(),
+  /** 旧字段：分类与能力合一的文案，缺 kind/capability 时兜底解析 */
+  type: short(120).optional(),
   thumb: text(300),
   url: text(300),
 })

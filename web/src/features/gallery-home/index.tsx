@@ -144,6 +144,11 @@ export function GalleryHome() {
   const skillMenuRef = useRef<HTMLDivElement>(null)
   /** 03 提示词画廊筛选：0=全部 1=图片 2=视频（与 h.gallery.tabs 对齐） */
   const [galleryTab, setGalleryTab] = useState(0)
+  /** 04 精选模型：当前悬停/选中的模型下标（左侧预览跟随） */
+  const [modelActive, setModelActive] = useState(0)
+  /** 后台可能存了空行，渲染前先过滤掉没名字的项，避免出现空行 */
+  const modelList = h.models.items.filter((mi) => (mi.name ?? '').trim() !== '')
+  const activeModel = modelList[Math.min(modelActive, Math.max(0, modelList.length - 1))]
   /** 胶囊滑动高亮块：跟随当前选中项的位置与宽度（真实测量，适配任意语种文案） */
   const galleryTabRefs = useRef<Array<HTMLButtonElement | null>>([])
   const [tabThumb, setTabThumb] = useState({ x: 0, w: 0 })
@@ -645,43 +650,83 @@ export function GalleryHome() {
           </div>
         </section>
 
-        {/* ============ 5. 模型亮点 ============ */}
-        <section className='section'>
+        {/* ============ 5. 精选模型（对标 04：左预览 + 右列表悬停换图） ============ */}
+        <section className='section' id='home-models'>
           <div className='container'>
-            <div className='section-head' data-reveal-group data-reveal-step='90'>
-              <span className='eyebrow'>
-                <span className='sec-index'>{h.models.index}</span>
-                {h.models.eyebrow}
-              </span>
-              <h2>{h.models.title}</h2>
-              <p>{h.models.lead}</p>
-            </div>
-            <div className='model-stats' data-reveal-group data-reveal-step='140'>
-              <div className='stat'>
-                <b>{h.models.stats.models}</b>
-                <span>{t('Available models')}</span>
+            <div className='models-head' data-reveal-group data-reveal-step='90'>
+              <div className='models-head-copy'>
+                <span className='eyebrow'>
+                  <span className='sec-index'>{h.models.index}</span>
+                  {h.models.eyebrow}
+                </span>
+                <h2 className='models-title'>{h.models.title}</h2>
               </div>
-              <div className='stat'>
-                <b>{h.models.stats.providers}</b>
-                <span>{t('Providers')}</span>
+              <div className='models-head-side'>
+                <p className='models-lead'>{h.models.lead}</p>
+                <dl className='models-stats'>
+                  <div>
+                    <dd>{h.models.stats.models}</dd>
+                    <dt>{t('Available models')}</dt>
+                  </div>
+                  <div>
+                    <dd>{h.models.stats.providers}</dd>
+                    <dt>{t('Providers')}</dt>
+                  </div>
+                </dl>
               </div>
             </div>
-            <div className='model-list' data-reveal-group data-reveal-step='85'>
-              {h.models.items.map((mi) => (
-                <Nav className='model-item' to={mi.url} key={mi.name}>
-                  <span className='model-rank'>
-                    {String(mi.rank).padStart(2, '0')}
+
+            <div className='models-body'>
+              {/* 左侧预览：所有模型图叠放，选中/悬停淡入切换 */}
+              <div className='models-preview' data-reveal>
+                <div className='models-preview-stack'>
+                  {modelList.map((mi, i) => (
+                    <img
+                      key={`${mi.name}-${i}`}
+                      className={i === modelActive ? 'is-on' : undefined}
+                      src={mi.thumb}
+                      alt=''
+                      loading='lazy'
+                    />
+                  ))}
+                </div>
+                <div className='models-caption'>
+                  <span className='models-kind' key={`k-${modelActive}`}>
+                    {activeModel?.category ?? ''}
                   </span>
-                  <span className='model-thumb'>
-                    <img src={mi.thumb} alt={mi.name} loading='lazy' />
-                  </span>
-                  <span className='model-info'>
-                    <b>{mi.name}</b>
-                    <span>{mi.type}</span>
-                  </span>
-                </Nav>
-              ))}
+                  <p key={`n-${modelActive}`}>
+                    {activeModel?.name ?? ''}
+                  </p>
+                </div>
+              </div>
+
+              {/* 右侧列表：悬停即切换左侧预览 */}
+              <div className='models-list' data-reveal-group data-reveal-step='45'>
+                {modelList.map((mi, i) => (
+                  <Nav
+                    className='model-row'
+                    to={mi.url}
+                    key={`${mi.name}-${i}`}
+                    data-active={i === modelActive ? 'true' : 'false'}
+                    onMouseEnter={() => setModelActive(i)}
+                    onFocus={() => setModelActive(i)}
+                  >
+                    <span className='model-row-index' aria-hidden='true'>
+                      {String(i + 1).padStart(2, '0')}
+                    </span>
+                    <span className='model-row-name'>{mi.name}</span>
+                    <span className='model-row-meta'>
+                      {mi.category}
+                      {mi.capability && (
+                        <span className='model-row-cap'>{mi.capability}</span>
+                      )}
+                    </span>
+                    <ArrowUpRight className='model-row-arrow' size={18} />
+                  </Nav>
+                ))}
+              </div>
             </div>
+
             <div className='center' data-reveal>
               <Nav className='gallery-link' to='/pricing'>
                 {h.models.exploreLabel} <ArrowRight size={14} />
