@@ -197,6 +197,10 @@ export const homeConfigSchema = z
         connectKicker: short(80).optional(),
         connectTitle: text(240).optional(),
         connectPoints: z.array(short(200)).max(8).optional(),
+        apiBase: text(300).optional(),
+        connectPrimaryLabel: short(80).optional(),
+        connectSecondaryLabel: short(80).optional(),
+        connectSecondaryUrl: text(300).optional(),
         connectUrl: text(300).optional(),
       })
       .optional(),

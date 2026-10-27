@@ -81,6 +81,8 @@ const RAW_KEYS = new Set([
   'codeNode',
   'codeTabs',
   'connectKicker',
+  'apiBase',
+  'connectSecondaryUrl',
   'icon',
   'key',
   'index',
@@ -442,8 +444,9 @@ export const HOME_DATA = {
       'Every request is metered and visible in your usage log.',
     ],
     codeTitle: 'API base',
+    apiBase: 'https://api.cdymm.com/v1',
     codeTabs: ['cURL', 'Python', 'Node.js'],
-    code: `curl https://your-domain/v1/chat/completions \\
+    code: `curl https://api.cdymm.com/v1/chat/completions \\
   -H "Authorization: Bearer $API_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -453,7 +456,7 @@ export const HOME_DATA = {
     codePython: `from openai import OpenAI
 
 client = OpenAI(
-    base_url="https://your-domain/v1",
+    base_url="https://api.cdymm.com/v1",
     api_key="YOUR_API_KEY",
 )
 
@@ -465,7 +468,7 @@ print(resp.choices[0].message.content)`,
     codeNode: `import OpenAI from "openai"
 
 const client = new OpenAI({
-  baseURL: "https://your-domain/v1",
+  baseURL: "https://api.cdymm.com/v1",
   apiKey: process.env.API_KEY,
 })
 
@@ -485,10 +488,13 @@ console.log(resp.choices[0].message.content)`,
       'We ask before you go over your cap.',
     ],
     connectUrl: '/pricing',
+    connectPrimaryLabel: 'Connect now',
+    connectSecondaryLabel: 'View guide',
+    connectSecondaryUrl: '/docs',
   },
   closing: {
     kicker: 'Your next idea starts here',
-    title: 'Create with taste. Scale without friction.',
+    title: 'Create with taste.\nScale without friction.',
     lead:
       'Start visually on the canvas, drop into a focused studio, or wire the same models into your own product.',
     primaryLabel: 'Start creating',

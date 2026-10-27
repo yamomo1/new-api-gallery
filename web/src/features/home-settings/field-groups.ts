@@ -131,6 +131,8 @@ export const TEXT_GROUPS: FieldGroup[] = [
       { path: 'cta.connectKicker', label: 'Connect card kicker' },
       { path: 'cta.connectTitle', label: 'Connect card title', type: 'textarea' },
       { path: 'cta.connectPoints', label: 'Connect card points (comma separated)', type: 'list' },
+      { path: 'cta.connectPrimaryLabel', label: 'Connect card primary label' },
+      { path: 'cta.connectSecondaryLabel', label: 'Connect card secondary label' },
     ],
   },
   {
@@ -162,6 +164,8 @@ export const SHARED_GROUPS: FieldGroup[] = [
       { path: 'cta.connectUrl', label: 'API button link' },
       { path: 'closing.primaryUrl', label: 'Closing primary link' },
       { path: 'closing.secondaryUrl', label: 'Closing secondary link' },
+      { path: 'cta.apiBase', label: 'API base URL (shown in the code window)' },
+      { path: 'cta.connectSecondaryUrl', label: 'Connect card secondary link' },
     ],
   },
   {

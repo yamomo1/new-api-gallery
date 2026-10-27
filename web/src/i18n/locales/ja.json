@@ -7646,6 +7646,12 @@
     "Connect card kicker": "Connect card kicker",
     "Connect card title": "Connect card title",
     "Connect card points (comma separated)": "Connect card points (comma separated)",
-    "One compatible API.\nInto your product.": "One compatible API.\nInto your product."
+    "One compatible API.\nInto your product.": "One compatible API.\nInto your product.",
+    "View guide": "View guide",
+    "Connect card primary label": "Connect card primary label",
+    "Connect card secondary label": "Connect card secondary label",
+    "API base URL (shown in the code window)": "API base URL (shown in the code window)",
+    "Connect card secondary link": "Connect card secondary link",
+    "Create with taste.\nScale without friction.": "Create with taste.\nScale without friction."
   }
 }

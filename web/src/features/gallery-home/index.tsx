@@ -201,10 +201,7 @@ export function GalleryHome() {
   /** 05 代码窗：当前标签下的示例代码 + 本站 API 基础地址 */
   const activeCode =
     [h.cta.code, h.cta.codePython, h.cta.codeNode][codeTab] ?? h.cta.code
-  const apiBase =
-    typeof window !== 'undefined'
-      ? `${window.location.origin}/v1`
-      : 'https://your-domain/v1'
+  const apiBase = h.cta.apiBase || 'https://api.cdymm.com/v1'
   /** 胶囊滑动高亮块：跟随当前选中项的位置与宽度（真实测量，适配任意语种文案） */
   const galleryTabRefs = useRef<Array<HTMLButtonElement | null>>([])
   const [tabThumb, setTabThumb] = useState({ x: 0, w: 0 })
@@ -852,6 +849,18 @@ export function GalleryHome() {
                         <li key={p}>{p}</li>
                       ))}
                     </ul>
+                    <div className='api-connect-actions'>
+                      <Nav className='api-connect-primary' to={h.cta.connectUrl}>
+                        {h.cta.connectPrimaryLabel}
+                        <ChevronRight size={14} />
+                      </Nav>
+                      <Nav
+                        className='api-connect-ghost'
+                        to={h.cta.connectSecondaryUrl}
+                      >
+                        {h.cta.connectSecondaryLabel}
+                      </Nav>
+                    </div>
                   </div>
                   <div className='api-connect-visual' aria-hidden='true'>
                     <span className='api-chip'>
@@ -960,10 +969,11 @@ export function GalleryHome() {
               </h2>
               <p className='home-closing-lede'>{h.closing.lead}</p>
               <div className='home-closing-actions'>
-                <Nav className='hero-btn-primary' to={h.closing.primaryUrl}>
+                <Nav className='home-closing-primary' to={h.closing.primaryUrl}>
                   {h.closing.primaryLabel}
+                  <ChevronRight size={15} />
                 </Nav>
-                <Nav className='hero-btn-ghost' to={h.closing.secondaryUrl}>
+                <Nav className='home-closing-ghost' to={h.closing.secondaryUrl}>
                   {h.closing.secondaryLabel}
                 </Nav>
               </div>

@@ -7470,7 +7470,7 @@
     "One key, all models": "一个密钥，所有模型",
     "Transparent billing": "透明的计费",
     "Code example": "代码示例",
-    "Connect now": "立即连接",
+    "Connect now": "立即接入",
     "Your next idea starts here": "下一个灵感，从这里开始",
     "Create with taste. Scale without friction.": "有格调地创作，无阻力地扩展。",
     "Start visually on the canvas, drop into a focused studio, or wire the same models into your own product.": "从画布开始视觉创作，进入专注工作室，或把同一批模型接入自己的产品。",
@@ -7646,6 +7646,12 @@
     "Connect card kicker": "接入卡小标签",
     "Connect card title": "接入卡标题",
     "Connect card points (comma separated)": "接入卡要点（逗号分隔）",
-    "One compatible API.\nInto your product.": "一套兼容 API，\n接入你的产品。"
+    "One compatible API.\nInto your product.": "一套兼容 API，\n接入你的产品。",
+    "View guide": "查看指南",
+    "Connect card primary label": "接入卡主按钮文案",
+    "Connect card secondary label": "接入卡次按钮文案",
+    "API base URL (shown in the code window)": "API 基础地址（代码窗显示）",
+    "Connect card secondary link": "接入卡次按钮链接",
+    "Create with taste.\nScale without friction.": "有格调地创作，\n无阻力地扩展。"
   }
 }
