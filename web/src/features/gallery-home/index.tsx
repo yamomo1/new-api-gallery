@@ -36,6 +36,7 @@ import {
 } from 'lucide-react'
 
 import { PublicLayout } from '@/components/layout'
+import { StudioScene } from '@/features/canvas-landing/scene'
 import { useScrollReveal } from '@/hooks/use-scroll-reveal'
 
 import {
@@ -458,34 +459,26 @@ export function GalleryHome() {
           </div>
         </section>
 
-        {/* ============ 3. 三个 Studio ============ */}
-        <section className='section'>
+        {/* ============ 3. 画布工作室（对标第三页，1:1 复刻） ============ */}
+        <section className='section' id='home-studios'>
           <div className='container'>
-            <div className='section-head' data-reveal-group data-reveal-step='90'>
-              <span className='eyebrow'>
-                <span className='sec-index'>{h.studios.index}</span>
-                {h.studios.eyebrow}
-              </span>
-              <h2>{h.studios.title}</h2>
-              <p>{h.studios.lead}</p>
-            </div>
-            <div className='studios' data-reveal-group data-reveal-step='150'>
-              {h.studios.items.map((s) => (
-                <Nav className='studio' to={s.url} key={s.title}>
-                  <div className='studio-media'>
-                    <img src={s.image} alt={s.title} loading='lazy' />
-                  </div>
-                  <div className='studio-body'>
-                    <span className='studio-kicker'>{s.kicker}</span>
-                    <h3>{s.title}</h3>
-                    <p>{s.desc}</p>
-                    <span className='studio-cta'>
-                      {s.cta} <ArrowRight size={14} />
-                    </span>
-                  </div>
-                </Nav>
-              ))}
-            </div>
+            <StudioScene
+              embed
+              as='h2'
+              index={h.studios.index}
+              eyebrow={t('Canvas studio')}
+              titleLines={[t('One idea.'), t('Every way to create.')]}
+              lead={h.studios.lead}
+              media={{
+                canvas: h.studios.items[0]?.image,
+                image: h.studios.items[1]?.image,
+                motion: h.studios.items[2]?.image,
+              }}
+              links={{
+                image: h.studios.items[1]?.url ?? '/prompt-gallery',
+                motion: h.studios.items[2]?.url ?? '/prompt-gallery',
+              }}
+            />
           </div>
         </section>
 

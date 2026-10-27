@@ -84,14 +84,15 @@
   opacity: 0.7;
 }
 
-.ctlp-head h1 {
+/* 标题：落地页是 h1，嵌首页时降级成 h2，样式同一份 */
+.ctlp-head .ctlp-title {
   margin: 14px 0 0;
   font-size: clamp(2.15rem, 4.4vw, 3.55rem);
   line-height: 1.06;
   letter-spacing: -0.035em;
   font-weight: 700;
 }
-.ctlp-head h1 > span {
+.ctlp-head .ctlp-title > span {
   display: block;
   animation: ctlp-line-in 1.05s var(--ctlp-ease) both;
 }
@@ -622,6 +623,37 @@
   transition: none;
 }
 
+/* ============ 嵌入首页第 3 屏（.ctlp-embed） ============ */
+/* 去掉页面级留白 / 底色 / 顶部辉光，宽度交给首页的 .container */
+/* 用双类提高权重，压过下方媒体查询里的 .ctlp { padding: ... } */
+.ctlp.ctlp-embed {
+  padding: 0;
+  background: transparent;
+  overflow: visible;
+}
+.ctlp-embed::before {
+  display: none;
+}
+.ctlp-embed .ctlp-inner {
+  position: relative;
+}
+
+/* 入场类动画改成「滚动进入视口才播」：
+   未挂 .is-live 时全部冻结在 0% 关键帧（配合 fill: both → 元素处于初始不可见态），
+   区块滚进视口挂上 .is-live 后一齐开跑；持续动画（推拉/行军蚁/光标闪烁）同理。 */
+.ctlp-embed:not(.is-live) * {
+  animation-play-state: paused !important;
+}
+.ctlp-embed:not(.is-live) .ctlp-submit::after,
+.ctlp-embed:not(.is-live) .ctlp-canvas::after {
+  animation-play-state: paused !important;
+}
+
+/* 出现动画占用了 transform，会盖掉卡片 hover 上浮 → 出现结束后放开 hover */
+.ctlp-card[data-reveal].in:hover {
+  transform: translateY(-4px);
+}
+
 /* ============ 响应式 ============ */
 @media (max-width: 1080px) {
   .ctlp-head {
@@ -661,7 +693,7 @@
   .ctlp-shell {
     padding: 0 16px;
   }
-  .ctlp-head h1 {
+  .ctlp-head .ctlp-title {
     font-size: clamp(1.95rem, 8.6vw, 2.5rem);
   }
   .ctlp-canvas {
@@ -692,7 +724,7 @@
   .ctlp .ctlp-guide,
   .ctlp .ctlp-eyebrow,
   .ctlp .ctlp-lead,
-  .ctlp .ctlp-head h1 > span {
+  .ctlp .ctlp-head .ctlp-title > span {
     animation: none !important;
   }
   .ctlp [data-reveal] {
