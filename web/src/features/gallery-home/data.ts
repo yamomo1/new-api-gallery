@@ -77,6 +77,10 @@ const RAW_KEYS = new Set([
   'art',
   'images',
   'code',
+  'codePython',
+  'codeNode',
+  'codeTabs',
+  'connectKicker',
   'icon',
   'key',
   'index',
@@ -424,10 +428,21 @@ export const HOME_DATA = {
   },
   cta: {
     index: '05',
-    title: 'Ship with one compatible API.',
-    lead: 'Call chat, image and video models through one consistent API — access, routing and usage logs all in one place.',
-    features: ['OpenAI-compatible routing', 'One key, all models', 'Transparent billing'],
-    codeTitle: 'Code example',
+    eyebrow: 'Developers',
+    title: 'One compatible API.\nInto your product.',
+    lead: 'Use one consistent API for chat, image and video models — access, routing and usage logs all in one place.',
+    features: [
+      'OpenAI-compatible routing',
+      'One key for every model',
+      'Transparent billing',
+    ],
+    featureDescs: [
+      'Point your existing SDKs at the new base URL.',
+      'Text, image and video models behind a single credential.',
+      'Every request is metered and visible in your usage log.',
+    ],
+    codeTitle: 'API base',
+    codeTabs: ['cURL', 'Python', 'Node.js'],
     code: `curl https://your-domain/v1/chat/completions \\
   -H "Authorization: Bearer $API_KEY" \\
   -H "Content-Type: application/json" \\
@@ -435,8 +450,40 @@ export const HOME_DATA = {
     "model": "deepseek/deepseek-v4-pro",
     "messages": [{"role": "user", "content": "Hello"}]
   }'`,
-    genLabel: 'Generate',
-    connectLabel: 'Connect now',
+    codePython: `from openai import OpenAI
+
+client = OpenAI(
+    base_url="https://your-domain/v1",
+    api_key="YOUR_API_KEY",
+)
+
+resp = client.chat.completions.create(
+    model="deepseek/deepseek-v4-pro",
+    messages=[{"role": "user", "content": "Hello"}],
+)
+print(resp.choices[0].message.content)`,
+    codeNode: `import OpenAI from "openai"
+
+const client = new OpenAI({
+  baseURL: "https://your-domain/v1",
+  apiKey: process.env.API_KEY,
+})
+
+const resp = await client.chat.completions.create({
+  model: "deepseek/deepseek-v4-pro",
+  messages: [{ role: "user", content: "Hello" }],
+})
+console.log(resp.choices[0].message.content)`,
+    genLabel: 'Create API key',
+    docsLabel: 'Documentation',
+    connectKicker: 'YAMOMO AI',
+    connectTitle:
+      'Call every image and video model right inside Claude, Codex and WorkBuddy.',
+    connectPoints: [
+      'Same models and the same prices as the site.',
+      'A separate budget you can revoke at any time.',
+      'We ask before you go over your cap.',
+    ],
     connectUrl: '/pricing',
   },
   closing: {

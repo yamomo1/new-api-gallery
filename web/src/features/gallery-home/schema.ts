@@ -182,13 +182,21 @@ export const homeConfigSchema = z
       .optional(),
     cta: z
       .object({
+        eyebrow: short(80).optional(),
         title: text(200).optional(),
         lead: text(600).optional(),
-        features: z.array(short(80)).max(8).optional(),
+        features: z.array(short(120)).max(8).optional(),
+        featureDescs: z.array(short(240)).max(8).optional(),
         codeTitle: short(80).optional(),
         code: z.string().max(4000).optional(),
+        codePython: z.string().max(4000).optional(),
+        codeNode: z.string().max(4000).optional(),
         genLabel: short(40).optional(),
+        docsLabel: short(80).optional(),
         connectLabel: short(80).optional(),
+        connectKicker: short(80).optional(),
+        connectTitle: text(240).optional(),
+        connectPoints: z.array(short(200)).max(8).optional(),
         connectUrl: text(300).optional(),
       })
       .optional(),

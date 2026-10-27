@@ -7626,6 +7626,26 @@
     "Pick a section on the left, edit it on the right, then save.": "左侧选分区，右侧编辑，改完记得保存。",
     "No models yet. Add one to fill this section.": "还没有模型，添加一条来填充这个区块。",
     "Each entry drives one row on the homepage. Hovering a row swaps the preview image on the left, so pick a picture that matches the model.": "每一条对应首页的一行；悬停时左侧预览会换成该项图片，建议挑选与模型匹配的图。",
-    "Images live under web/public, so a path like /images/home/xxx.webp maps to web/public/images/home/xxx.webp.": "图片放在 web/public 下：/images/home/xxx.webp 对应 web/public/images/home/xxx.webp。"
+    "Images live under web/public, so a path like /images/home/xxx.webp maps to web/public/images/home/xxx.webp.": "图片放在 web/public 下：/images/home/xxx.webp 对应 web/public/images/home/xxx.webp。",
+    "Developers": "开发者",
+    "One compatible API. Into your product.": "一套兼容 API，接入你的产品。",
+    "Use one consistent API for chat, image and video models — access, routing and usage logs all in one place.": "对聊天、图像和视频模型使用一致的 API，将访问、路由和使用记录集中在一处。",
+    "One key for every model": "一个密钥适用于所有模型",
+    "Point your existing SDKs at the new base URL.": "将现有 SDK 指向新的基础地址。",
+    "Text, image and video models behind a single credential.": "单个凭证背后的文本、图像和视频模型。",
+    "Every request is metered and visible in your usage log.": "每个请求都会被计量，并显示在你的使用日志中。",
+    "API base": "API 基础地址",
+    "Create API key": "创建 API 密钥",
+    "Documentation": "文档",
+    "Call every image and video model right inside Claude, Codex and WorkBuddy.": "在 Claude、Codex 和 WorkBuddy 中直接调用全部图片和视频模型",
+    "Same models and the same prices as the site.": "与网站使用同样的模型、同样的价格。",
+    "A separate budget you can revoke at any time.": "独立预算，随时撤销。",
+    "We ask before you go over your cap.": "超过你设定的金额会先询问你。",
+    "Feature titles (comma separated)": "特性标题（逗号分隔）",
+    "Feature descriptions (comma separated)": "特性描述（逗号分隔）",
+    "Connect card kicker": "接入卡小标签",
+    "Connect card title": "接入卡标题",
+    "Connect card points (comma separated)": "接入卡要点（逗号分隔）",
+    "One compatible API.\nInto your product.": "一套兼容 API，\n接入你的产品。"
   }
 }
