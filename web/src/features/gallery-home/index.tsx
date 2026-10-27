@@ -517,13 +517,28 @@ export function GalleryHome() {
                     </li>
                   ))}
                 </ul>
-                <div className='agent-preview-steps' data-reveal-group data-reveal-step='90'>
-                  {h.agent.preview.steps.map((s, i) => (
-                    <button type='button' key={s} className={i === 0 ? 'on' : ''}>
-                      <i>{String(i + 1).padStart(2, '0')}</i>
-                      {s}
-                    </button>
-                  ))}
+                {/* 流程演示：角色定案 → 镜头 1 → 镜头 2 → 成片，逐个点亮 */}
+                <div className='agent-steps'>
+                  <div className='agent-preview-steps' data-reveal-group data-reveal-step='90'>
+                    {h.agent.preview.steps.map((s, i) => {
+                      const last = i === h.agent.preview.steps.length - 1
+                      return (
+                        <button
+                          type='button'
+                          key={s}
+                          className={last ? 'is-final' : undefined}
+                          style={{ '--i': i } as CSSProperties}
+                        >
+                          <i>{String(i + 1).padStart(2, '0')}</i>
+                          <span>{s}</span>
+                          {last && <Check size={12} className='agent-step-check' />}
+                        </button>
+                      )
+                    })}
+                  </div>
+                  <span className='agent-steps-track' aria-hidden='true'>
+                    <span className='agent-steps-fill' />
+                  </span>
                 </div>
                 <div className='agent-preview-actions'>
                   <button type='button' className='agent-preview-edit'>

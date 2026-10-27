@@ -598,15 +598,73 @@ html:not(.dark) .ghome {
 .ghome .agent-preview-plan { list-style: none; margin: 0 0 14px; padding: 0; display: flex; flex-direction: column; gap: 8px; }
 .ghome .agent-preview-plan li { display: flex; align-items: center; gap: 9px; font-size: 13px; color: var(--agent-panel-muted); line-height: 1.4; }
 .ghome .agent-preview-plan li svg { flex: none; color: var(--hero-gold); }
-.ghome .agent-preview-steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 14px; }
+.ghome .agent-steps { margin-bottom: 14px; }
+.ghome .agent-preview-steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 9px; }
 .ghome .agent-preview-steps button {
-  appearance: none; text-align: left; cursor: pointer; font-family: var(--font-sans);
+  appearance: none; text-align: left; cursor: default; font-family: var(--font-sans);
   background: var(--agent-panel-soft); border: 1px solid var(--agent-panel-line); border-radius: 11px;
-  padding: 10px 11px; display: flex; align-items: center; gap: 8px; color: var(--agent-panel-ink); font-size: 12.5px; transition: 0.18s;
+  padding: 10px 11px; display: flex; align-items: center; gap: 8px; color: var(--agent-panel-ink); font-size: 12.5px;
+  transition: background 0.3s, border-color 0.3s, box-shadow 0.3s;
+  /* 四步轮流点亮：8s 一轮，每步占 2s（--i 由 JSX 注入） */
+  animation: agent-step-cycle 8s linear infinite;
+  animation-delay: calc(var(--i, 0) * 2s);
 }
 .ghome .agent-preview-steps button i { font-style: normal; font-size: 11px; font-weight: 800; color: var(--hero-gold);
   font-family: var(--font-serif); min-width: 18px; }
-.ghome .agent-preview-steps button.on { background: color-mix(in oklab, var(--hero-gold) 20%, transparent); border-color: color-mix(in oklab, var(--hero-gold) 55%, transparent); }
+.ghome .agent-preview-steps button > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* 末步「成片」：始终金色描边提示它是交付物 */
+.ghome .agent-preview-steps button.is-final { border-color: color-mix(in oklab, var(--hero-gold) 34%, transparent); }
+.ghome .agent-step-check { margin-left: auto; flex: none; color: var(--hero-gold); opacity: 0.9; }
+
+@keyframes agent-step-cycle {
+  0%, 2% {
+    background: var(--agent-panel-soft);
+    border-color: var(--agent-panel-line);
+    box-shadow: none;
+  }
+  8%, 20% {
+    background: color-mix(in oklab, var(--hero-gold) 22%, transparent);
+    border-color: color-mix(in oklab, var(--hero-gold) 62%, transparent);
+    box-shadow: 0 10px 24px -16px rgba(233, 184, 122, 0.9), inset 0 0 0 1px rgba(233, 184, 122, 0.12);
+  }
+  26%, 100% {
+    background: var(--agent-panel-soft);
+    border-color: var(--agent-panel-line);
+    box-shadow: none;
+  }
+}
+.ghome .agent-preview-steps button.is-final {
+  animation-name: agent-step-cycle-final;
+}
+@keyframes agent-step-cycle-final {
+  0%, 2% {
+    background: var(--agent-panel-soft);
+    border-color: color-mix(in oklab, var(--hero-gold) 34%, transparent);
+    box-shadow: none;
+  }
+  8%, 20% {
+    background: color-mix(in oklab, var(--hero-gold) 34%, transparent);
+    border-color: color-mix(in oklab, var(--hero-gold) 78%, transparent);
+    box-shadow: 0 12px 28px -14px rgba(233, 184, 122, 1), inset 0 0 0 1px rgba(233, 184, 122, 0.2);
+  }
+  26%, 100% {
+    background: var(--agent-panel-soft);
+    border-color: color-mix(in oklab, var(--hero-gold) 34%, transparent);
+    box-shadow: none;
+  }
+}
+
+/* 步骤下方的进度条：跟着四步跳进（steps(4)） */
+.ghome .agent-steps-track { display: block; height: 3px; border-radius: 999px; background: rgba(255, 255, 255, 0.13); overflow: hidden; }
+.ghome .agent-steps-fill {
+  display: block; height: 100%; width: 0; border-radius: inherit;
+  background: linear-gradient(90deg, color-mix(in oklab, var(--hero-gold) 55%, transparent), var(--hero-gold));
+  animation: agent-steps-fill 8s steps(4, end) infinite;
+}
+@keyframes agent-steps-fill {
+  from { width: 0; }
+  to { width: 100%; }
+}
 .ghome .agent-preview-actions { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
 .ghome .agent-preview-edit {
   appearance: none; cursor: pointer; font-family: var(--font-sans); font-size: 13px; font-weight: 600;
@@ -1309,6 +1367,8 @@ html:not(.dark) .ghome {
   .ghome .hero-ticker-track,
   .ghome .marquee-track,
   .ghome .agent-attach svg,
+  .ghome .agent-preview-steps button,
+  .ghome .agent-steps-fill,
   .ghome .api-flow-step,
   .ghome .api-flow-img img,
   .ghome .api-flow-caret,

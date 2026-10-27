@@ -254,7 +254,7 @@ export const HOME_DATA = {
         'Three shot prompts written and wired',
         'Estimated price shown before running',
       ],
-      steps: ['Character locked', 'Shot 1', 'Shot 2', 'Shot 3'],
+      steps: ['Character locked', 'Shot 1', 'Shot 2', 'Final cut'],
       editLabel: 'Edit plan',
       runLabel: 'Approve and run',
     },
