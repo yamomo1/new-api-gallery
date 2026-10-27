@@ -30,6 +30,7 @@ import {
   ArrowUpRight,
   Film,
   Image as ImageIcon,
+  Loader2,
   Move,
   Paperclip,
   Type,
@@ -170,8 +171,46 @@ type StudioCard = {
   descKey: string
   linkKey: string
   to: string
+  /** 图上浮层的形态：prompt = 打字机提示词胶囊；progress = 生成进度条 */
+  mode: 'prompt' | 'progress'
   /** 打字机起播延迟：两张卡错开，避免同时开始 */
   delay: number
+}
+
+/** 生成进度：0→100 用 duration 毫秒，满格停 hold 毫秒后重来（模拟连续出片） */
+function useProgress(active: boolean, duration = 6400, hold = 800): number {
+  const reduced = usePrefersReducedMotion()
+  const [pct, setPct] = useState(reduced ? 100 : 0)
+
+  useEffect(() => {
+    if (reduced) {
+      setPct(100)
+      return
+    }
+    if (!active) return
+    let raf = 0
+    let start = performance.now()
+    let last = -1
+    const step = (now: number) => {
+      const elapsed = now - start
+      if (elapsed >= duration + hold) {
+        start = now
+        last = 0
+        setPct(0)
+      } else {
+        const v = Math.min(100, Math.round((elapsed / duration) * 100))
+        if (v !== last) {
+          last = v
+          setPct(v)
+        }
+      }
+      raf = requestAnimationFrame(step)
+    }
+    raf = requestAnimationFrame(step)
+    return () => cancelAnimationFrame(raf)
+  }, [active, duration, hold, reduced])
+
+  return pct
 }
 
 export function StudioScene({
@@ -209,6 +248,7 @@ export function StudioScene({
           'From a single prompt to polished images, with leading image models at hand.',
         linkKey: 'Open image studio',
         to: links?.image ?? '/prompt-gallery',
+        mode: 'prompt',
         delay: 0,
       },
       {
@@ -223,6 +263,7 @@ export function StudioScene({
         descKey: 'Turn a still frame into motion, and direct every second.',
         linkKey: 'Open motion studio',
         to: links?.motion ?? '/prompt-gallery',
+        mode: 'progress',
         delay: 950,
       },
     ],
@@ -331,7 +372,11 @@ function StudioCardView({
     () => card.promptKeys.map((k) => t(k)),
     [card.promptKeys, t],
   )
-  const typed = useTypewriter(lines, card.delay, enabled)
+  const typed = useTypewriter(
+    lines,
+    card.delay,
+    enabled && card.mode === 'prompt',
+  )
   const Icon = card.icon
 
   return (
@@ -341,21 +386,25 @@ function StudioCardView({
       <div className='ctlp-card-media'>
         <img src={card.image} alt='' loading='lazy' decoding='async' />
 
-        {/* 提示词输入胶囊：图标 + 打字机文案 + 圆形生成按钮 */}
-        <div className='ctlp-prompt'>
-          <Paperclip size={13} className='ctlp-clip' />
-          <span className='ctlp-prompt-text'>
-            {typed}
-            <i className='ctlp-caret' aria-hidden='true' />
-          </span>
-          <button
-            type='button'
-            className='ctlp-submit'
-            aria-label={t('Generate')}
-          >
-            <ArrowUp size={14} />
-          </button>
-        </div>
+        {card.mode === 'progress' ? (
+          <ProgressPill active={enabled} />
+        ) : (
+          /* 提示词输入胶囊：图标 + 打字机文案 + 圆形生成按钮 */
+          <div className='ctlp-prompt'>
+            <Paperclip size={13} className='ctlp-clip' />
+            <span className='ctlp-prompt-text'>
+              {typed}
+              <i className='ctlp-caret' aria-hidden='true' />
+            </span>
+            <button
+              type='button'
+              className='ctlp-submit'
+              aria-label={t('Generate')}
+            >
+              <ArrowUp size={14} />
+            </button>
+          </div>
+        )}
       </div>
 
       <div className='ctlp-card-body'>
@@ -370,5 +419,29 @@ function StudioCardView({
         </TanstackLink>
       </div>
     </article>
+  )
+}
+
+/** 图上浮层：生成进度条（图生视频卡用，替代打字机提示词） */
+function ProgressPill({ active }: { active: boolean }) {
+  const { t } = useTranslation()
+  const pct = useProgress(active)
+
+  return (
+    <div
+      className='ctlp-prompt ctlp-prompt--progress'
+      role='progressbar'
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-valuenow={pct}
+      aria-label={t('Generating')}
+    >
+      <Loader2 size={13} className='ctlp-spin' aria-hidden='true' />
+      <span className='ctlp-progress-label'>{t('Generating')}</span>
+      <span className='ctlp-progress-track' aria-hidden='true'>
+        <i className='ctlp-progress-fill' style={{ width: `${pct}%` }} />
+      </span>
+      <span className='ctlp-progress-pct'>{pct}%</span>
+    </div>
   )
 }
