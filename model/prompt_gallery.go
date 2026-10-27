@@ -26,7 +26,9 @@ type PromptGallery struct {
 	Status    string `json:"status" gorm:"type:varchar(16);index;default:published"` // draft / published / rejected
 	// Home 管理员「首页显示」标记：勾选后该作品在公开列表（latest）里置顶，
 	// 因此会优先出现在首页 03 画廊的自动来源里。
-	Home      bool  `json:"home" gorm:"default:false;index"`
+	Home bool `json:"home" gorm:"default:false;index"`
+	// ProjectId 工作台所属项目/文件夹（0 = 未分组，对应 gallery_projects.id）
+	ProjectId int64 `json:"project_id" gorm:"default:0;index"`
 	CreatedAt int64 `json:"created_at" gorm:"bigint"`
 	UpdatedAt int64 `json:"updated_at" gorm:"bigint"`
 }
@@ -134,9 +136,35 @@ func GetPromptGalleryFacets() (*PromptGalleryFacet, error) {
 	return facet, nil
 }
 
-// GetUserPromptGalleries 我的作品（登录用户，含草稿/被拒）
-func GetUserPromptGalleries(userId int, offset, limit int) ([]PromptGallery, int64, error) {
-	db := DB.Model(&PromptGallery{}).Where("author_id = ?", userId).Order("id DESC")
+// MyGalleryQuery 工作台「个人作品」查询条件
+type MyGalleryQuery struct {
+	ProjectId   int64  // >=0 按项目过滤；-1 不过滤
+	ProjectNone bool   // true 只看未分组（project_id = 0）
+	Type        string // image / video / 空=全部
+	Search      string // 标题/提示词模糊
+	Sort        string // latest（默认，新→旧）/ oldest
+}
+
+// GetUserPromptGalleries 我的作品（登录用户，含草稿/被拒），支持工作台筛选
+func GetUserPromptGalleries(userId int, q MyGalleryQuery, offset, limit int) ([]PromptGallery, int64, error) {
+	db := DB.Model(&PromptGallery{}).Where("author_id = ?", userId)
+	if q.ProjectNone {
+		db = db.Where("project_id = 0")
+	} else if q.ProjectId >= 0 {
+		db = db.Where("project_id = ?", q.ProjectId)
+	}
+	if q.Type != "" {
+		db = db.Where("type = ?", q.Type)
+	}
+	if q.Search != "" {
+		like := "%" + strings.TrimSpace(q.Search) + "%"
+		db = db.Where("title LIKE ? OR prompt LIKE ?", like, like)
+	}
+	if q.Sort == "oldest" {
+		db = db.Order("id ASC")
+	} else {
+		db = db.Order("id DESC")
+	}
 
 	var total int64
 	if err := db.Count(&total).Error; err != nil {
@@ -186,6 +214,20 @@ func UpdatePromptGallery(userId int, id int64, update *PromptGallery) error {
 // DeletePromptGallery 删除我的作品（仅作者本人）
 func DeletePromptGallery(userId int, id int64) error {
 	res := DB.Where("id = ? AND author_id = ?", id, userId).Delete(&PromptGallery{})
+	if res.Error != nil {
+		return res.Error
+	}
+	if res.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
+}
+
+// SetPromptGalleryProject 移动作品到项目/文件夹（仅作者；不动审核状态）
+func SetPromptGalleryProject(userId int, id int64, projectId int64) error {
+	res := DB.Model(&PromptGallery{}).
+		Where("id = ? AND author_id = ?", id, userId).
+		Updates(map[string]any{"project_id": projectId, "updated_at": common.GetTimestamp()})
 	if res.Error != nil {
 		return res.Error
 	}

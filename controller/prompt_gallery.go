@@ -73,31 +73,6 @@ func GetPromptGalleryFacets(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"success": true, "data": facets})
 }
 
-// GetMyPromptGalleries 我的作品列表（登录态）
-// GET /api/prompt-gallery/v1/mine
-func GetMyPromptGalleries(c *gin.Context) {
-	userId := c.GetInt("id")
-	offset, _ := strconv.Atoi(c.DefaultQuery("offset", "0"))
-	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
-	if limit <= 0 || limit > 100 {
-		limit = 20
-	}
-	items, total, err := model.GetUserPromptGalleries(userId, offset, limit)
-	if err != nil {
-		common.ApiError(c, err)
-		return
-	}
-	c.JSON(http.StatusOK, gin.H{
-		"success": true,
-		"data": gin.H{
-			"items":  items,
-			"total":  total,
-			"offset": offset,
-			"limit":  limit,
-		},
-	})
-}
-
 // CreateMyPromptGallery 发布作品
 // POST /api/prompt-gallery/v1/mine
 func CreateMyPromptGallery(c *gin.Context) {

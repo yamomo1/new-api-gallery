@@ -54,6 +54,12 @@ func SetApiRouter(router *gin.Engine) {
 			promptGalleryRoute.POST("/mine", middleware.UserAuth(), controller.CreateMyPromptGallery)
 			promptGalleryRoute.PUT("/mine/:id", middleware.UserAuth(), controller.UpdateMyPromptGallery)
 			promptGalleryRoute.DELETE("/mine/:id", middleware.UserAuth(), controller.DeleteMyPromptGallery)
+			promptGalleryRoute.POST("/mine/:id/project", middleware.UserAuth(), controller.SetMyPromptGalleryProject)
+			// 工作台「项目 / 文件夹」分组
+			promptGalleryRoute.GET("/projects", middleware.UserAuth(), controller.ListMyGalleryProjects)
+			promptGalleryRoute.POST("/projects", middleware.UserAuth(), controller.CreateMyGalleryProject)
+			promptGalleryRoute.PUT("/projects/:id", middleware.UserAuth(), controller.UpdateMyGalleryProject)
+			promptGalleryRoute.DELETE("/projects/:id", middleware.UserAuth(), controller.DeleteMyGalleryProject)
 			promptGalleryRoute.GET("/admin/prompts", middleware.AdminAuth(), controller.AdminListPromptGalleries)
 			promptGalleryRoute.POST("/admin/prompts/:id/status", middleware.AdminAuth(), controller.AdminSetPromptGalleryStatus)
 			promptGalleryRoute.PUT("/admin/prompts/:id", middleware.AdminAuth(), controller.AdminUpdatePromptGallery)
