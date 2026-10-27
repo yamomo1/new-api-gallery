@@ -103,7 +103,6 @@ export const TEXT_GROUPS: FieldGroup[] = [
       { path: 'gallery.lead', label: 'Lead', type: 'textarea' },
       { path: 'gallery.tabs', label: 'Filter tabs (comma separated)', type: 'list' },
       { path: 'gallery.exploreLabel', label: 'Browse button label' },
-      { path: 'gallery.featuredTitle', label: 'Featured title' },
     ],
   },
   {

@@ -70,6 +70,7 @@ const RAW_KEYS = new Set([
   'secondaryUrl',
   'connectUrl',
   'featuredVideo',
+  'source',
   'videos',
   'video',
   'image',
@@ -301,6 +302,17 @@ export const HOME_DATA = {
     exploreLabel: 'Browse the gallery',
     featuredTitle: 'Inspiration square · Community picks',
     featuredVideo: '/videos/gallery-video.mp4',
+    /**
+     * 作品来源（后台可改）：
+     * - manual  后台手动挑选（用下面的 items，改图/改文案都以手选为准）
+     * - latest  自动取画廊最新发布的作品
+     * - popular 自动取画廊最热门的作品
+     * 没在后台设置过时默认 latest：画廊里有作品就自动展示最新，
+     * 画廊还没有已发布作品时回退到下面的 items。
+     */
+    source: 'latest',
+    /** latest / popular 时取多少条（默认 10，正好铺成 2 行大卡 + 小卡） */
+    limit: 10,
     items: [
       {
         title: '90s cool-tone fantasy portrait in emerald hanfu',

@@ -87,6 +87,8 @@ const studioItemSchema = z.object({
 })
 
 const galleryItemSchema = z.object({
+  /** 关联的画廊作品 id（后台从画廊挑选时写入，便于回溯） */
+  id: z.number().int().optional(),
   title: short(),
   model: short(80),
   /** 作品类型：首页「全部/图片/视频」筛选用；缺省按 image 处理 */
@@ -170,6 +172,10 @@ export const homeConfigSchema = z
         exploreLabel: short(80).optional(),
         featuredTitle: short(120).optional(),
         featuredVideo: text(300).optional(),
+        /** 作品来源：manual 手选 / latest 画廊最新 / popular 画廊最热门 */
+        source: z.enum(['manual', 'latest', 'popular']).optional(),
+        /** 自动来源时取多少条 */
+        limit: z.number().int().min(1).max(24).optional(),
         items: z.array(galleryItemSchema).max(24).optional(),
       })
       .optional(),

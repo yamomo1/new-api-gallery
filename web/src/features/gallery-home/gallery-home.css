@@ -848,10 +848,33 @@ html:not(.dark) .ghome {
 /* 筛选后为空的兜底提示 */
 .ghome .gallery-empty { grid-column: 1 / -1; display: flex; align-items: center; justify-content: center; min-height: 160px; border: 1px dashed var(--border); border-radius: 16px; color: var(--muted); font-size: 14px; }
 /* 精选视频块 */
-.ghome .featured-video { margin-top: 28px; border-radius: var(--home-radius); overflow: hidden; border: 1px solid var(--border); position: relative; aspect-ratio: 21 / 9; background: var(--hero-screen); }
-.ghome .featured-video video { width: 100%; height: 100%; object-fit: cover; }
-.ghome .featured-video .cap { position: absolute; left: 22px; bottom: 18px; color: var(--hero-ink); font-family: var(--font-serif); font-size: 20px; z-index: 2; }
-.ghome .featured-video::after { content: ""; position: absolute; inset: 0; background: linear-gradient(0deg, rgba(3,11,15,.6), transparent 45%); }
+/* 悬停引导箭头：右下角滑入 + 斜向轻推，提示可以点进去看提示词 */
+.ghome .gcard-cta {
+  position: absolute; right: 14px; bottom: 14px; z-index: 3;
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 38px; height: 38px; border-radius: 50%;
+  background: var(--accent-gold, #e9b872); color: #120e07;
+  box-shadow: 0 12px 28px -14px rgba(233, 184, 122, 0.95);
+  opacity: 0; transform: translateY(14px) scale(0.9);
+  pointer-events: none;
+  transition:
+    opacity 0.28s ease,
+    transform 0.4s cubic-bezier(0.34, 1.42, 0.44, 1);
+}
+.ghome .gcard--big .gcard-cta { right: 20px; bottom: 20px; width: 46px; height: 46px; }
+.ghome .gcard:hover .gcard-cta,
+.ghome .gcard:focus-visible .gcard-cta {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  animation: gcard-arrow-nudge 1.5s ease-in-out 0.35s infinite;
+}
+@keyframes gcard-arrow-nudge {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(3px, -3px) scale(1.05); }
+}
+/* 给右下角箭头让位，标题不会压到它 */
+.ghome .gcard-info { padding-right: 46px; }
+.ghome .gcard--big .gcard-info { padding-right: 62px; }
 
 /* ============================================================
    精选模型（04，对标 1:1：左预览 + 右列表，悬停换图）
@@ -1408,7 +1431,8 @@ html:not(.dark) .ghome {
   .ghome .gallery-tabs-thumb,
   .ghome .gallery-tabs-sheen,
   .ghome .gallery-explore::before,
-  .ghome .gallery-explore::after {
+  .ghome .gallery-explore::after,
+  .ghome .gcard-cta {
     animation: none !important;
     transition: none !important;
   }

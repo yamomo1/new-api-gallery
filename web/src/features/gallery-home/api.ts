@@ -56,6 +56,96 @@ async function fetchRawHomeConfig(): Promise<HomeConfigV2 | null> {
 
 type MotionOverride = NonNullable<HomeConfigV2['shared']>['motion']
 
+/* ------------------------------------------------------------------
+ * 03 作品来源：后台可选手动挑选，或自动取画廊「最新 / 最热门」
+ * ------------------------------------------------------------------ */
+
+export type GalleryCardItem = {
+  id?: number
+  title: string
+  model: string
+  kind: 'image' | 'video'
+  cover?: string
+  video?: string
+  url: string
+}
+
+const VIDEO_EXT = /\.(mp4|webm|mov|m4v)(\?|$)/i
+
+/** media 字段是 JSON 数组字符串；坏数据一律当空数组 */
+export function parseGalleryMedia(media: string): string[] {
+  try {
+    const parsed = JSON.parse(media || '[]')
+    if (!Array.isArray(parsed)) return []
+    return parsed.filter(
+      (x): x is string => typeof x === 'string' && x.trim() !== '',
+    )
+  } catch {
+    return []
+  }
+}
+
+/** 画廊作品 → 首页作品卡（封面 / 悬停视频 / 类型 / 标题 / 模型） */
+export function toGalleryCard(item: {
+  id?: number
+  title: string
+  model: string
+  type: string
+  cover: string
+  media: string
+}): GalleryCardItem {
+  const media = parseGalleryMedia(item.media)
+  const isVideo = item.type === 'video'
+  const videoFromMedia = media.find((m) => VIDEO_EXT.test(m))
+  const videoFromCover = VIDEO_EXT.test(item.cover || '') ? item.cover : undefined
+  return {
+    id: item.id,
+    title: item.title,
+    model: item.model,
+    kind: isVideo ? 'video' : 'image',
+    cover: item.cover || media[0] || '',
+    video: isVideo ? (videoFromMedia ?? videoFromCover) : undefined,
+    url: '/prompt-gallery',
+  }
+}
+
+/**
+ * 按后台来源拉取首页 03 的作品：
+ * - manual  不请求，直接返回空数组（调用方用手选 items）
+ * - latest  画廊最新发布
+ * - popular 画廊最热门
+ * 失败或为空时调用方回退到内置/手选数据，不会出现空区块。
+ */
+export function useGalleryFeed(
+  source: string,
+  limit: number,
+): { items: GalleryCardItem[]; isLoading: boolean } {
+  const enabled = source === 'latest' || source === 'popular'
+  const take = Math.min(Math.max(Number(limit) || 10, 1), 24)
+  const { data, isLoading } = useQuery({
+    queryKey: ['gallery-home', 'gallery-feed', source, take],
+    enabled,
+    staleTime: 5 * 60 * 1000,
+    retry: 1,
+    queryFn: async () => {
+      const params = new URLSearchParams({
+        sort: source === 'popular' ? 'popular' : 'latest',
+        limit: String(take),
+        offset: '0',
+      })
+      const res = await fetch(`/api/prompt-gallery/v1/prompts?${params.toString()}`, {
+        headers: { Accept: 'application/json' },
+      })
+      if (!res.ok) throw new Error(`gallery feed ${res.status}`)
+      const body = (await res.json()) as {
+        data?: { items?: Parameters<typeof toGalleryCard>[0][] }
+      }
+      return (body.data?.items ?? []).map(toGalleryCard)
+    },
+  })
+  return { items: enabled ? (data ?? []) : [], isLoading }
+}
+
 export type GalleryHomeContent = {
   home: HomeContent
   motion: MotionContent

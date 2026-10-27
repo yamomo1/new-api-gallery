@@ -90,6 +90,11 @@ import {
 } from './field-groups'
 import { TranslateCard } from './translate-card'
 import { ModelItemsCard, type ModelItem } from './model-items-card'
+import {
+  GalleryItemsCard,
+  type GallerySource,
+  type GalleryWork,
+} from './gallery-items-card'
 
 const HOME_CONFIG_KEY = 'HomeConfig'
 
@@ -624,6 +629,34 @@ export function HomeSettings() {
     Array.isArray(sharedModelsRaw) ? sharedModelsRaw : defaultModels
   ) as ModelItem[]
 
+  /** 03 灵感画廊作品：来源 + 手选列表，后台覆盖写在 shared.gallery.* */
+  const defaultGallery = (baseForLang as unknown as {
+    gallery?: {
+      source?: GallerySource
+      limit?: number
+      items?: GalleryWork[]
+    }
+  }).gallery
+  const sharedGallerySource = getPath(draft.shared, 'gallery.source')
+  const sharedGalleryLimit = getPath(draft.shared, 'gallery.limit')
+  const sharedGalleryItems = getPath(draft.shared, 'gallery.items')
+  const gallerySource = (
+    sharedGallerySource === 'manual' ||
+    sharedGallerySource === 'latest' ||
+    sharedGallerySource === 'popular'
+      ? sharedGallerySource
+      : (defaultGallery?.source ?? 'manual')
+  ) as GallerySource
+  const galleryLimit =
+    typeof sharedGalleryLimit === 'number'
+      ? sharedGalleryLimit
+      : (defaultGallery?.limit ?? 10)
+  const galleryItems = (
+    Array.isArray(sharedGalleryItems)
+      ? sharedGalleryItems
+      : (defaultGallery?.items ?? [])
+  ) as GalleryWork[]
+
   const filledInGroup = (group: FieldGroup) =>
     group.fields.filter((f) => {
       const v = getPath(localeDraft, f.path)
@@ -996,6 +1029,26 @@ export function HomeSettings() {
                     overridden={Array.isArray(sharedModelsRaw)}
                     onChange={(items) => setSharedValue('models.items', items)}
                     onReset={() => setSharedValue('models.items', '')}
+                  />
+                )}
+
+                {activeGroup.key === 'gallery' && (
+                  <GalleryItemsCard
+                    source={gallerySource}
+                    limit={galleryLimit}
+                    items={galleryItems}
+                    itemsOverridden={Array.isArray(sharedGalleryItems)}
+                    sourceOverridden={
+                      sharedGallerySource !== undefined && sharedGallerySource !== ''
+                    }
+                    onSourceChange={(v) => setSharedValue('gallery.source', v)}
+                    onLimitChange={(v) => setSharedValue('gallery.limit', v)}
+                    onChange={(items) => setSharedValue('gallery.items', items)}
+                    onResetItems={() => setSharedValue('gallery.items', '')}
+                    onResetSource={() => {
+                      setSharedValue('gallery.source', '')
+                      setSharedValue('gallery.limit', '')
+                    }}
                   />
                 )}
               </>
