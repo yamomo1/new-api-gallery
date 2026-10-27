@@ -7460,6 +7460,7 @@
     "Browse models and pricing": "瀏覽模型與價格",
     "Video generation · Text to video": "影片生成 · 文字轉影片",
     "Image generation · Text to image": "圖像生成 · 文字轉圖像",
+    "Image generation": "圖片生成",
     "Video generation": "影片生成",
     "Video generation · Image to video": "影片生成 · 圖片轉影片",
     "Chat · Reasoning": "對話 · 推理",
@@ -7611,6 +7612,20 @@
     "Feature 3 description": "特色 3 描述",
     "Feature 4 title": "特色 4 標題",
     "Feature 4 description": "特色 4 描述",
-    "Top ticker": "頂部跑馬燈"
+    "Top ticker": "頂部跑馬燈",
+    "Featured models": "Featured models",
+    "Restore default list": "Restore default list",
+    "Add a model": "Add a model",
+    "Category badge": "Category badge",
+    "Capability tag": "Capability tag",
+    "Preview image path": "Preview image path",
+    "Link": "Link",
+    "Language and translation": "Language and translation",
+    "Editing language": "Editing language",
+    "No fields match your search": "No fields match your search",
+    "Pick a section on the left, edit it on the right, then save.": "Pick a section on the left, edit it on the right, then save.",
+    "No models yet. Add one to fill this section.": "No models yet. Add one to fill this section.",
+    "Each entry drives one row on the homepage. Hovering a row swaps the preview image on the left, so pick a picture that matches the model.": "Each entry drives one row on the homepage. Hovering a row swaps the preview image on the left, so pick a picture that matches the model.",
+    "Images live under web/public, so a path like /images/home/xxx.webp maps to web/public/images/home/xxx.webp.": "Images live under web/public, so a path like /images/home/xxx.webp maps to web/public/images/home/xxx.webp."
   }
 }

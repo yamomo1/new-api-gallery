@@ -32,9 +32,7 @@ import {
   ArrowDown,
   ArrowUp,
   Check,
-  ChevronDown,
   Eraser,
-  Film,
   Loader2,
   Plus,
   RotateCcw,
@@ -64,11 +62,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
@@ -96,6 +89,7 @@ import {
   type FieldGroup,
 } from './field-groups'
 import { TranslateCard } from './translate-card'
+import { ModelItemsCard, type ModelItem } from './model-items-card'
 
 const HOME_CONFIG_KEY = 'HomeConfig'
 
@@ -211,6 +205,8 @@ export function HomeSettings() {
   const [dirty, setDirty] = useState(false)
   const [migrated, setMigrated] = useState(false)
   const [search, setSearch] = useState('')
+  /** 当前编辑的分区（lang / 各文案组 key / shared），一次只渲染一屏 */
+  const [tab, setTab] = useState<string>('hero')
 
   useEffect(() => {
     let alive = true
@@ -606,35 +602,81 @@ export function HomeSettings() {
     )
   }
 
-  return (
-    <div className='h-full w-full overflow-y-auto'>
-    <div className='mx-auto w-full max-w-4xl space-y-5 p-4 pb-20'>
-      {/* 头部 */}
-      <div className='flex flex-wrap items-start justify-between gap-3'>
-        <div>
-          <h1 className='text-xl font-semibold'>{t('Home settings')}</h1>
-          <p className='max-w-xl text-sm text-muted-foreground'>
-            {t('Every language falls back to English, then to the built-in default.')}
-          </p>
-          {dirty && (
-            <p className='mt-1 text-xs text-amber-600 dark:text-amber-400'>
-              {t('Unsaved changes')}
-            </p>
-          )}
-        </div>
-        <Button onClick={save} disabled={saving}>
-          {saving ? <Loader2 className='size-4 animate-spin' /> : <Save className='size-4' />}
-          {t('Save')}
-        </Button>
-      </div>
+  /* ---------------------------- 分区导航 ---------------------------- */
 
-      {migrated && (
-        <div className='rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs'>
-          {t('Legacy config migrated to English')}
-        </div>
-      )}
+  const TABS: { key: string; title: string }[] = [
+    { key: 'lang', title: 'Language and translation' },
+    ...TEXT_GROUPS.map((g) => ({ key: g.key, title: g.title })),
+    { key: 'shared', title: 'Shared assets (all languages)' },
+  ]
+  const activeGroup = TEXT_GROUPS.find((g) => g.key === tab)
+  const groupFields = activeGroup
+    ? activeGroup.fields.filter((f) => matches(f, activeGroup))
+    : []
+  const isSearching = query.length > 0
 
-      {/* 语种切换 */}
+  /** 精选模型列表：默认值来自内置数据，后台覆盖写在 shared.models.items */
+  const defaultModels = ((
+    baseForLang as unknown as { models?: { items?: ModelItem[] } }
+  ).models?.items ?? []) as ModelItem[]
+  const sharedModelsRaw = getPath(draft.shared, 'models.items')
+  const modelItems = (
+    Array.isArray(sharedModelsRaw) ? sharedModelsRaw : defaultModels
+  ) as ModelItem[]
+
+  const filledInGroup = (group: FieldGroup) =>
+    group.fields.filter((f) => {
+      const v = getPath(localeDraft, f.path)
+      return v !== undefined && v !== null && v !== ''
+    }).length
+
+  const TabButton = ({
+    item,
+    compact = false,
+  }: {
+    item: { key: string; title: string }
+    compact?: boolean
+  }) => {
+    const active = item.key === tab && !isSearching
+    return (
+      <button
+        type='button'
+        onClick={() => {
+          setTab(item.key)
+          setSearch('')
+        }}
+        className={[
+          compact
+            ? 'shrink-0 rounded-full border px-3 py-1.5 text-xs transition'
+            : 'flex w-full items-center justify-between gap-2 rounded-md px-3 py-2 text-left text-sm transition',
+          active
+            ? compact
+              ? 'border-primary bg-primary text-primary-foreground'
+              : 'bg-primary/10 font-medium text-primary'
+            : 'text-muted-foreground hover:bg-muted',
+          compact && !active ? 'border-border hover:bg-muted' : '',
+        ].join(' ')}
+      >
+        <span>{t(item.title)}</span>
+        {!compact && item.key === 'lang' && (
+          <Badge variant='outline' className='tabular-nums'>
+            {filledNow}/{TOTAL_TEXT_FIELDS}
+          </Badge>
+        )}
+        {!compact && item.key !== 'lang' && (() => {
+          const g = TEXT_GROUPS.find((x) => x.key === item.key)
+          return g ? (
+            <Badge variant='outline' className='tabular-nums'>
+              {filledInGroup(g)}/{g.fields.length}
+            </Badge>
+          ) : null
+        })()}
+      </button>
+    )
+  }
+
+  const languagePanel = (
+    <>
       <Card>
         <CardHeader className='pb-3'>
           <CardTitle className='text-base'>{t('Language')}</CardTitle>
@@ -667,15 +709,6 @@ export function HomeSettings() {
             })}
           </div>
           <div className='flex flex-wrap items-center gap-2'>
-            <div className='relative min-w-48 flex-1'>
-              <Search className='absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground' />
-              <Input
-                className='pl-8'
-                value={search}
-                placeholder={t('Search fields')}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
             <Button variant='outline' size='sm' onClick={fillEmptyFromFallback}>
               {t('Fill empty fields from fallback')}
             </Button>
@@ -693,9 +726,7 @@ export function HomeSettings() {
               <AlertDialogContent size='default'>
                 <AlertDialogHeader>
                   <AlertDialogTitle>{t('Reset the whole homepage?')}</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    {t('Reset warning')}
-                  </AlertDialogDescription>
+                  <AlertDialogDescription>{t('Reset warning')}</AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>{t('Cancel')}</AlertDialogCancel>
@@ -712,165 +743,266 @@ export function HomeSettings() {
         </CardContent>
       </Card>
 
-      {/* 自动翻译：用本站模型把源语种铺到目标语种的空白字段 */}
       <TranslateCard
         locales={draft.locales}
         currentLang={lang}
         writeField={writeField}
         markDirty={() => setDirty(true)}
       />
+    </>
+  )
 
-      {/* 文案分组 */}
+  const sharedPanel = (
+    <>
+      {/* 视频轮播：醒目的独立面板，一眼看到「在这里添加视频」 */}
+      <Card>
+        <CardHeader className='pb-3'>
+          <CardTitle className='text-base'>{t('Hero video playlist')}</CardTitle>
+          <p className='text-xs text-muted-foreground'>
+            {t('Video source for the homepage hero background; add as many clips as you need.')}
+          </p>
+        </CardHeader>
+        <CardContent className='space-y-3'>
+          <div className='space-y-2'>
+            {videos.map((v, i) => (
+              <div key={i} className='flex items-center gap-2'>
+                <Badge variant='outline' className='w-12 justify-center'>
+                  {String(i + 1).padStart(2, '0')}
+                </Badge>
+                <Input
+                  value={v}
+                  placeholder='/videos/xxx.mp4'
+                  onChange={(e) =>
+                    writeVideos(videos.map((old, j) => (j === i ? e.target.value : old)))
+                  }
+                />
+                <Button
+                  variant='ghost'
+                  size='icon'
+                  className='size-8'
+                  aria-label={t('Move up')}
+                  disabled={i === 0}
+                  onClick={() => moveVideo(i, -1)}
+                >
+                  <ArrowUp className='size-4' />
+                </Button>
+                <Button
+                  variant='ghost'
+                  size='icon'
+                  className='size-8'
+                  aria-label={t('Move down')}
+                  disabled={i === videos.length - 1}
+                  onClick={() => moveVideo(i, 1)}
+                >
+                  <ArrowDown className='size-4' />
+                </Button>
+                <Button
+                  variant='ghost'
+                  size='icon'
+                  className='size-8'
+                  aria-label={t('Remove this clip')}
+                  onClick={() => writeVideos(videos.filter((_, j) => j !== i))}
+                >
+                  <Trash2 className='size-4' />
+                </Button>
+              </div>
+            ))}
+            <Button
+              variant='outline'
+              size='sm'
+              onClick={() => writeVideos([...videos, ''])}
+            >
+              <Plus className='size-4' /> {t('Add a clip')}
+            </Button>
+          </div>
+          <p className='text-xs text-muted-foreground'>
+            {t('Use a path under the site root (for example /videos/hero-video.mp4, stored in web/public/videos/). Clips loop in order; add as many as you need.')}
+          </p>
+        </CardContent>
+      </Card>
+
+      {SHARED_GROUPS.map((group) => {
+        const fields = group.fields.filter((f) => matches(f, group))
+        if (!fields.length) return null
+        return (
+          <Card key={group.key}>
+            <CardHeader className='pb-3'>
+              <CardTitle className='text-base'>{t(group.title)}</CardTitle>
+            </CardHeader>
+            <CardContent className='grid gap-3 md:grid-cols-2'>
+              {fields.map((f) => (
+                <div key={f.path}>
+                  {renderField(f, asText(getPath(sharedResolved, f.path)))}
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        )
+      })}
+    </>
+  )
+
+  const searchPanel = (
+    <>
       {TEXT_GROUPS.map((group) => {
         const fields = group.fields.filter((f) => matches(f, group))
         if (!fields.length) return null
         return (
-          <Collapsible key={group.key} defaultOpen={group.key === 'hero'}>
-            <Card>
-              <CollapsibleTrigger className='flex w-full items-center justify-between gap-2 px-4 py-3 text-left'>
-                <CardTitle className='text-base'>{t(group.title)}</CardTitle>
-                <div className='flex items-center gap-2'>
-                  <Badge variant='outline' className='tabular-nums'>
-                    {fields.filter((f) => {
-                      const v = getPath(localeDraft, f.path)
-                      return v !== undefined && v !== null && v !== ''
-                    }).length}
-                    /{group.fields.length}
-                  </Badge>
-                  <ChevronDown className='size-4 text-muted-foreground' />
-                </div>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <CardContent className='grid gap-4 border-t md:grid-cols-2'>
-                  {fields.map((f) => (
-                    <div key={f.path}>{renderTextField(f)}</div>
-                  ))}
-                </CardContent>
-              </CollapsibleContent>
-            </Card>
-          </Collapsible>
+          <Card key={group.key}>
+            <CardHeader className='pb-3'>
+              <button
+                type='button'
+                className='text-left text-base font-semibold hover:underline'
+                onClick={() => {
+                  setTab(group.key)
+                  setSearch('')
+                }}
+              >
+                {t(group.title)}
+              </button>
+            </CardHeader>
+            <CardContent className='grid gap-4 md:grid-cols-2'>
+              {fields.map((f) => (
+                <div key={f.path}>{renderTextField(f)}</div>
+              ))}
+            </CardContent>
+          </Card>
         )
       })}
-
-      {/* 共享资源 */}
-      <Collapsible defaultOpen>
-        <Card>
-          <CollapsibleTrigger className='flex w-full items-center justify-between gap-2 px-4 py-3 text-left'>
-            <div>
-              <CardTitle className='text-base'>
-                {t('Shared assets (all languages)')}
-              </CardTitle>
-              <p className='text-xs text-muted-foreground'>
-                {t('Shared assets hint')}
-              </p>
-            </div>
-            <ChevronDown className='size-4 text-muted-foreground' />
-          </CollapsibleTrigger>
-          <CollapsibleContent>
-            <CardContent className='space-y-4 border-t'>
-              {/* 视频轮播：醒目的独立面板，一眼看到「在这里添加视频」 */}
-              <div className='space-y-3 rounded-lg border bg-muted/20 p-4'>
-                <div className='flex flex-wrap items-center justify-between gap-2'>
-                  <div className='flex items-center gap-2'>
-                    <span className='flex size-8 items-center justify-center rounded-md bg-primary/10 text-primary'>
-                      <Film className='size-4' />
-                    </span>
-                    <div className='flex flex-col'>
-                      <Label className='text-sm font-medium'>{t('Hero video playlist')}</Label>
-                      <span className='text-xs text-muted-foreground'>
-                        {t('Video source for the homepage hero background; add as many clips as you need.')}
-                      </span>
-                    </div>
-                  </div>
-                  <Badge variant='secondary' className='tabular-nums'>
-                    {videos.length} {t('clips')}
-                  </Badge>
+      {SHARED_GROUPS.map((group) => {
+        const fields = group.fields.filter((f) => matches(f, group))
+        if (!fields.length) return null
+        return (
+          <Card key={group.key}>
+            <CardHeader className='pb-3'>
+              <button
+                type='button'
+                className='text-left text-base font-semibold hover:underline'
+                onClick={() => {
+                  setTab('shared')
+                  setSearch('')
+                }}
+              >
+                {t(group.title)}
+              </button>
+            </CardHeader>
+            <CardContent className='grid gap-3 md:grid-cols-2'>
+              {fields.map((f) => (
+                <div key={f.path}>
+                  {renderField(f, asText(getPath(sharedResolved, f.path)))}
                 </div>
-                <div className='space-y-2'>
-                {videos.map((v, i) => (
-                  <div key={i} className='flex items-center gap-2'>
-                    <Badge variant='outline' className='w-12 justify-center'>
-                      {String(i + 1).padStart(2, '0')}
-                    </Badge>
-                    <Input
-                      value={v}
-                      placeholder='/videos/xxx.mp4'
-                      onChange={(e) =>
-                        writeVideos(videos.map((old, j) => (j === i ? e.target.value : old)))
-                      }
-                    />
-                    <Button
-                      variant='ghost'
-                      size='icon'
-                      className='size-8'
-                      aria-label={t('Move up')}
-                      disabled={i === 0}
-                      onClick={() => moveVideo(i, -1)}
-                    >
-                      <ArrowUp className='size-4' />
-                    </Button>
-                    <Button
-                      variant='ghost'
-                      size='icon'
-                      className='size-8'
-                      aria-label={t('Move down')}
-                      disabled={i === videos.length - 1}
-                      onClick={() => moveVideo(i, 1)}
-                    >
-                      <ArrowDown className='size-4' />
-                    </Button>
-                    <Button
-                      variant='ghost'
-                      size='icon'
-                      className='size-8'
-                      aria-label={t('Remove this clip')}
-                      onClick={() => writeVideos(videos.filter((_, j) => j !== i))}
-                    >
-                      <Trash2 className='size-4' />
-                    </Button>
-                  </div>
-                ))}
-                <Button
-                  variant='outline'
-                  size='sm'
-                  onClick={() => writeVideos([...videos, ''])}
-                >
-                  <Plus className='size-4' /> {t('Add a clip')}
-                </Button>
-                <p className='text-xs text-muted-foreground'>
-                  {t('Use a path under the site root (for example /videos/hero-video.mp4, stored in web/public/videos/). Clips loop in order; add as many as you need.')}
-                </p>
-                </div>
-              </div>
-
-              {SHARED_GROUPS.map((group) => {
-                const fields = group.fields.filter((f) => matches(f, group))
-                if (!fields.length) return null
-                return (
-                  <div key={group.key} className='space-y-3'>
-                    <Label className='text-xs font-medium'>{t(group.title)}</Label>
-                    <div className='grid gap-3 md:grid-cols-2'>
-                      {fields.map((f) => (
-                        <div key={f.path}>
-                          {renderField(f, asText(getPath(sharedResolved, f.path)))}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )
-              })}
+              ))}
             </CardContent>
-          </CollapsibleContent>
-        </Card>
-      </Collapsible>
+          </Card>
+        )
+      })}
+      {!TEXT_GROUPS.some((g) => g.fields.some((f) => matches(f, g))) &&
+        !SHARED_GROUPS.some((g) => g.fields.some((f) => matches(f, g))) && (
+          <p className='rounded-md border border-dashed px-4 py-10 text-center text-sm text-muted-foreground'>
+            {t('No fields match your search')}
+          </p>
+        )}
+    </>
+  )
 
-      <div className='flex justify-end'>
-        <Button onClick={save} disabled={saving}>
-          {saving ? <Loader2 className='size-4 animate-spin' /> : <Save className='size-4' />}
-          {t('Save')}
-        </Button>
+  return (
+    <div className='flex h-full w-full overflow-hidden'>
+      {/* 左侧分区导航（桌面） */}
+      <aside className='hidden w-60 shrink-0 flex-col border-r bg-muted/20 lg:flex'>
+        <div className='border-b px-4 py-4'>
+          <h1 className='text-base font-semibold'>{t('Home settings')}</h1>
+          <p className='mt-1 text-[11px] leading-relaxed text-muted-foreground'>
+            {t('Pick a section on the left, edit it on the right, then save.')}
+          </p>
+        </div>
+        <nav className='flex-1 space-y-0.5 overflow-y-auto p-2'>
+          {TABS.map((item) => (
+            <TabButton key={item.key} item={item} />
+          ))}
+        </nav>
+        <div className='border-t p-3 text-[11px] text-muted-foreground'>
+          {t('Every language falls back to English, then to the built-in default.')}
+        </div>
+      </aside>
+
+      <div className='flex min-w-0 flex-1 flex-col'>
+        {/* 顶部工具条：搜索 + 保存 */}
+        <div className='flex flex-wrap items-center gap-2 border-b bg-background/80 px-4 py-3 backdrop-blur'>
+          <div className='relative w-full min-w-40 flex-1 sm:max-w-72'>
+            <Search className='absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground' />
+            <Input
+              className='pl-8'
+              value={search}
+              placeholder={t('Search fields')}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+          {dirty && (
+            <span className='text-xs text-amber-600 dark:text-amber-400'>
+              {t('Unsaved changes')}
+            </span>
+          )}
+          <Button onClick={save} disabled={saving}>
+            {saving ? <Loader2 className='size-4 animate-spin' /> : <Save className='size-4' />}
+            {t('Save')}
+          </Button>
+        </div>
+
+        {/* 移动端：分区横滑 */}
+        <div className='flex gap-2 overflow-x-auto border-b px-3 py-2 lg:hidden'>
+          {TABS.map((item) => (
+            <TabButton key={item.key} item={item} compact />
+          ))}
+        </div>
+
+        <div className='flex-1 overflow-y-auto'>
+          <div className='mx-auto w-full max-w-3xl space-y-5 p-4 pb-24'>
+            {migrated && (
+              <div className='rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs'>
+                {t('Legacy config migrated to English')}
+              </div>
+            )}
+
+            {isSearching ? (
+              searchPanel
+            ) : tab === 'lang' ? (
+              languagePanel
+            ) : tab === 'shared' ? (
+              sharedPanel
+            ) : activeGroup ? (
+              <>
+                <Card>
+                  <CardHeader className='pb-3'>
+                    <div className='flex flex-wrap items-center justify-between gap-2'>
+                      <CardTitle className='text-base'>{t(activeGroup.title)}</CardTitle>
+                      <Badge variant='outline' className='tabular-nums'>
+                        {filledInGroup(activeGroup)}/{activeGroup.fields.length}
+                      </Badge>
+                    </div>
+                    <p className='text-xs text-muted-foreground'>
+                      {t('Editing language')}: {HOME_LOCALE_LABELS[lang] ?? lang}
+                    </p>
+                  </CardHeader>
+                  <CardContent className='grid gap-4 md:grid-cols-2'>
+                    {groupFields.map((f) => (
+                      <div key={f.path}>{renderTextField(f)}</div>
+                    ))}
+                  </CardContent>
+                </Card>
+
+                {activeGroup.key === 'models' && (
+                  <ModelItemsCard
+                    items={modelItems}
+                    overridden={Array.isArray(sharedModelsRaw)}
+                    onChange={(items) => setSharedValue('models.items', items)}
+                    onReset={() => setSharedValue('models.items', '')}
+                  />
+                )}
+              </>
+            ) : null}
+          </div>
+        </div>
       </div>
-    </div>
     </div>
   )
 }

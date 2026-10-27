@@ -7460,6 +7460,7 @@
     "Browse models and pricing": "Смотреть модели и цены",
     "Video generation · Text to video": "Генерация видео · Текст в видео",
     "Image generation · Text to image": "Генерация изображений · Текст в изображение",
+    "Image generation": "Генерация изображений",
     "Video generation": "Генерация видео",
     "Video generation · Image to video": "Генерация видео · Изображение в видео",
     "Chat · Reasoning": "Чат · Рассуждения",
@@ -7611,6 +7612,20 @@
     "Feature 3 description": "Описание функции 3",
     "Feature 4 title": "Заголовок функции 4",
     "Feature 4 description": "Описание функции 4",
-    "Top ticker": "Верхняя строка"
+    "Top ticker": "Верхняя строка",
+    "Featured models": "Featured models",
+    "Restore default list": "Restore default list",
+    "Add a model": "Add a model",
+    "Category badge": "Category badge",
+    "Capability tag": "Capability tag",
+    "Preview image path": "Preview image path",
+    "Link": "Link",
+    "Language and translation": "Language and translation",
+    "Editing language": "Editing language",
+    "No fields match your search": "No fields match your search",
+    "Pick a section on the left, edit it on the right, then save.": "Pick a section on the left, edit it on the right, then save.",
+    "No models yet. Add one to fill this section.": "No models yet. Add one to fill this section.",
+    "Each entry drives one row on the homepage. Hovering a row swaps the preview image on the left, so pick a picture that matches the model.": "Each entry drives one row on the homepage. Hovering a row swaps the preview image on the left, so pick a picture that matches the model.",
+    "Images live under web/public, so a path like /images/home/xxx.webp maps to web/public/images/home/xxx.webp.": "Images live under web/public, so a path like /images/home/xxx.webp maps to web/public/images/home/xxx.webp."
   }
 }

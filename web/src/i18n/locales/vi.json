@@ -7460,6 +7460,7 @@
     "Browse models and pricing": "Xem mô hình và bảng giá",
     "Video generation · Text to video": "Tạo video · Văn bản thành video",
     "Image generation · Text to image": "Tạo hình ảnh · Văn bản thành ảnh",
+    "Image generation": "Tạo hình ảnh",
     "Video generation": "Tạo video",
     "Video generation · Image to video": "Tạo video · Ảnh thành video",
     "Chat · Reasoning": "Trò chuyện · Suy luận",
@@ -7611,6 +7612,20 @@
     "Feature 3 description": "Mô tả tính năng 3",
     "Feature 4 title": "Tiêu đề tính năng 4",
     "Feature 4 description": "Mô tả tính năng 4",
-    "Top ticker": "Thanh chạy phía trên"
+    "Top ticker": "Thanh chạy phía trên",
+    "Featured models": "Featured models",
+    "Restore default list": "Restore default list",
+    "Add a model": "Add a model",
+    "Category badge": "Category badge",
+    "Capability tag": "Capability tag",
+    "Preview image path": "Preview image path",
+    "Link": "Link",
+    "Language and translation": "Language and translation",
+    "Editing language": "Editing language",
+    "No fields match your search": "No fields match your search",
+    "Pick a section on the left, edit it on the right, then save.": "Pick a section on the left, edit it on the right, then save.",
+    "No models yet. Add one to fill this section.": "No models yet. Add one to fill this section.",
+    "Each entry drives one row on the homepage. Hovering a row swaps the preview image on the left, so pick a picture that matches the model.": "Each entry drives one row on the homepage. Hovering a row swaps the preview image on the left, so pick a picture that matches the model.",
+    "Images live under web/public, so a path like /images/home/xxx.webp maps to web/public/images/home/xxx.webp.": "Images live under web/public, so a path like /images/home/xxx.webp maps to web/public/images/home/xxx.webp."
   }
 }
