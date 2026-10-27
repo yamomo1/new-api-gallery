@@ -47,6 +47,10 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 
+import { useNavigate } from '@tanstack/react-router'
+
+import { useCreateCanvasDocument } from '@/features/canvas/hooks'
+
 import {
   useCreateGalleryProject,
   useCreateMyWork,
@@ -123,6 +127,8 @@ const EMPTY_WORK: WorkForm = {
 export function WorksSection() {
   const { t, i18n } = useTranslation()
   const zh = i18n.language?.startsWith('zh')
+  const navigate = useNavigate()
+  const createCanvas = useCreateCanvasDocument()
 
   const [filter, setFilter] = useState<WorkspaceFilter>('all')
   const [sort, setSort] = useState<WorkspaceSort>('latest')
@@ -390,6 +396,24 @@ export function WorksSection() {
           >
             <Plus size={14} />
             {t('workspace.works.newProject')}
+          </button>
+
+          <button
+            type='button'
+            className='wk-new-canvas-btn'
+            disabled={createCanvas.isPending}
+            onClick={async () => {
+              const created = await createCanvas.mutateAsync({ title: '' })
+              if (created?.id) {
+                void navigate({
+                  to: '/canvas/$documentId',
+                  params: { documentId: String(created.id) },
+                })
+              }
+            }}
+          >
+            <Plus size={14} />
+            {t('workspace.works.newCanvas')}
           </button>
         </div>
       </div>

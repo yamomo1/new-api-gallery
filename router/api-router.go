@@ -66,6 +66,15 @@ func SetApiRouter(router *gin.Engine) {
 			promptGalleryRoute.DELETE("/admin/prompts/:id", middleware.AdminAuth(), controller.AdminDeletePromptGallery)
 			promptGalleryRoute.POST("/admin/prompts/:id/home", middleware.AdminAuth(), controller.AdminSetPromptGalleryHome)
 		}
+		// Canvas 无限画布文档（二开新增：/canvas/:id 编辑器的服务端存储）
+		canvasRoute := apiRouter.Group("/canvas/v1")
+		{
+			canvasRoute.GET("/documents", middleware.UserAuth(), controller.ListMyCanvasDocuments)
+			canvasRoute.POST("/documents", middleware.UserAuth(), controller.CreateMyCanvasDocument)
+			canvasRoute.GET("/documents/:id", middleware.UserAuth(), controller.GetMyCanvasDocument)
+			canvasRoute.PUT("/documents/:id", middleware.UserAuth(), controller.UpdateMyCanvasDocument)
+			canvasRoute.DELETE("/documents/:id", middleware.UserAuth(), controller.DeleteMyCanvasDocument)
+		}
 		apiRouter.GET("/verification", middleware.EmailVerificationRateLimit(), middleware.TurnstileCheck(), controller.SendEmailVerification)
 		apiRouter.GET("/reset_password", middleware.CriticalRateLimit(), middleware.TurnstileCheck(), controller.SendPasswordResetEmail)
 		apiRouter.POST("/user/reset", middleware.CriticalRateLimit(), anonymousRequestBodyLimit, controller.ResetPassword)

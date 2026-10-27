@@ -396,7 +396,8 @@
   background: var(--muted);
 }
 .wk-add-work-btn,
-.wk-new-project-btn {
+.wk-new-project-btn,
+.wk-new-canvas-btn {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
@@ -405,6 +406,18 @@
   border-radius: 999px;
   cursor: pointer;
   transition: filter 0.15s ease, background 0.15s ease;
+}
+.wk-new-canvas-btn {
+  border: 1px solid var(--border);
+  color: var(--foreground);
+  background: transparent;
+}
+.wk-new-canvas-btn:hover {
+  background: var(--muted);
+}
+.wk-new-canvas-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 .wk-add-work-btn {
   color: var(--foreground);

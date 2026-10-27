@@ -1,0 +1,222 @@
+/* 二开：无限画布编辑器（/canvas/:id），React Flow v12 + 站点主题令牌 */
+
+.cv-editor {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - var(--header-height, 3.5rem));
+  min-height: 480px;
+}
+
+.cv-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--background);
+  flex-wrap: wrap;
+}
+
+.cv-title-input {
+  flex: 1 1 160px;
+  min-width: 120px;
+  max-width: 320px;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--foreground);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+}
+
+.cv-title-input:hover {
+  border-color: var(--border);
+}
+
+.cv-title-input:focus {
+  outline: none;
+  border-color: var(--ring);
+  background: var(--muted);
+}
+
+.cv-save-state {
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+  min-width: 3.5rem;
+}
+
+.cv-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin-left: auto;
+  flex-wrap: wrap;
+}
+
+.cv-canvas-wrap {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  background: var(--muted);
+}
+
+.cv-editor-empty,
+.cv-hint {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  pointer-events: none;
+  font-size: 0.875rem;
+  color: var(--muted-foreground);
+}
+
+.cv-editor-empty {
+  pointer-events: auto;
+}
+
+/* ---------- 节点 ---------- */
+
+.cv-node {
+  width: 224px;
+  padding: 0.5rem;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--card-foreground);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 6%);
+  font-size: 0.8125rem;
+}
+
+.cv-node.is-selected {
+  border-color: var(--ring);
+  box-shadow: 0 0 0 2px color-mix(in oklab, var(--ring) 35%, transparent);
+}
+
+.cv-node-head {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin-bottom: 0.375rem;
+}
+
+.cv-node-kind {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.6875rem;
+  color: var(--muted-foreground);
+}
+
+.cv-node-status {
+  margin-left: auto;
+  font-size: 0.625rem;
+  padding: 0.05rem 0.35rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  color: var(--muted-foreground);
+}
+
+.cv-status-running {
+  color: var(--primary);
+  border-color: color-mix(in oklab, var(--primary) 40%, transparent);
+}
+
+.cv-status-success {
+  color: #15803d;
+  border-color: #15803d40;
+}
+
+.cv-status-error {
+  color: var(--destructive);
+  border-color: color-mix(in oklab, var(--destructive) 40%, transparent);
+}
+
+.cv-node-media {
+  height: 104px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--muted);
+  margin-bottom: 0.375rem;
+}
+
+.cv-node-media img,
+.cv-node-media video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.cv-node-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--muted-foreground);
+}
+
+.cv-node-title,
+.cv-node-prompt,
+.cv-node-body {
+  width: 100%;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  padding: 0.2rem 0.3rem;
+  font-size: 0.75rem;
+  resize: none;
+}
+
+.cv-node-title {
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+}
+
+.cv-node-title:hover,
+.cv-node-prompt:hover,
+.cv-node-body:hover {
+  border-color: var(--border);
+}
+
+.cv-node-title:focus,
+.cv-node-prompt:focus,
+.cv-node-body:focus {
+  outline: none;
+  border-color: var(--ring);
+  background: var(--background);
+}
+
+.cv-node-note {
+  background: #fef3c7;
+  border-color: #fcd34d;
+}
+
+.cv-node-body-note {
+  min-height: 72px;
+}
+
+.cv-handle {
+  width: 8px;
+  height: 8px;
+  background: var(--background);
+  border: 1.5px solid var(--muted-foreground);
+}
+
+/* React Flow 官方控件适配主题 */
+.cv-canvas-wrap .react-flow__controls-button {
+  background: var(--background);
+  border-bottom: 1px solid var(--border);
+  color: var(--foreground);
+}
+
+.cv-canvas-wrap .react-flow__minimap {
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}

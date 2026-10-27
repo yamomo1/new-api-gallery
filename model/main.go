@@ -378,6 +378,7 @@ func migrateDB() error {
 		&UserAccessToken{},
 		&PromptGallery{},
 		&GalleryProject{},
+		&CanvasDocument{},
 	)
 	if err != nil {
 		return err
