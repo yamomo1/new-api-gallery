@@ -92,6 +92,8 @@ const galleryItemSchema = z.object({
   /** 作品类型：首页「全部/图片/视频」筛选用；缺省按 image 处理 */
   kind: z.enum(['image', 'video']).optional(),
   cover: text(300),
+  /** 可选：悬停时播放的短视频（mp4/webm），不填就只显示封面 */
+  video: text(300).optional(),
   url: text(300),
 })
 

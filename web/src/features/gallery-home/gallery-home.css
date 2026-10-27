@@ -367,7 +367,18 @@ html:not(.dark) .ghome {
     transparent 70%
   );
 }
-.ghome .section--tinted { background: transparent; border-block: 0; } /* 与前后区块无缝（对标站整页连续背景，不做灰色色带） */
+.ghome .section--tinted { background: transparent; border-block: 0; }
+/* 性能：首屏以下的区块用 content-visibility 跳过布局/绘制，接近视口才渲染。
+   contain-intrinsic-size 给一个近似高度，避免滚动条跳动。 */
+.ghome #home-agent,
+.ghome #home-studios,
+.ghome #home-gallery,
+.ghome #home-models,
+.ghome #home-api {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 900px;
+}
+.ghome .home-closing { content-visibility: auto; contain-intrinsic-size: auto 620px; } /* 与前后区块无缝（对标站整页连续背景，不做灰色色带） */
 .ghome .section-head { max-width: 720px; margin: 0 auto 48px; text-align: center; }
 .ghome .section-head h2 { font-family: var(--font-serif); font-size: clamp(28px, 3.6vw, 40px); line-height: 1.12; margin: 14px 0 12px; font-weight: 600; letter-spacing: -0.015em; }
 .ghome .section-head p { color: var(--muted); font-size: 16px; margin: 0; }
@@ -800,6 +811,8 @@ html:not(.dark) .ghome {
 }
 .ghome .gcard--big { grid-column: span 2; grid-row: span 2; aspect-ratio: auto; }
 .ghome .gcard:hover { transform: translateY(-4px); border-color: rgba(233, 184, 122, 0.38); box-shadow: 0 24px 56px -34px rgba(0, 0, 0, 0.85); }
+/* 性能：卡片自身隔离布局与绘制 */
+.ghome .gcard { contain: layout paint; }
 .ghome .gcard-art { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform 0.9s cubic-bezier(0.22, 0.61, 0.36, 1); }
 .ghome .gcard:hover .gcard-art { transform: scale(1.05); }
 /* 底部渐变托底：保证浮层文字可读 */
@@ -807,6 +820,26 @@ html:not(.dark) .ghome {
   background: linear-gradient(0deg, rgba(0, 0, 0, 0.72), rgba(0, 0, 0, 0.18) 46%, transparent 68%); }
 .ghome .gcard-ph { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase;
   background: radial-gradient(circle at 30% 20%, color-mix(in oklab, var(--lime) 40%, transparent), transparent 60%), linear-gradient(160deg, var(--card-2), var(--background)); }
+/* 悬停播放的视频层：默认透明只显示封面 */
+.ghome .gcard-video {
+  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.45s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.ghome .gcard:hover .gcard-video,
+.ghome .gcard:focus-visible .gcard-video { opacity: 1; }
+/* 左上角 VIDEO 角标，悬停播放时淡出 */
+.ghome .gcard-play {
+  position: absolute; left: 14px; top: 14px; z-index: 2;
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 4px 9px; border-radius: 999px;
+  background: rgba(3, 11, 15, 0.58); color: #f7bf77;
+  font-size: 9.5px; font-weight: 600; letter-spacing: 0.1em;
+  backdrop-filter: blur(4px);
+  transition: opacity 0.25s;
+}
+.ghome .gcard:hover .gcard-play { opacity: 0; }
+
 .ghome .gcard-info { position: absolute; left: 16px; right: 16px; bottom: 14px; z-index: 2; }
 .ghome .gcard-title { color: #fff; font-size: 14.5px; font-weight: 600; line-height: 1.45; text-shadow: 0 1px 10px rgba(0, 0, 0, 0.55);
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }

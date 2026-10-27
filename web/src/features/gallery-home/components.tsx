@@ -2,7 +2,7 @@
  * GalleryHome 子组件（移植自 gallery-frontend components/）
  * HeroVideoStage / HeroTicker / HeroShowcaseCard / ModelTicker
  */
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import type { HeroCardConfig } from './data'
 import type { MotionContent } from './types'
@@ -10,6 +10,18 @@ import type { MotionContent } from './types'
 /* ---------------- HeroVideoStage：首屏视频背景（多段顺序播放） ---------------- */
 export function HeroVideoStage({ videos }: { videos: string[] }) {
   const [i, setI] = useState(0)
+  /** 系统开启「减少动效」时不自动播放，只解码首帧，省流量也省电 */
+  const [reduced, setReduced] = useState(false)
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const sync = () => setReduced(mq.matches)
+    sync()
+    mq.addEventListener?.('change', sync)
+    return () => mq.removeEventListener?.('change', sync)
+  }, [])
+
   const list = videos.filter(Boolean)
   if (!list.length) return null
   const cur = list[Math.min(i, list.length - 1)]
@@ -20,10 +32,11 @@ export function HeroVideoStage({ videos }: { videos: string[] }) {
       key={cur}
       className='home-hero-video'
       src={cur}
-      autoPlay
+      autoPlay={!reduced}
       muted
       playsInline
-      preload='auto'
+      preload={reduced ? 'metadata' : 'auto'}
+      disablePictureInPicture
       onEnded={() => setI((prev) => (prev + 1) % list.length)}
     />
   )

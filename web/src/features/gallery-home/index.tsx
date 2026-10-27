@@ -82,6 +82,118 @@ function highlightCode(line: string, lineKey: number): ReactNode {
   return nodes.length ? nodes : '\u00a0'
 }
 
+/** 精选视频：滚动到附近才挂载 <video>，避免首屏就下载整段视频 */
+function FeaturedVideo({ src, caption }: { src: string; caption: string }) {
+  const { ref, near } = useNearViewport<HTMLDivElement>('360px')
+  return (
+    <div className='featured-video' ref={ref} data-reveal data-reveal-delay='80'>
+      {near && (
+        <video src={src} autoPlay muted loop playsInline preload='none' />
+      )}
+      <span className='cap'>{caption}</span>
+    </div>
+  )
+}
+
+/** 元素接近视口时才返回 true（用于视频懒加载，避免首屏之外就开始下载） */
+function useNearViewport<T extends HTMLElement>(rootMargin = '320px') {
+  const ref = useRef<T>(null)
+  const [near, setNear] = useState(false)
+  useEffect(() => {
+    const el = ref.current
+    if (!el || near) return
+    if (typeof IntersectionObserver === 'undefined') {
+      setNear(true)
+      return
+    }
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setNear(true)
+          io.disconnect()
+        }
+      },
+      { rootMargin },
+    )
+    io.observe(el)
+    return () => io.disconnect()
+  }, [near, rootMargin])
+  return { ref, near }
+}
+
+/** 作品卡：带视频的卡片在悬停/聚焦时播放，离开即暂停回到封面 */
+function GalleryCard({
+  item,
+  big,
+}: {
+  item: {
+    title: string
+    model: string
+    cover?: string
+    video?: string
+    kind?: string
+    url: string
+  }
+  big?: boolean
+}) {
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const play = () => {
+    const v = videoRef.current
+    if (!v) return
+    v.play().catch(() => {})
+  }
+  const stop = () => {
+    const v = videoRef.current
+    if (!v) return
+    v.pause()
+    v.currentTime = 0
+  }
+  return (
+    <Nav
+      className={big ? 'gcard gcard--big' : 'gcard'}
+      to={item.url}
+      onMouseEnter={play}
+      onMouseLeave={stop}
+      onFocus={play}
+      onBlur={stop}
+    >
+      {item.cover ? (
+        <img
+          className='gcard-art'
+          src={item.cover}
+          alt={item.title}
+          loading='lazy'
+          decoding='async'
+        />
+      ) : (
+        <span className='gcard-ph'>YMM</span>
+      )}
+      {item.video && (
+        <>
+          <video
+            ref={videoRef}
+            className='gcard-video'
+            src={item.video}
+            poster={item.cover}
+            muted
+            loop
+            playsInline
+            preload='none'
+          />
+          <span className='gcard-play' aria-hidden='true'>
+            <Play size={11} />
+            {item.kind === 'video' ? 'VIDEO' : ''}
+          </span>
+        </>
+      )}
+      <div className='gcard-info'>
+        <div className='gcard-title'>{item.title}</div>
+        <div className='gcard-model'>{item.model}</div>
+      </div>
+    </Nav>
+  )
+}
+
 import { PublicLayout } from '@/components/layout'
 import { StudioScene } from '@/features/canvas-landing/scene'
 import { useScrollReveal } from '@/hooks/use-scroll-reveal'
@@ -199,6 +311,15 @@ export function GalleryHome() {
   const modelList = h.models.items.filter((mi) => (mi.name ?? '').trim() !== '')
   const activeModel = modelList[Math.min(modelActive, Math.max(0, modelList.length - 1))]
   /** 05 代码窗：当前标签下的示例代码 + 本站 API 基础地址 */
+  /** 03 画廊：当前筛选下的可见作品；首卡永远是大卡，条目够多时（≥10）第 6 张也做大卡，正好铺满网格 */
+  const galleryVisible = h.gallery.items.filter(
+    (g) =>
+      galleryTab === 0 ||
+      (g.kind ?? 'image') === (galleryTab === 1 ? 'image' : 'video'),
+  )
+  const galleryBigIdx = new Set<number>([0])
+  if (galleryVisible.length >= 10) galleryBigIdx.add(5)
+
   const activeCode =
     [h.cta.code, h.cta.codePython, h.cta.codeNode][codeTab] ?? h.cta.code
   const apiBase = h.cta.apiBase || 'https://api.cdymm.com/v1'
@@ -645,55 +766,19 @@ export function GalleryHome() {
               </Nav>
             </div>
 
-            {/* 作品网格：首卡跨 2×2，其余 1×1（对标站布局）；文字浮在图上 */}
-            {/* key 跟随筛选变化：切换时整组重新挂载，卡片逐个淡入（配合 reveal 错峰） */}
+            {/* 作品网格：无论哪个筛选，首卡都跨 2×2（左大图 + 右侧小图） */}
             <div
               className='gallery-grid'
               key={galleryTab}
               data-reveal-group
               data-reveal-step='95'
             >
-              {h.gallery.items
-                .filter(
-                  (g) =>
-                    galleryTab === 0 ||
-                    (g.kind ?? 'image') ===
-                      (galleryTab === 1 ? 'image' : 'video'),
-                )
-                .map((g, i) => (
-                  <Nav
-                    className={
-                      galleryTab === 0 && i === 0
-                        ? 'gcard gcard--big'
-                        : 'gcard'
-                    }
-                    to={g.url}
-                    key={g.title}
-                  >
-                    {g.cover ? (
-                      <img
-                        className='gcard-art'
-                        src={g.cover}
-                        alt={g.title}
-                        loading='lazy'
-                      />
-                    ) : (
-                      <span className='gcard-ph'>YMM</span>
-                    )}
-                    <div className='gcard-info'>
-                      <div className='gcard-title'>{g.title}</div>
-                      <div className='gcard-model'>{g.model}</div>
-                    </div>
-                  </Nav>
-                ))}
-              {galleryTab !== 0 &&
-                h.gallery.items.every(
-                  (g) =>
-                    (g.kind ?? 'image') !==
-                    (galleryTab === 1 ? 'image' : 'video'),
-                ) && (
-                  <div className='gallery-empty'>{t('No works yet')}</div>
-                )}
+              {galleryVisible.map((g, i) => (
+                <GalleryCard key={g.title} item={g} big={galleryBigIdx.has(i)} />
+              ))}
+              {galleryVisible.length === 0 && (
+                <div className='gallery-empty'>{t('No works yet')}</div>
+              )}
             </div>
 
             <div className='center' data-reveal>
@@ -703,17 +788,10 @@ export function GalleryHome() {
             </div>
 
             {h.gallery.featuredVideo && (
-              <div className='featured-video' data-reveal data-reveal-delay='80'>
-                <video
-                  src={h.gallery.featuredVideo}
-                  autoPlay
-                  muted
-                  loop
-                  playsInline
-                  preload='metadata'
-                />
-                <span className='cap'>{h.gallery.featuredTitle}</span>
-              </div>
+              <FeaturedVideo
+                src={h.gallery.featuredVideo}
+                caption={h.gallery.featuredTitle}
+              />
             )}
           </div>
         </section>
@@ -755,6 +833,7 @@ export function GalleryHome() {
                       src={mi.thumb}
                       alt=''
                       loading='lazy'
+                      decoding='async'
                     />
                   ))}
                 </div>
