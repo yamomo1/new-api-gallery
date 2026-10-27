@@ -13,7 +13,7 @@
  * 动效：home-settle 2.4s 落定 / home-rise 0.7s stagger 上浮 / home-bob 浮卡轻浮
  * 样式：gallery-home.css（作用域 .ghome，颜色继承 New API 主题变量 → 换肤联动）
  */
-import type { CSSProperties } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
 import { useEffect, useRef, useState } from 'react'
 import { Link as TanstackLink } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
@@ -22,19 +22,65 @@ import {
   ArrowUp,
   ArrowUpRight,
   BookOpen,
+  Copy,
   Check,
   ChevronDown,
   ChevronRight,
   Film,
   Images,
+  KeyRound,
   LayoutGrid,
   Paperclip,
   Play,
   ShieldCheck,
   Sparkles,
+  Terminal,
   User,
   Video,
 } from 'lucide-react'
+
+/**
+ * 极简语法高亮：字符串 / URL / 命令行参数 / 关键字 / 注释
+ * 只覆盖首页 05 代码窗的三种示例（cURL / Python / Node.js），不追求完整解析。
+ */
+const CODE_TOKEN_RE =
+  /("([^"\\]|\\.)*"|'([^'\\]|\\.)*'|https?:\/\/[^\s'"]+|-[A-Za-z]\b|\b(?:curl|from|import|const|let|await|async|new|print|return|export|def|console)\b)/g
+
+function highlightCode(line: string, lineKey: number): ReactNode {
+  if (/^\s*(#|\/\/)/.test(line)) {
+    return <span className='api-tok-comment'>{line}</span>
+  }
+  const nodes: ReactNode[] = []
+  let last = 0
+  CODE_TOKEN_RE.lastIndex = 0
+  let m = CODE_TOKEN_RE.exec(line)
+  while (m) {
+    const token = m[0]
+    const isFlag = /^-[A-Za-z]$/.test(token)
+    const prevChar = m.index > 0 ? line[m.index - 1] : ' '
+    if (isFlag && !/\s/.test(prevChar)) {
+      m = CODE_TOKEN_RE.exec(line)
+      continue
+    }
+    if (m.index > last) nodes.push(line.slice(last, m.index))
+    const cls = token.startsWith('http')
+      ? 'api-tok-url'
+      : /^["']/.test(token)
+        ? 'api-tok-str'
+        : isFlag
+          ? 'api-tok-flag'
+          : 'api-tok-key'
+    nodes.push(
+      <span key={`${lineKey}-${m.index}`} className={cls}>
+        {token}
+      </span>,
+    )
+    last = m.index + token.length
+    m = CODE_TOKEN_RE.exec(line)
+  }
+  if (last < line.length) nodes.push(line.slice(last))
+  return nodes.length ? nodes : '\u00a0'
+}
 
 import { PublicLayout } from '@/components/layout'
 import { StudioScene } from '@/features/canvas-landing/scene'
@@ -146,9 +192,19 @@ export function GalleryHome() {
   const [galleryTab, setGalleryTab] = useState(0)
   /** 04 精选模型：当前悬停/选中的模型下标（左侧预览跟随） */
   const [modelActive, setModelActive] = useState(0)
+  /** 05 开发者：代码示例标签页（cURL / Python / Node.js）与复制反馈 */
+  const [codeTab, setCodeTab] = useState(0)
+  const [copied, setCopied] = useState<'code' | 'base' | null>(null)
   /** 后台可能存了空行，渲染前先过滤掉没名字的项，避免出现空行 */
   const modelList = h.models.items.filter((mi) => (mi.name ?? '').trim() !== '')
   const activeModel = modelList[Math.min(modelActive, Math.max(0, modelList.length - 1))]
+  /** 05 代码窗：当前标签下的示例代码 + 本站 API 基础地址 */
+  const activeCode =
+    [h.cta.code, h.cta.codePython, h.cta.codeNode][codeTab] ?? h.cta.code
+  const apiBase =
+    typeof window !== 'undefined'
+      ? `${window.location.origin}/v1`
+      : 'https://your-domain/v1'
   /** 胶囊滑动高亮块：跟随当前选中项的位置与宽度（真实测量，适配任意语种文案） */
   const galleryTabRefs = useRef<Array<HTMLButtonElement | null>>([])
   const [tabThumb, setTabThumb] = useState({ x: 0, w: 0 })
@@ -700,7 +756,8 @@ export function GalleryHome() {
                 </div>
               </div>
 
-              {/* 右侧列表：悬停即切换左侧预览 */}
+              {/* 右侧列表：与左侧预览等高，可滚轮滚动；悬停即切换左侧预览 */}
+              <div className='models-list-wrap'>
               <div className='models-list' data-reveal-group data-reveal-step='45'>
                 {modelList.map((mi, i) => (
                   <Nav
@@ -725,6 +782,7 @@ export function GalleryHome() {
                   </Nav>
                 ))}
               </div>
+              </div>
             </div>
 
             <div className='center' data-reveal>
@@ -735,58 +793,150 @@ export function GalleryHome() {
           </div>
         </section>
 
-        {/* ============ 6. 统一 API CTA ============ */}
-        <section className='section cta'>
+        {/* ============ 6. 开发者 API（对标 05：左文案 + 右代码窗） ============ */}
+        <section className='section api' id='home-api'>
           <div className='container'>
-            <div className='cta-inner' data-reveal-group data-reveal-step='110'>
-              <span className='eyebrow' style={{ color: 'var(--hero-gold)' }}>
-                <span className='sec-index'>{h.cta.index}</span>
-                YMM · You Make Moments
-              </span>
-              <h2>{h.cta.title}</h2>
-              <p>{h.cta.lead}</p>
-              <ul className='cta-features' data-reveal-group data-reveal-step='70'>
-                {h.cta.features.map((f) => (
-                  <li key={f}>{f}</li>
-                ))}
-              </ul>
-              <div className='code-card'>
-                <div
-                  style={{
-                    color: 'var(--muted)',
-                    fontSize: 12,
-                    marginBottom: 8,
-                    fontFamily: 'var(--font-sans)',
-                  }}
-                >
-                  {h.cta.codeTitle}
+            <div className='api-grid'>
+              {/* —— 左列 —— */}
+              <div className='api-left' data-reveal-group data-reveal-step='90'>
+                <span className='eyebrow'>
+                  <span className='sec-index'>{h.cta.index}</span>
+                  {h.cta.eyebrow}
+                </span>
+                <h2 className='api-title'>{h.cta.title}</h2>
+                <p className='api-lead'>{h.cta.lead}</p>
+
+                <ul className='api-features' data-reveal-group data-reveal-step='70'>
+                  {h.cta.features.map((f, i) => (
+                    <li key={f}>
+                      <span className='api-feature-icon' aria-hidden='true'>
+                        {i === 0 ? (
+                          <Terminal size={18} />
+                        ) : i === 1 ? (
+                          <KeyRound size={18} />
+                        ) : (
+                          <ShieldCheck size={18} />
+                        )}
+                      </span>
+                      <span className='api-feature-copy'>
+                        <b>{f}</b>
+                        {h.cta.featureDescs?.[i] && (
+                          <span>{h.cta.featureDescs[i]}</span>
+                        )}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+
+                <div className='api-actions' data-reveal>
+                  <Nav className='api-primary' to={h.cta.connectUrl}>
+                    <KeyRound size={16} />
+                    <span>{h.cta.genLabel}</span>
+                    <ArrowRight size={14} className='api-primary-arrow' />
+                  </Nav>
+                  <Nav className='api-ghost' to='/docs'>
+                    <BookOpen size={16} />
+                    <span>{h.cta.docsLabel}</span>
+                    <ArrowUpRight size={14} />
+                  </Nav>
                 </div>
-                <pre style={{ margin: 0 }}>{h.cta.code}</pre>
+
+                <div className='api-connect' data-reveal>
+                  <div className='api-connect-copy'>
+                    <span className='api-connect-kicker'>
+                      {h.cta.connectKicker}
+                    </span>
+                    <h3>{h.cta.connectTitle}</h3>
+                    <ul>
+                      {h.cta.connectPoints.map((p) => (
+                        <li key={p}>{p}</li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div className='api-connect-visual' aria-hidden='true'>
+                    <span className='api-chip'>
+                      <Terminal size={14} />
+                    </span>
+                    <span className='api-chip'>
+                      <Sparkles size={14} />
+                    </span>
+                    <span className='api-chip'>
+                      <ArrowRight size={14} />
+                    </span>
+                    <span className='api-chip api-chip--bar' />
+                  </div>
+                </div>
               </div>
-              <div
-                className='cta-row'
-                style={{
-                  display: 'flex',
-                  gap: 12,
-                  justifyContent: 'center',
-                  marginTop: 22,
-                  flexWrap: 'wrap',
-                }}
-              >
-                <Nav className='gen-btn' to={h.cta.connectUrl}>
-                  <Play size={16} /> {h.cta.genLabel}
-                </Nav>
-                <Nav
-                  className='btn-ghost'
-                  to='/pricing'
-                  style={{
-                    borderColor: 'var(--hero-line)',
-                    color: 'var(--hero-ink)',
-                  }}
-                >
-                  {h.cta.connectLabel} <ChevronRight size={14} />
-                </Nav>
-              </div>
+
+              {/* —— 右列：代码窗（标签切换 + 复制 + 逐行入场） —— */}
+              <figure className='api-code' data-reveal>
+                <div className='api-code-head'>
+                  <span className='api-dots' aria-hidden='true'>
+                    <i />
+                    <i />
+                    <i />
+                  </span>
+                  <div className='api-tabs' role='tablist'>
+                    {h.cta.codeTabs.map((tab, i) => (
+                      <button
+                        key={tab}
+                        type='button'
+                        role='tab'
+                        aria-selected={codeTab === i}
+                        className={codeTab === i ? 'is-on' : undefined}
+                        onClick={() => setCodeTab(i)}
+                      >
+                        {tab}
+                      </button>
+                    ))}
+                  </div>
+                  <button
+                    type='button'
+                    className='api-copy'
+                    aria-label={t('Copy code')}
+                    onClick={() => {
+                      const text = activeCode
+                      navigator.clipboard?.writeText(text).then(() => {
+                        setCopied('code')
+                        setTimeout(() => setCopied(null), 1600)
+                      })
+                    }}
+                  >
+                    {copied === 'code' ? <Check size={15} /> : <Copy size={15} />}
+                  </button>
+                </div>
+
+                <div className='api-base'>
+                  <span className='api-base-label'>{h.cta.codeTitle}</span>
+                  <code className='api-base-url'>{apiBase}</code>
+                  <button
+                    type='button'
+                    className='api-copy'
+                    aria-label={t('Copy base URL')}
+                    onClick={() => {
+                      navigator.clipboard?.writeText(apiBase).then(() => {
+                        setCopied('base')
+                        setTimeout(() => setCopied(null), 1600)
+                      })
+                    }}
+                  >
+                    {copied === 'base' ? <Check size={15} /> : <Copy size={15} />}
+                  </button>
+                </div>
+
+                <pre className='api-code-body' key={codeTab}>
+                  {activeCode.split('\n').map((line, i) => (
+                    <span
+                      className='api-code-line'
+                      key={i}
+                      style={{ animationDelay: `${i * 24}ms` }}
+                    >
+                      {line ? highlightCode(line, i) : '\u00a0'}
+                      {'\n'}
+                    </span>
+                  ))}
+                </pre>
+              </figure>
             </div>
           </div>
         </section>
