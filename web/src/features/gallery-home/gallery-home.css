@@ -958,20 +958,94 @@ html:not(.dark) .ghome {
 }
 .ghome .api-connect-ghost:hover { border-color: rgba(233, 184, 122, 0.45); color: var(--accent-gold, #e9b872); transform: translateY(-1px); }
 
-.ghome .api-connect-visual { display: flex; align-items: center; gap: 6px; justify-content: flex-end; flex-wrap: wrap; }
-.ghome .api-chip {
-  display: inline-flex; align-items: center; justify-content: center;
-  width: 34px; height: 34px; border-radius: 10px;
-  border: 1px solid var(--border); background: color-mix(in oklab, var(--card) 82%, transparent);
-  color: color-mix(in oklab, var(--accent-gold, #e9b872) 80%, var(--foreground));
-  animation: api-chip-float 5.6s ease-in-out infinite;
+/* 接入 → 成功 → 出图 的三步小流程（循环演示） */
+.ghome .api-flow {
+  display: flex; flex-direction: column; gap: 8px;
+  align-items: stretch; justify-self: end; width: 100%; max-width: 148px;
 }
-.ghome .api-chip:nth-child(2) { animation-delay: 0.5s; }
-.ghome .api-chip:nth-child(3) { animation-delay: 1s; }
-.ghome .api-chip--bar { width: 34px; background: color-mix(in oklab, var(--foreground) 8%, transparent); border-style: dashed; }
-@keyframes api-chip-float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-4px); }
+.ghome .api-flow-step {
+  position: relative;
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 10px; border-radius: 10px; min-width: 0;
+  border: 1px solid var(--border);
+  background: color-mix(in oklab, var(--card) 80%, transparent);
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 10.5px; line-height: 1.2; color: var(--muted);
+  opacity: 0; will-change: opacity, transform;
+}
+.ghome .api-flow-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* 步骤之间的细虚线连接，强调「流程」 */
+.ghome .api-flow-step::after {
+  content: ""; position: absolute; left: 16px; bottom: -8px; width: 1px; height: 8px;
+  background: linear-gradient(180deg, rgba(233, 184, 122, 0.55), rgba(233, 184, 122, 0.12));
+}
+.ghome .api-flow-img::after { display: none; }
+
+/* ① 命令行 */
+.ghome .api-flow-cmd {
+  background: #0a1116; border-color: rgba(255, 255, 255, 0.1); color: rgba(230, 225, 214, 0.9);
+  animation: api-flow-in-1 9s ease-in-out infinite;
+}
+.ghome .api-flow-prompt { color: var(--accent-gold, #e9b872); font-weight: 700; }
+.ghome .api-flow-caret {
+  width: 5px; height: 11px; margin-left: 1px; border-radius: 1px;
+  background: var(--accent-gold, #e9b872);
+  animation: api-flow-caret 1.05s steps(1, end) infinite;
+}
+
+/* ② 接入成功 */
+.ghome .api-flow-ok {
+  border-color: rgba(233, 184, 122, 0.35);
+  color: color-mix(in oklab, var(--accent-gold, #e9b872) 82%, var(--foreground));
+  animation: api-flow-in-2 9s ease-in-out infinite;
+}
+.ghome .api-flow-check {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 14px; height: 14px; border-radius: 50%; flex: none;
+  background: rgba(233, 184, 122, 0.18); color: var(--accent-gold, #e9b872);
+}
+
+/* ③ 生成图片 */
+.ghome .api-flow-img {
+  position: relative; padding: 6px; gap: 0;
+  animation: api-flow-in-3 9s ease-in-out infinite;
+}
+.ghome .api-flow-img img {
+  width: 100%; height: 68px; object-fit: cover; border-radius: 7px; display: block;
+  filter: blur(6px); transform: scale(1.04);
+  animation: api-flow-pop 9s ease-in-out infinite;
+}
+.ghome .api-flow-tag {
+  position: absolute; left: 9px; bottom: 9px;
+  display: inline-flex; align-items: center; gap: 3px;
+  padding: 2px 6px; border-radius: 999px; max-width: calc(100% - 18px);
+  background: rgba(3, 11, 15, 0.62); color: #f7bf77;
+  font-size: 9px; letter-spacing: 0.02em; backdrop-filter: blur(4px);
+}
+
+@keyframes api-flow-in-1 {
+  0%, 8% { opacity: 0; transform: translateY(5px); }
+  14%, 88% { opacity: 1; transform: none; }
+  96%, 100% { opacity: 0; transform: translateY(-3px); }
+}
+@keyframes api-flow-in-2 {
+  0%, 27% { opacity: 0; transform: translateY(5px); }
+  33%, 88% { opacity: 1; transform: none; }
+  96%, 100% { opacity: 0; transform: translateY(-3px); }
+}
+@keyframes api-flow-in-3 {
+  0%, 46% { opacity: 0; transform: translateY(5px) scale(0.97); }
+  54%, 88% { opacity: 1; transform: none; }
+  96%, 100% { opacity: 0; transform: translateY(-3px); }
+}
+@keyframes api-flow-caret {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+@keyframes api-flow-pop {
+  0%, 46% { filter: blur(6px); transform: scale(1.05); }
+  62%, 88% { filter: blur(0); transform: scale(1); }
+  96%, 100% { filter: blur(6px); transform: scale(1.05); }
 }
 
 /* —— 代码窗 —— */
@@ -1121,7 +1195,7 @@ html:not(.dark) .ghome {
   /* 05 开发者：上下堆叠，代码窗不再居中 */
   .ghome .api-grid { grid-template-columns: 1fr; gap: 34px; align-items: start; }
   .ghome .api-connect { grid-template-columns: 1fr; }
-  .ghome .api-connect-visual { justify-content: flex-start; }
+  .ghome .api-flow { justify-self: start; max-width: 180px; }
   .ghome .api-code-body { font-size: 12px; }
   .ghome .agent-body { grid-template-columns: 1fr; gap: 26px; }
   .ghome .agent-preview-steps { grid-template-columns: repeat(2, 1fr); }
@@ -1235,6 +1309,9 @@ html:not(.dark) .ghome {
   .ghome .hero-ticker-track,
   .ghome .marquee-track,
   .ghome .agent-attach svg,
+  .ghome .api-flow-step,
+  .ghome .api-flow-img img,
+  .ghome .api-flow-caret,
   .ghome .gallery-tabs-thumb,
   .ghome .gallery-tabs-sheen,
   .ghome .gallery-explore::before,
@@ -1242,6 +1319,9 @@ html:not(.dark) .ghome {
     animation: none !important;
     transition: none !important;
   }
+  /* 减弱动效时流程图直接全部显示 */
+  .ghome .api-flow-step { opacity: 1 !important; transform: none !important; }
+  .ghome .api-flow-img img { filter: none !important; transform: none !important; }
   .ghome [data-reveal] {
     opacity: 1;
     transform: none;

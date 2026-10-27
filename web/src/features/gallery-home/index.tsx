@@ -862,17 +862,25 @@ export function GalleryHome() {
                       </Nav>
                     </div>
                   </div>
-                  <div className='api-connect-visual' aria-hidden='true'>
-                    <span className='api-chip'>
-                      <Terminal size={14} />
-                    </span>
-                    <span className='api-chip'>
-                      <Sparkles size={14} />
-                    </span>
-                    <span className='api-chip'>
-                      <ArrowRight size={14} />
-                    </span>
-                    <span className='api-chip api-chip--bar' />
+                  {/* 右：接入 → 成功 → 出图 的三步小流程（纯装饰，循环播放） */}
+                  <div className='api-flow' aria-hidden='true'>
+                    <div className='api-flow-step api-flow-cmd'>
+                      <span className='api-flow-prompt'>&gt;</span>
+                      <span className='api-flow-text'>ymm connect</span>
+                      <i className='api-flow-caret' />
+                    </div>
+                    <div className='api-flow-step api-flow-ok'>
+                      <span className='api-flow-check'>
+                        <Check size={10} />
+                      </span>
+                      <span className='api-flow-text'>connected</span>
+                    </div>
+                    <div className='api-flow-step api-flow-img'>
+                      <img src='/images/home/model-image-v4.webp' alt='' loading='lazy' />
+                      <span className='api-flow-tag'>
+                        <Sparkles size={9} /> image.webp
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
