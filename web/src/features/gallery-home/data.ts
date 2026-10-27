@@ -259,7 +259,7 @@ export const HOME_DATA = {
     lead: 'A visual workspace for exploring, focused studios for speed, and steady model access once an idea becomes a product.',
     items: [
       {
-        image: '/images/home/creative-workspace-hero.webp',
+        image: '/images/home/creative-canvas-artwork.webp',
         kicker: 'Canvas',
         title: 'Arrange on an infinite canvas',
         desc: 'Lay out references, prompts, images, video and sound in one fluid visual workflow. Keep the whole idea in view.',

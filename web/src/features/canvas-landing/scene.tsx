@@ -42,7 +42,7 @@ type HeadingTag = 'h1' | 'h2'
 
 /** 内置素材：与首页/对标站同一批图，调用方可覆盖 */
 const DEFAULT_MEDIA = {
-  canvas: '/images/home/creative-workspace-hero.webp',
+  canvas: '/images/home/creative-canvas-artwork.webp',
   image: '/images/home/studio-portrait-v3.webp',
   motion: '/images/home/model-cinema-v3.webp',
 }

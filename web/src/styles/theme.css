@@ -97,6 +97,9 @@ For commercial licensing, please contact support@quantumnous.com
 :root {
   --radius: 1rem;
   --app-header-height: 3rem;
+  /* 全局品牌金：区块编号（01–05 眉标）、金色强调统一走这个令牌，
+     想整体换金色只改这里（首页 .sec-index 与画布工作室 .ctlp-eyebrow i 都引用它）。 */
+  --accent-gold: #e9b872;
   /* Static build-channel fallback consumed when JS hasn't booted yet. */
   --app-rev: '2k6e8r7p';
   /* Auto starts with the browser font, including before JS applies the
@@ -182,6 +185,8 @@ For commercial licensing, please contact support@quantumnous.com
   /* Native controls follow the theme; Dark Reader also reads this to detect
      the built-in dark theme. */
   color-scheme: dark;
+  /* 暗色下的品牌金：底色更深，金色调亮一档保持对比度 */
+  --accent-gold: #f6d29a;
   /* OpenAI-like dark mode with a crisp charcoal canvas. */
   --background: oklch(0.235 0 0);
   --foreground: oklch(0.965 0 0);

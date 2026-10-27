@@ -381,7 +381,7 @@ html:not(.dark) .ghome {
 }
 .ghome .sec-index {
   font-family: var(--font-serif); font-size: 15px; font-weight: 700;
-  color: var(--hero-gold, var(--gh-accent-soft)); letter-spacing: 0.02em; text-transform: none;
+  color: var(--accent-gold, var(--gh-accent-soft)); letter-spacing: 0.02em; text-transform: none;
   font-variant-numeric: tabular-nums;
 }
 
