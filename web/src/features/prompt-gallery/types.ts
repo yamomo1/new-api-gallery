@@ -40,6 +40,7 @@ export type PromptGalleryFacets = {
   categories: string[]
   models: string[]
   types: string[]
+  tags?: string[]
 }
 
 export type PromptGalleryListParams = {
@@ -47,6 +48,7 @@ export type PromptGalleryListParams = {
   search?: string
   type?: PromptGalleryType
   model?: string
+  tag?: string
   sort?: PromptGallerySort
   offset?: number
   limit?: number

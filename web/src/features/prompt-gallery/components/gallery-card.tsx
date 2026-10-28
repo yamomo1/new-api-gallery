@@ -1,104 +1,173 @@
-import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Check, Heart, Video } from 'lucide-react'
+import { Copy, Eye, Heart, Play, Star, Video } from 'lucide-react'
 
-import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 
 import type { PromptGalleryItem } from '../types'
+import { isVideoUrl, parseGalleryMedia } from '../utils'
 
 type GalleryCardProps = {
   item: PromptGalleryItem
+  onOpen?: (item: PromptGalleryItem) => void
+  liked?: boolean
+  likeCount?: number
+  onLike?: (item: PromptGalleryItem) => void
+  favorite?: boolean
+  onToggleFavorite?: (id: number) => void
   onCopy?: (prompt: string) => void
 }
 
-/** 单张画廊卡片：封面 + hover 提示词浮层（复制 / 模型 / 点赞） */
-export function GalleryCard({ item, onCopy }: GalleryCardProps) {
+/** 单张画廊卡片（对标参考站）：封面 + 视频播放键 + 浏览量 + 底部浮层（标题/复制/点赞/收藏） */
+export function GalleryCard({
+  item,
+  onOpen,
+  liked,
+  likeCount,
+  onLike,
+  favorite,
+  onToggleFavorite,
+  onCopy,
+}: GalleryCardProps) {
   const { t } = useTranslation()
-  const [copied, setCopied] = useState(false)
-
-  const media: string[] = (() => {
-    try {
-      const parsed = JSON.parse(item.media || '[]')
-      return Array.isArray(parsed) ? parsed : []
-    } catch {
-      return item.cover ? [item.cover] : []
-    }
-  })()
-
+  const media = parseGalleryMedia(item)
   const cover = item.cover || media[0]
 
-  const handleCopy = () => {
+  // 视频类型：若封面本身就是视频文件则直接可播，否则用封面图 + 播放键
+  const coverIsVideo = cover ? isVideoUrl(cover) : false
+  const isVideoItem = item.type === 'video' || coverIsVideo
+
+  const handleCopy = (e: React.MouseEvent) => {
+    e.stopPropagation()
     if (onCopy) {
       onCopy(item.prompt)
       return
     }
     navigator.clipboard?.writeText(item.prompt)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 1500)
+  }
+
+  const handleLike = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    onLike?.(item)
+  }
+
+  const handleFavorite = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    onToggleFavorite?.(item.id)
   }
 
   return (
-    <figure className='group relative mb-4 break-inside-avoid overflow-hidden rounded-xl border border-border bg-card transition-shadow hover:shadow-lg'>
-      <div className='relative aspect-auto w-full overflow-hidden bg-muted'>
+    <figure
+      role='button'
+      tabIndex={0}
+      onClick={() => onOpen?.(item)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') onOpen?.(item)
+      }}
+      className='group relative mb-4 cursor-pointer break-inside-avoid overflow-hidden rounded-xl border border-border bg-card outline-none transition-shadow hover:shadow-lg focus-visible:ring-2 focus-visible:ring-ring'
+    >
+      <div className='relative w-full overflow-hidden bg-muted'>
         {cover ? (
-          <img
-            src={cover}
-            alt={item.title}
-            loading='lazy'
-            className='block w-full transition-transform duration-300 group-hover:scale-[1.03]'
-          />
+          coverIsVideo ? (
+            <video
+              src={cover}
+              muted
+              loop
+              playsInline
+              preload='metadata'
+              className='block w-full'
+            />
+          ) : (
+            <img
+              src={cover}
+              alt={item.title}
+              loading='lazy'
+              className='block w-full transition-transform duration-300 group-hover:scale-[1.03]'
+            />
+          )
         ) : (
           <div className='flex aspect-[4/3] w-full items-center justify-center text-muted-foreground'>
             <Video className='size-8' />
           </div>
         )}
-        {item.type === 'video' && (
-          <span className='absolute left-2 top-2 inline-flex items-center gap-1 rounded-md bg-black/55 px-1.5 py-0.5 text-[11px] font-medium text-white'>
-            <Video className='size-3' /> {t('Video')}
+
+        {/* 视频中央播放键 */}
+        {isVideoItem && (
+          <span className='pointer-events-none absolute inset-0 flex items-center justify-center'>
+            <span className='flex size-11 items-center justify-center rounded-full bg-black/45 backdrop-blur-sm transition-transform duration-200 group-hover:scale-110'>
+              <Play className='size-5 fill-white text-white' />
+            </span>
           </span>
+        )}
+
+        {/* 右上角浏览量 */}
+        <span className='absolute right-2 top-2 inline-flex items-center gap-1 rounded-md bg-black/50 px-1.5 py-0.5 text-[11px] font-medium text-white/90 backdrop-blur-sm'>
+          <Eye className='size-3' /> {item.views}
+        </span>
+
+        {/* 收藏角标 */}
+        {onToggleFavorite && (
+          <button
+            type='button'
+            aria-label={favorite ? t('Favorited') : t('Favorite')}
+            onClick={handleFavorite}
+            className={cn(
+              'absolute left-2 top-2 flex size-7 items-center justify-center rounded-full bg-black/50 text-white/80 backdrop-blur-sm transition-colors hover:bg-black/70',
+              favorite && 'text-amber-400'
+            )}
+          >
+            <Star className={cn('size-3.5', favorite && 'fill-current')} />
+          </button>
         )}
       </div>
 
-      {/* hover 提示词浮层 */}
-      <div className='pointer-events-none absolute inset-x-0 bottom-0 translate-y-2 bg-gradient-to-t from-black/80 to-transparent p-3 opacity-0 transition-all duration-200 group-hover:pointer-events-auto group-hover:translate-y-0 group-hover:opacity-100'>
-        <p className='line-clamp-3 mb-2 text-xs leading-relaxed text-white/90'>
-          {item.prompt}
-        </p>
-        <div className='flex items-center gap-2'>
-          <Button
-            variant='secondary'
-            size='sm'
-            className='h-7 rounded-md bg-white/15 px-2 text-xs text-white hover:bg-white/25'
-            onClick={handleCopy}
-          >
-            {copied ? (
-              <>
-                <Check className='size-3.5' /> {t('Copied')}
-              </>
-            ) : (
-              t('Copy Prompt')
+      {/* 底部渐变浮层：标题 + 复制 + 点赞 */}
+      <div className='absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/45 to-transparent p-3 pt-8'>
+        <div className='flex items-end justify-between gap-2'>
+          <div className='min-w-0'>
+            <p className='truncate text-sm font-semibold text-white'>
+              {item.title}
+            </p>
+            {item.model && (
+              <p className='mt-0.5 truncate text-[11px] text-white/65'>
+                {item.model}
+              </p>
             )}
-          </Button>
-          {item.model && (
-            <span className='truncate rounded-md bg-white/15 px-2 py-1 text-[11px] text-white/80'>
-              {item.model}
-            </span>
-          )}
-          <span className='ml-auto inline-flex items-center gap-1 text-[11px] text-white/70'>
-            <Heart className='size-3' /> {item.likes}
-          </span>
+          </div>
+          <div className='flex shrink-0 items-center gap-1'>
+            <button
+              type='button'
+              aria-label={t('Copy Prompt')}
+              title={t('Copy Prompt')}
+              onClick={handleCopy}
+              className='flex size-7 items-center justify-center rounded-full bg-white/10 text-white/80 transition-colors hover:bg-white/25 hover:text-white'
+            >
+              <Copy className='size-3.5' />
+            </button>
+            <button
+              type='button'
+              aria-label={liked ? t('Favorited') : 'Like'}
+              title='Like'
+              disabled={liked}
+              onClick={handleLike}
+              className={cn(
+                'flex h-7 items-center gap-1 rounded-full bg-white/10 px-2 text-[11px] font-medium text-white/80 transition-colors hover:bg-white/25 hover:text-white',
+                liked && 'text-rose-400 hover:bg-white/10',
+                !onLike && 'pointer-events-none opacity-80'
+              )}
+            >
+              <Heart className={cn('size-3.5', liked && 'fill-current')} />
+              {likeCount ?? item.likes}
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* 底部标题 */}
-      <figcaption className='flex items-center justify-between gap-2 px-3 py-2'>
-        <span className='truncate text-sm font-medium'>{item.title}</span>
-        {item.author && (
-          <span className='shrink-0 text-xs text-muted-foreground'>
-            {item.author}
-          </span>
-        )}
-      </figcaption>
+      {/* hover 显示提示词预览 */}
+      <div className='pointer-events-none absolute inset-x-0 top-0 bg-gradient-to-b from-black/70 to-transparent p-3 opacity-0 transition-opacity duration-200 group-hover:opacity-100'>
+        <p className='line-clamp-3 text-xs leading-relaxed text-white/90'>
+          {item.prompt}
+        </p>
+      </div>
     </figure>
   )
 }

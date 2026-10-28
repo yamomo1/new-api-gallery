@@ -36,6 +36,14 @@ export async function getPromptGalleryFacets(): Promise<
   return res.data
 }
 
+/** 公开点赞（+1），返回更新后的点赞数；前端用 localStorage 防重复 */
+export async function likePromptGallery(
+  id: number
+): Promise<ApiEnvelope<{ likes: number }>> {
+  const res = await api.post(`/api/prompt-gallery/v1/prompts/${id}/like`)
+  return res.data
+}
+
 export async function getMyPromptGalleries(
   params: PromptGalleryListParams
 ): Promise<ApiEnvelope<PromptGalleryListResult>> {

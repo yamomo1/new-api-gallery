@@ -1,5 +1,8 @@
 {
   "translation": {
+    "360": "360",
+    "1000": "1000",
+    "10000": "10000",
     "\"default\": \"us-central1\", \"claude-3-5-sonnet-20240620\": \"europe-west1\"": "\"default\": \"us-central1\", \"claude-3-5-sonnet-20240620\": \"europe-west1\"",
     "#1 App": "#1 应用",
     "#1 Model": "#1 模型",
@@ -44,8 +47,6 @@
     "1. Select upstream models": "1. 选择上游模型",
     "10 / page": "10 条/页",
     "100 / page": "100 条/页",
-    "1000": "1000",
-    "10000": "10000",
     "14 Days": "14 天",
     "180 days": "180 天",
     "192.168.1.1&#10;10.0.0.0/8": "192.168.1.1&#10;10.0.0.0/8",
@@ -66,7 +67,6 @@
     "30 days": "30 天",
     "30 days ago": "30 天前",
     "30d change": "30 天变化",
-    "360": "360",
     "5 minutes": "5 分钟",
     "5-Hour Window": "5小时窗口",
     "50 / page": "50 条/页",
@@ -7853,6 +7853,22 @@
     "Opening the canvas studio…": "正在打开画布工作台…",
     "Open manually": "手动打开",
     "The canvas studio URL is not configured yet.": "还没有配置画布工作台地址。",
-    "Set VITE_CANVAS_STUDIO_URL or edit features/canvas/studio.ts.": "请设置 VITE_CANVAS_STUDIO_URL，或修改 features/canvas/studio.ts。"
+    "Set VITE_CANVAS_STUDIO_URL or edit features/canvas/studio.ts.": "请设置 VITE_CANVAS_STUDIO_URL，或修改 features/canvas/studio.ts。",
+    "All prompts": "全部提示词",
+    "All tags": "所有标签",
+    "Browse curated image and video prompts, and send any inspiration straight to the generator.": "浏览精选的图像和视频提示词，并将任意灵感直接发送到生成器。",
+    "Favorite": "收藏",
+    "Favorited": "已收藏",
+    "Featured AI prompt inspiration": "精选 AI 提示词灵感",
+    "Image prompts": "图像提示词",
+    "Link copied": "链接已复制",
+    "No favorites yet": "还没有收藏",
+    "Publish work": "发布作品",
+    "Search prompts, styles and ideas": "搜索提示词、风格和创意",
+    "Share gallery": "分享",
+    "Show favorites only": "只看收藏",
+    "Video prompts": "视频提示词",
+    "{{count}} prompts": "{{count}} 个提示词",
+    "Favorites": "收藏"
   }
 }

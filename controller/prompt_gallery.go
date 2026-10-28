@@ -23,6 +23,7 @@ func GetPromptGalleryList(c *gin.Context) {
 		Search:   c.Query("search"),
 		Type:     c.Query("type"),
 		Model:    c.Query("model"),
+		Tag:      c.Query("tag"),
 		Sort:     c.DefaultQuery("sort", "related"),
 		Offset:   offset,
 		Limit:    limit,
@@ -60,6 +61,27 @@ func GetPromptGalleryDetail(c *gin.Context) {
 	}
 	model.IncrPromptGalleryViews(id)
 	c.JSON(http.StatusOK, gin.H{"success": true, "data": item})
+}
+
+// LikePromptGallery 公开点赞（+1，前端用 localStorage 防重复点击）
+// POST /api/prompt-gallery/v1/prompts/:id/like
+func LikePromptGallery(c *gin.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		common.ApiErrorT(c, "Invalid gallery id")
+		return
+	}
+	// 仅允许对已发布作品点赞
+	if _, err := model.GetPromptGalleryById(id); err != nil {
+		common.ApiError(c, err)
+		return
+	}
+	likes, err := model.IncrPromptGalleryLikes(id)
+	if err != nil {
+		common.ApiError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"success": true, "data": gin.H{"likes": likes}})
 }
 
 // GetPromptGalleryFacets 聚合分类/模型/类型

@@ -4,7 +4,8 @@
  * 列表展示「我」发布的画廊条目（含草稿/被拒状态），支持新建/编辑/删除。
  * 后端接口：/api/prompt-gallery/v1/mine（GET/POST/PUT/DELETE）。
  */
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useSearch } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { Pencil, Plus, Trash2 } from 'lucide-react'
 
@@ -65,6 +66,7 @@ const STATUS_BADGE: Record<string, 'default' | 'secondary' | 'warning' | 'destru
 
 export function MyWorks() {
   const { t } = useTranslation()
+  const { create: autoCreate } = useSearch({ from: '/_authenticated/my-works/' })
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState<PromptGalleryItem | null>(null)
   const [form, setForm] = useState<PromptGallerySubmit>(EMPTY_FORM)
@@ -81,6 +83,12 @@ export function MyWorks() {
     setForm(EMPTY_FORM)
     setOpen(true)
   }
+
+  // 从画廊页「发布作品」跳转（?create=1）时自动打开投稿弹窗
+  useEffect(() => {
+    if (autoCreate) openCreate()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoCreate])
 
   const openEdit = (item: PromptGalleryItem) => {
     setEditing(item)

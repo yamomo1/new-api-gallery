@@ -1,6 +1,7 @@
 package model
 
 import (
+	"sort"
 	"strings"
 
 	"github.com/QuantumNous/new-api/common"
@@ -42,6 +43,7 @@ type PromptGalleryFacet struct {
 	Categories []string `json:"categories"`
 	Models     []string `json:"models"`
 	Types      []string `json:"types"`
+	Tags       []string `json:"tags"`
 }
 
 // PromptGalleryListQuery 列表查询参数
@@ -50,6 +52,7 @@ type PromptGalleryListQuery struct {
 	Search   string
 	Type     string
 	Model    string
+	Tag      string
 	Sort     string // related / latest / featured / popular
 	Offset   int
 	Limit    int
@@ -73,6 +76,9 @@ func GetPublishedPromptGalleries(q PromptGalleryListQuery) ([]PromptGallery, int
 	}
 	if q.Model != "" {
 		db = db.Where("model = ?", q.Model)
+	}
+	if q.Tag != "" {
+		db = db.Where("tags LIKE ?", "%"+strings.TrimSpace(q.Tag)+"%")
 	}
 	if q.Search != "" {
 		like := "%" + strings.TrimSpace(q.Search) + "%"
@@ -111,9 +117,9 @@ func GetPromptGalleryById(id int64) (*PromptGallery, error) {
 	return &item, nil
 }
 
-// GetPromptGalleryFacets 聚合分类/模型/类型（仅统计已发布）
+// GetPromptGalleryFacets 聚合分类/模型/类型/标签（仅统计已发布）
 func GetPromptGalleryFacets() (*PromptGalleryFacet, error) {
-	facet := &PromptGalleryFacet{Categories: []string{}, Models: []string{}, Types: []string{}}
+	facet := &PromptGalleryFacet{Categories: []string{}, Models: []string{}, Types: []string{}, Tags: []string{}}
 
 	if err := DB.Model(&PromptGallery{}).
 		Where("status = ?", PromptGalleryStatusPublished).
@@ -133,6 +139,39 @@ func GetPromptGalleryFacets() (*PromptGalleryFacet, error) {
 		Pluck("type", &facet.Types).Error; err != nil {
 		return nil, err
 	}
+
+	// 标签聚合：Tags 为逗号分隔字符串，按出现频次取前 24 个
+	var tagRows []string
+	if err := DB.Model(&PromptGallery{}).
+		Where("status = ?", PromptGalleryStatusPublished).
+		Where("tags <> ''").
+		Pluck("tags", &tagRows).Error; err != nil {
+		return nil, err
+	}
+	counter := map[string]int{}
+	for _, raw := range tagRows {
+		for _, tag := range strings.Split(raw, ",") {
+			tag = strings.TrimSpace(tag)
+			if tag == "" {
+				continue
+			}
+			counter[tag]++
+		}
+	}
+	tags := make([]string, 0, len(counter))
+	for tag := range counter {
+		tags = append(tags, tag)
+	}
+	sort.Slice(tags, func(i, j int) bool {
+		if counter[tags[i]] != counter[tags[j]] {
+			return counter[tags[i]] > counter[tags[j]]
+		}
+		return tags[i] < tags[j]
+	})
+	if len(tags) > 24 {
+		tags = tags[:24]
+	}
+	facet.Tags = tags
 	return facet, nil
 }
 
@@ -240,6 +279,20 @@ func SetPromptGalleryProject(userId int, id int64, projectId int64) error {
 // IncrPromptGalleryViews 浏览量 +1
 func IncrPromptGalleryViews(id int64) {
 	DB.Model(&PromptGallery{}).Where("id = ?", id).UpdateColumn("views", gorm.Expr("views + 1"))
+}
+
+// IncrPromptGalleryLikes 点赞数 +1，返回更新后的点赞数
+func IncrPromptGalleryLikes(id int64) (int64, error) {
+	res := DB.Model(&PromptGallery{}).Where("id = ?", id).
+		UpdateColumn("likes", gorm.Expr("likes + 1"))
+	if res.Error != nil {
+		return 0, res.Error
+	}
+	var item PromptGallery
+	if err := DB.Select("likes").First(&item, id).Error; err != nil {
+		return 0, err
+	}
+	return int64(item.Likes), nil
 }
 
 // AdminPromptGalleryQuery 后台列表筛选条件

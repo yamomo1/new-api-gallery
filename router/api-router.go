@@ -49,6 +49,7 @@ func SetApiRouter(router *gin.Engine) {
 		{
 			promptGalleryRoute.GET("/prompts", controller.GetPromptGalleryList)
 			promptGalleryRoute.GET("/prompts/:id", controller.GetPromptGalleryDetail)
+			promptGalleryRoute.POST("/prompts/:id/like", controller.LikePromptGallery)
 			promptGalleryRoute.GET("/facets", controller.GetPromptGalleryFacets)
 			promptGalleryRoute.GET("/mine", middleware.UserAuth(), controller.GetMyPromptGalleries)
 			promptGalleryRoute.POST("/mine", middleware.UserAuth(), controller.CreateMyPromptGallery)

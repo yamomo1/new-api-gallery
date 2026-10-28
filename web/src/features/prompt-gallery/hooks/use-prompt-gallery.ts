@@ -15,6 +15,7 @@ import {
   getMyPromptGalleries,
   getPromptGalleryFacets,
   getPromptGalleryList,
+  likePromptGallery,
   updateMyPromptGallery,
   type PromptGallerySubmit,
 } from '../api'
@@ -41,6 +42,14 @@ export function usePromptGalleryFacets() {
     queryFn: async () =>
       requireServerSuccess(await getPromptGalleryFacets()).data,
     staleTime: 5 * 60 * 1000,
+  })
+}
+
+/** 公开点赞 +1（本地 localStorage 防重复，服务端不校验） */
+export function useLikePromptGallery() {
+  return useMutation({
+    mutationFn: async (id: number) =>
+      requireServerSuccess(await likePromptGallery(id)).data,
   })
 }
 
