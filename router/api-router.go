@@ -77,6 +77,8 @@ func SetApiRouter(router *gin.Engine) {
 			// 公开画廊（免登录）：首页展示 + 打开公开画布
 			canvasRoute.GET("/gallery", controller.ListPublicCanvasDocuments)
 			canvasRoute.GET("/gallery/:id", controller.GetPublicCanvasDocument)
+			// 画布工作台凭证：登录态自动下发 OpenAI 兼容 token（用量计入本人额度）
+			canvasRoute.GET("/session", middleware.UserAuth(), controller.GetCanvasSession)
 		}
 		apiRouter.GET("/verification", middleware.EmailVerificationRateLimit(), middleware.TurnstileCheck(), controller.SendEmailVerification)
 		apiRouter.GET("/reset_password", middleware.CriticalRateLimit(), middleware.TurnstileCheck(), controller.SendPasswordResetEmail)
