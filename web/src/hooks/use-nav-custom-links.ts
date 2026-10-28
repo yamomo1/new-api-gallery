@@ -13,6 +13,7 @@ import {
   type CustomNavLink,
   parseNavCustomLinks,
   resolveNavIcon,
+  type SidebarGroupKey,
 } from '@/lib/nav-custom-links'
 import type { NavLink, TopNavLink } from '@/components/layout/types'
 
@@ -25,9 +26,12 @@ function resolveTitle(link: CustomNavLink, t: (k: string) => string): string {
   return link.title || link.url
 }
 
+/** 侧边栏自定义链接：在 NavLink 基础上携带归属分组，供 useSidebarData 分派 */
+export type CustomSidebarLink = NavLink & { group?: SidebarGroupKey }
+
 export function useNavCustomLinks(): {
   top: TopNavLink[]
-  sidebar: NavLink[]
+  sidebar: CustomSidebarLink[]
 } {
   const { t } = useTranslation()
   const { status } = useStatus()
@@ -48,12 +52,14 @@ export function useNavCustomLinks(): {
         requiresAuth: !!l.requireAuth,
       }))
 
-    const sidebar: NavLink[] = config.sidebar
+    const sidebar: CustomSidebarLink[] = config.sidebar
       .filter((l) => l.enabled && (!l.requireAuth || isAuthed))
       .map((l) => ({
         title: resolveTitle(l, t),
         url: l.url,
         icon: resolveNavIcon(l.icon),
+        ...(l.group ? { group: l.group } : {}),
+        ...(l.requiredRole !== undefined ? { requiredRole: l.requiredRole } : {}),
       }))
 
     return { top, sidebar }

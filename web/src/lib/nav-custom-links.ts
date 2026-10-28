@@ -25,6 +25,39 @@ import {
   Trophy,
 } from 'lucide-react'
 
+/** 侧边栏可选分组。id 与 useSidebarData 中内置分组保持一致 */
+export type SidebarGroupKey =
+  | 'chat'
+  | 'general'
+  | 'personal'
+  | 'admin'
+  | 'fork'
+  | 'custom'
+
+/** 分组下拉选项：id + i18n key（复用侧边栏既有分组标题） */
+export const SIDEBAR_GROUP_OPTIONS: {
+  id: SidebarGroupKey
+  titleKey: string
+}[] = [
+  { id: 'chat', titleKey: 'Chat' },
+  { id: 'general', titleKey: 'General' },
+  { id: 'personal', titleKey: 'Personal' },
+  { id: 'admin', titleKey: 'Admin' },
+  { id: 'fork', titleKey: 'Fork Settings' },
+  { id: 'custom', titleKey: 'Custom' },
+]
+
+/** 侧边栏链接可见角色选项：value 为最低可见角色（ROLE 值），undefined = 不限 */
+export const SIDEBAR_ROLE_OPTIONS: {
+  value: number | undefined
+  titleKey: string
+}[] = [
+  { value: undefined, titleKey: 'Everyone' },
+  { value: 1, titleKey: 'User' },
+  { value: 10, titleKey: 'Admin' },
+  { value: 100, titleKey: 'Super Admin' },
+]
+
 /** 单条自定义链接 */
 export type CustomNavLink = {
   /** 稳定 id（用于 key / 排序，前端生成） */
@@ -43,6 +76,10 @@ export type CustomNavLink = {
   requireAuth?: boolean
   /** 侧边栏图标（lucide 名，见 ICON_MAP）；顶部导航忽略 */
   icon?: string
+  /** 侧边栏：归属分组（chat/general/personal/admin/fork/custom）。顶部导航忽略 */
+  group?: SidebarGroupKey
+  /** 侧边栏：可见最低角色（ROLE 值）；未设置则所有人可见。顶部导航忽略 */
+  requiredRole?: number
 }
 
 export type NavCustomLinksConfig = {
@@ -156,5 +193,7 @@ function stripLink(link: CustomNavLink): CustomNavLink {
   if (link.external) out.external = true
   if (link.requireAuth) out.requireAuth = true
   if (link.icon) out.icon = link.icon
+  if (link.group) out.group = link.group
+  if (link.requiredRole !== undefined) out.requiredRole = link.requiredRole
   return out
 }

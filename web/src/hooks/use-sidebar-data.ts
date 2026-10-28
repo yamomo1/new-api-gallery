@@ -223,12 +223,24 @@ export function useSidebarData(): SidebarData {
     ]
 
   // 二开：后台自定义链接分组（侧边栏）
+  // 按 link.group 分派到对应内置分组；未指定或未知分组则归入独立的「自定义」分组
   if (custom.sidebar.length) {
-    navGroups.push({
-      id: 'custom',
-      title: t('Custom'),
-      items: custom.sidebar,
-    })
+    const byGroup: Record<string, SidebarData['navGroups'][number]['items']> =
+      {}
+    for (const item of custom.sidebar) {
+      const key = item.group ?? 'custom'
+      ;(byGroup[key] ??= []).push(item)
+    }
+    for (const group of navGroups) {
+      if (group.id && byGroup[group.id]) {
+        group.items.push(...byGroup[group.id])
+        delete byGroup[group.id]
+      }
+    }
+    const leftover = Object.values(byGroup).flat()
+    if (leftover.length) {
+      navGroups.push({ id: 'custom', title: t('Custom'), items: leftover })
+    }
   }
 
   return { navGroups }

@@ -18,6 +18,13 @@ import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import {
   DropdownMenu,
@@ -32,6 +39,8 @@ import {
   type CustomNavLink,
   type NavCustomLinksConfig,
   NAV_LINK_PRESETS,
+  SIDEBAR_GROUP_OPTIONS,
+  SIDEBAR_ROLE_OPTIONS,
   newNavLinkId,
   parseNavCustomLinks,
   serializeNavCustomLinks,
@@ -45,7 +54,7 @@ function emptyLink(group: GroupKey): CustomNavLink {
     title: '',
     url: '',
     enabled: true,
-    ...(group === 'sidebar' ? { icon: 'frame' } : {}),
+    ...(group === 'sidebar' ? { icon: 'frame', group: 'custom' } : {}),
   }
 }
 
@@ -147,6 +156,58 @@ function LinkRow({
           </label>
         )}
       </div>
+
+      {group === 'sidebar' && (
+        <div className='flex flex-wrap items-end gap-3'>
+          <div className='flex min-w-40 flex-col gap-1'>
+            <Label className='text-xs'>{t('Sidebar group')}</Label>
+            <Select
+              value={link.group ?? 'custom'}
+              onValueChange={(v) =>
+                onChange({ ...link, group: v as CustomNavLink['group'] })
+              }
+            >
+              <SelectTrigger className='h-9'>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {SIDEBAR_GROUP_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.id} value={opt.id}>
+                    {t(opt.titleKey)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className='flex min-w-40 flex-col gap-1'>
+            <Label className='text-xs'>{t('Visible to')}</Label>
+            <Select
+              value={String(link.requiredRole ?? 'everyone')}
+              onValueChange={(v) =>
+                onChange({
+                  ...link,
+                  requiredRole:
+                    v === 'everyone' ? undefined : Number(v),
+                })
+              }
+            >
+              <SelectTrigger className='h-9'>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {SIDEBAR_ROLE_OPTIONS.map((opt) => (
+                  <SelectItem
+                    key={String(opt.value ?? 'everyone')}
+                    value={String(opt.value ?? 'everyone')}
+                  >
+                    {t(opt.titleKey)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -307,7 +368,9 @@ export function NavigationLinksSection({
         <div className='flex flex-col gap-2'>
           <h4 className='text-sm font-semibold'>{t('Sidebar')}</h4>
           <p className='text-muted-foreground text-xs'>
-            {t('Links appended to a "Custom" group in the user sidebar.')}
+            {t(
+              'Custom links are added into the selected sidebar group (Chat / General / Personal / Admin / Fork). Use "Visible to" to restrict a link to a minimum role.'
+            )}
           </p>
           <GroupEditor group='sidebar' config={config} setConfig={setConfig} />
         </div>
