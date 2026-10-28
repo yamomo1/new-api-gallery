@@ -63,8 +63,7 @@ export type PromptGalleryListResult = {
   facets?: { models: string[]; categories: string[] }
 }
 
-/** 后台审核列表的筛选条件 */
-export type PromptGalleryAdminParams = {
+/** 后台审核列表的筛选条件 */export type PromptGalleryAdminParams = {
   status?: PromptGalleryStatus
   type?: PromptGalleryType
   model?: string
@@ -73,4 +72,19 @@ export type PromptGalleryAdminParams = {
   sort?: 'newest' | 'oldest' | 'views' | 'likes'
   offset?: number
   limit?: number
+}
+
+/** 我收藏的作品（登录用户；画布素材面板共用同一接口） */
+export type PromptGalleryFavoritesResult = {
+  items: PromptGalleryItem[]
+  total: number
+  /** 收藏的作品 ID（新→旧），画廊页用来点亮星标 */
+  ids: number[]
+  offset: number
+  limit: number
+}
+
+export type PromptGalleryFavoriteToggleResult = {
+  favorited: boolean
+  total: number
 }

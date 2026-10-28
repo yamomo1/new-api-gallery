@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearch } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { FolderOpen, Plus, Share2, Sparkles, Star } from 'lucide-react'
@@ -8,16 +8,19 @@ import { PublicLayout } from '@/components/layout'
 import { PageTransition } from '@/components/page-transition'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { useAuthStore } from '@/stores/auth-store'
 
 import { GalleryCard, GalleryCardSkeleton, GalleryFilterPanel } from './components'
 import { GalleryDetailDialog } from './components/gallery-detail-dialog'
 import {
   useLikePromptGallery,
+  useMyPromptGalleryFavorites,
   usePromptGalleryFacets,
   usePromptGalleryList,
+  useTogglePromptGalleryFavorite,
 } from './hooks/use-prompt-gallery'
 import type { PromptGalleryItem, PromptGallerySort, PromptGalleryType } from './types'
-import { readFavorites, readLiked, writeFavorites, writeLiked } from './utils'
+import { readFavorites, readLiked, writeFavorites, writeLiked, copyText } from './utils'
 
 const PAGE_SIZE = 24
 
@@ -25,6 +28,7 @@ export function PromptGallery() {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const search = useSearch({ from: '/prompt-gallery/' })
+  const isLoggedIn = useAuthStore((state) => Boolean(state.auth.user))
 
   const [category, setCategory] = useState<string>(
     (search as { category?: string }).category || ''
@@ -36,9 +40,10 @@ export function PromptGallery() {
   const [tag, setTag] = useState('')
   const [sort, setSort] = useState<PromptGallerySort>('related')
   const [offset, setOffset] = useState(0)
-  const [detail, setDetail] = useState<{ id: number; item: PromptGalleryItem } | null>(
-    null
-  )
+  const [detail, setDetail] = useState<{
+    id: number
+    item: PromptGalleryItem | null
+  } | null>(null)
   const [favoritesOnly, setFavoritesOnly] = useState(false)
   const [favorites, setFavorites] = useState<Set<number>>(() => readFavorites())
   const [likedIds, setLikedIds] = useState<Set<number>>(() => readLiked())
@@ -70,11 +75,35 @@ export function PromptGallery() {
     limit: PAGE_SIZE,
   })
 
+  // 登录后收藏落库：画布「素材 → 已收藏」读的就是这份数据
+  const favoritesQuery = useMyPromptGalleryFavorites(isLoggedIn)
+  const favoriteMutation = useTogglePromptGalleryFavorite()
+  const syncedRef = useRef(false)
+
+  // 首次登录时把本地收藏合并到服务端（老用户不丢收藏）
+  useEffect(() => {
+    if (!isLoggedIn || !favoritesQuery.isSuccess || syncedRef.current) return
+    syncedRef.current = true
+    const serverIds = new Set(favoritesQuery.data?.ids ?? [])
+    const missing = [...readFavorites()].filter((id) => !serverIds.has(id))
+    if (missing.length) missing.forEach((id) => favoriteMutation.mutate(id))
+    writeFavorites(new Set())
+  }, [isLoggedIn, favoritesQuery.isSuccess, favoritesQuery.data, favoriteMutation])
+
+  // 服务端收藏为准（登录后）
+  useEffect(() => {
+    const ids = favoritesQuery.data?.ids
+    if (!isLoggedIn || !ids) return
+    setFavorites(new Set(ids))
+  }, [isLoggedIn, favoritesQuery.data])
+
   const allItems = listQuery.data?.items ?? []
-  const items = useMemo(
-    () => (favoritesOnly ? allItems.filter((i) => favorites.has(i.id)) : allItems),
-    [allItems, favoritesOnly, favorites]
-  )
+  const items = useMemo(() => {
+    if (!favoritesOnly) return allItems
+    // 登录后：收藏视图直接展示服务端收藏全集，不受当前页/筛选限制
+    if (isLoggedIn && favoritesQuery.data) return favoritesQuery.data.items
+    return allItems.filter((i) => favorites.has(i.id))
+  }, [allItems, favoritesOnly, favorites, isLoggedIn, favoritesQuery.data])
   const total = listQuery.data?.total
 
   const likeMutation = useLikePromptGallery()
@@ -95,23 +124,25 @@ export function PromptGallery() {
     [likedIds, likeMutation]
   )
 
-  const toggleFavorite = useCallback((id: number) => {
-    setFavorites((prev) => {
-      const next = new Set(prev)
-      if (next.has(id)) {
-        next.delete(id)
-      } else {
-        next.add(id)
-      }
-      writeFavorites(next)
-      return next
-    })
-  }, [])
+  const toggleFavorite = useCallback(
+    (id: number) => {
+      setFavorites((prev) => {
+        const next = new Set(prev)
+        if (next.has(id)) next.delete(id)
+        else next.add(id)
+        if (!isLoggedIn) writeFavorites(next)
+        return next
+      })
+      if (isLoggedIn) favoriteMutation.mutate(id)
+    },
+    [favoriteMutation, isLoggedIn]
+  )
 
   const handleCopy = useCallback(
-    (prompt: string) => {
-      navigator.clipboard?.writeText(prompt)
-      toast.success(t('Prompt copied'))
+    async (prompt: string) => {
+      const ok = await copyText(prompt)
+      if (ok) toast.success(t('Prompt copied'))
+      else toast.error(t('Copy failed'))
     },
     [t]
   )
@@ -123,31 +154,71 @@ export function PromptGallery() {
   }, [total])
 
   const handleShare = useCallback(async () => {
-    try {
-      await navigator.clipboard.writeText(window.location.href)
-      toast.success(t('Link copied'))
-    } catch {
-      toast.error(t('Copy failed'))
-    }
+    const ok = await copyText(window.location.href)
+    if (ok) toast.success(t('Link copied'))
+    else toast.error(t('Copy failed'))
   }, [t])
+
+  // 单个作品分享：移动端走系统分享面板，桌面端复制直达链接
+  const handleShareItem = useCallback(
+    async (item: PromptGalleryItem) => {
+      const url = `${window.location.origin}/prompt-gallery?prompt=${item.id}`
+      try {
+        const coarse = window.matchMedia?.('(pointer: coarse)').matches
+        if (coarse && navigator.share) {
+          await navigator.share({
+            title: item.title,
+            text: item.prompt.slice(0, 100),
+            url,
+          })
+          return
+        }
+      } catch (error) {
+        if ((error as Error)?.name === 'AbortError') return
+      }
+      const ok = await copyText(url)
+      if (ok) toast.success(t('Link copied'))
+      else toast.error(t('Copy failed'))
+    },
+    [t]
+  )
+
+  // 深链：/prompt-gallery?prompt=123 直接打开作品详情
+  const promptParam = (search as { prompt?: number }).prompt
+  useEffect(() => {
+    if (typeof promptParam === 'number' && Number.isFinite(promptParam) && promptParam > 0) {
+      setDetail({ id: promptParam, item: null })
+    }
+  }, [promptParam])
+
+  const closeDetail = useCallback(() => {
+    setDetail(null)
+    if (typeof promptParam === 'number') {
+      navigate({
+        to: '/prompt-gallery',
+        search: (prev) => ({ ...prev, prompt: undefined }),
+        replace: true,
+      })
+    }
+  }, [navigate, promptParam])
 
   const isLoading = listQuery.isLoading && allItems.length === 0
 
   return (
     <PublicLayout showMainContainer={false}>
       <PageTransition>
-        <div className='container px-4 py-6 pt-20 md:px-6'>
+        <div className='container px-4 pb-16 pt-24 md:px-6'>
           {/* 页头（对标参考站：徽标 + 标题 + 副标题 + 操作按钮组） */}
-          <div className='mb-6 flex flex-wrap items-end justify-between gap-4'>
+          <div className='mb-10 flex flex-wrap items-end justify-between gap-6'>
             <div>
               <p className='inline-flex items-center gap-1.5 text-sm font-semibold tracking-wide text-primary'>
                 <Sparkles className='size-4' />
                 {t('Featured AI prompt inspiration')}
               </p>
-              <h1 className='mt-1 text-3xl font-bold tracking-tight md:text-4xl'>
+              <h1 className='mt-2 text-4xl font-semibold tracking-tight md:text-5xl'>
                 {t('Prompt Gallery')}
               </h1>
-              <p className='mt-2 text-muted-foreground'>
+              <p className='mt-3 max-w-2xl text-[15px] leading-relaxed text-muted-foreground'>
                 {t(
                   'Browse curated image and video prompts, and send any inspiration straight to the generator.'
                 )}
@@ -159,10 +230,7 @@ export function PromptGallery() {
               >
                 <Plus className='size-4' /> {t('Publish work')}
               </Button>
-              <Button
-                variant='outline'
-                onClick={() => navigate({ to: '/my-works' })}
-              >
+              <Button variant='outline' onClick={() => navigate({ to: '/my-works' })}>
                 <FolderOpen className='size-4' /> {t('My works')}
               </Button>
               <Button variant='ghost' onClick={handleShare}>
@@ -198,11 +266,9 @@ export function PromptGallery() {
           />
 
           {/* 瀑布流 */}
-          <div className='columns-2 gap-4 sm:columns-3 lg:columns-4'>
+          <div className='columns-2 gap-6 md:columns-3 xl:columns-4'>
             {isLoading
-              ? Array.from({ length: 8 }).map((_, i) => (
-                  <GalleryCardSkeleton key={i} />
-                ))
+              ? Array.from({ length: 8 }).map((_, i) => <GalleryCardSkeleton key={i} />)
               : items.map((item) => (
                   <GalleryCard
                     key={item.id}
@@ -214,12 +280,13 @@ export function PromptGallery() {
                     favorite={favorites.has(item.id)}
                     onToggleFavorite={toggleFavorite}
                     onCopy={handleCopy}
+                    onShare={handleShareItem}
                   />
                 ))}
           </div>
 
           {!isLoading && items.length === 0 && (
-            <div className='py-20 text-center text-muted-foreground'>
+            <div className='py-24 text-center text-muted-foreground'>
               {favoritesOnly && favorites.size === 0
                 ? t('No favorites yet')
                 : t('No prompts yet')}
@@ -228,10 +295,10 @@ export function PromptGallery() {
 
           {/* 加载更多 */}
           {!favoritesOnly && total !== undefined && offset + PAGE_SIZE < total && (
-            <div className='mt-6 flex justify-center'>
+            <div className='mt-10 flex justify-center'>
               <button
                 type='button'
-                className='rounded-full border border-border px-5 py-2 text-sm text-muted-foreground transition-colors hover:text-foreground'
+                className='rounded-full border border-border px-6 py-2.5 text-sm text-muted-foreground transition-colors hover:border-foreground/30 hover:text-foreground'
                 onClick={() => setOffset((v) => v + PAGE_SIZE)}
               >
                 {t('Load more')}
@@ -244,12 +311,13 @@ export function PromptGallery() {
         <GalleryDetailDialog
           id={detail?.id ?? null}
           fallback={detail?.item ?? null}
-          onClose={() => setDetail(null)}
+          onClose={closeDetail}
           liked={detail ? likedIds.has(detail.id) : false}
           likeCount={detail ? likeCounts[detail.id] : undefined}
           onLike={handleLike}
           favorite={detail ? favorites.has(detail.id) : false}
           onToggleFavorite={toggleFavorite}
+          onShare={handleShareItem}
         />
       </PageTransition>
     </PublicLayout>

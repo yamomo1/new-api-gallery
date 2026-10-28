@@ -12,10 +12,12 @@ import {
   createMyPromptGallery,
   deleteMyPromptGallery,
   getAdminPromptGalleries,
+  getMyPromptGalleryFavorites,
   getMyPromptGalleries,
   getPromptGalleryFacets,
   getPromptGalleryList,
   likePromptGallery,
+  togglePromptGalleryFavorite,
   updateMyPromptGallery,
   type PromptGallerySubmit,
 } from '../api'
@@ -53,8 +55,31 @@ export function useLikePromptGallery() {
   })
 }
 
-export function useMyPromptGalleries(params: PromptGalleryListParams) {
+/** 我收藏的作品（登录后可用；画布素材面板共用同一接口） */
+export function useMyPromptGalleryFavorites(enabled: boolean) {
   return useQuery({
+    queryKey: ['prompt-gallery', 'favorites'],
+    queryFn: async () =>
+      requireServerSuccess(await getMyPromptGalleryFavorites({ limit: 200 }))
+        .data,
+    enabled,
+    staleTime: 60 * 1000,
+  })
+}
+
+/** 收藏 / 取消收藏：落库后画布素材面板即可看到 */
+export function useTogglePromptGalleryFavorite() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: number) =>
+      requireServerSuccess(await togglePromptGalleryFavorite(id)).data,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['prompt-gallery', 'favorites'] })
+    },
+  })
+}
+
+export function useMyPromptGalleries(params: PromptGalleryListParams) {  return useQuery({
     queryKey: ['prompt-gallery', 'mine', params],
     queryFn: async () =>
       requireServerSuccess(await getMyPromptGalleries(params)).data,

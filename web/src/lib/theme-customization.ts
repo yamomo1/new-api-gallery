@@ -113,7 +113,8 @@ export type ThemeCustomization = {
 
 export const DEFAULT_THEME_CUSTOMIZATION: ThemeCustomization = {
   preset: 'default',
-  font: 'default',
+  // 站点默认字体 = Sans（Public Sans），不再跟随浏览器默认无衬线体
+  font: 'sans',
   radius: 'default',
   scale: 'default',
   contentLayout: 'full',

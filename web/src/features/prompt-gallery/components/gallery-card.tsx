@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { Copy, Eye, Heart, Play, Star, Video } from 'lucide-react'
+import { Copy, Eye, Heart, Play, Share2, Star, Video } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
 
@@ -15,6 +15,8 @@ type GalleryCardProps = {
   favorite?: boolean
   onToggleFavorite?: (id: number) => void
   onCopy?: (prompt: string) => void
+  /** 分享单个作品（复制直达链接 / 系统分享） */
+  onShare?: (item: PromptGalleryItem) => void
 }
 
 /** 单张画廊卡片（对标参考站）：封面 + 视频播放键 + 浏览量 + 底部浮层（标题/复制/点赞/收藏） */
@@ -27,6 +29,7 @@ export function GalleryCard({
   favorite,
   onToggleFavorite,
   onCopy,
+  onShare,
 }: GalleryCardProps) {
   const { t } = useTranslation()
   const media = parseGalleryMedia(item)
@@ -55,6 +58,11 @@ export function GalleryCard({
     onToggleFavorite?.(item.id)
   }
 
+  const handleShare = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    onShare?.(item)
+  }
+
   return (
     <figure
       role='button'
@@ -63,7 +71,7 @@ export function GalleryCard({
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') onOpen?.(item)
       }}
-      className='group relative mb-4 cursor-pointer break-inside-avoid overflow-hidden rounded-xl border border-border bg-card outline-none transition-shadow hover:shadow-lg focus-visible:ring-2 focus-visible:ring-ring'
+      className='group relative mb-6 cursor-pointer break-inside-avoid overflow-hidden rounded-2xl border border-border bg-card outline-none transition-shadow hover:shadow-xl focus-visible:ring-2 focus-visible:ring-ring'
     >
       <div className='relative w-full overflow-hidden bg-muted'>
         {cover ? (
@@ -145,6 +153,15 @@ export function GalleryCard({
             </button>
             <button
               type='button'
+              aria-label={t('Share work')}
+              title={t('Share work')}
+              onClick={handleShare}
+              className='flex size-7 items-center justify-center rounded-full bg-white/10 text-white/80 transition-colors hover:bg-white/25 hover:text-white'
+            >
+              <Share2 className='size-3.5' />
+            </button>
+            <button
+              type='button'
               aria-label={liked ? t('Favorited') : 'Like'}
               title='Like'
               disabled={liked}
@@ -174,7 +191,7 @@ export function GalleryCard({
 
 export function GalleryCardSkeleton() {
   return (
-    <div className='mb-4 break-inside-avoid overflow-hidden rounded-xl border border-border bg-card'>
+    <div className='mb-6 break-inside-avoid overflow-hidden rounded-2xl border border-border bg-card'>
       <div className='aspect-[4/3] w-full animate-pulse bg-muted' />
       <div className='space-y-2 px-3 py-2'>
         <div className='h-3.5 w-2/3 animate-pulse rounded bg-muted' />

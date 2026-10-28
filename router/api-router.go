@@ -50,6 +50,9 @@ func SetApiRouter(router *gin.Engine) {
 			promptGalleryRoute.GET("/prompts", controller.GetPromptGalleryList)
 			promptGalleryRoute.GET("/prompts/:id", controller.GetPromptGalleryDetail)
 			promptGalleryRoute.POST("/prompts/:id/like", controller.LikePromptGallery)
+			// 收藏（登录用户，落库）：画廊页写入，画布素材面板读取
+			promptGalleryRoute.POST("/prompts/:id/favorite", middleware.UserAuth(), controller.TogglePromptGalleryFavorite)
+			promptGalleryRoute.GET("/favorites", middleware.UserAuth(), controller.GetMyPromptGalleryFavorites)
 			promptGalleryRoute.GET("/facets", controller.GetPromptGalleryFacets)
 			promptGalleryRoute.GET("/mine", middleware.UserAuth(), controller.GetMyPromptGalleries)
 			promptGalleryRoute.POST("/mine", middleware.UserAuth(), controller.CreateMyPromptGallery)

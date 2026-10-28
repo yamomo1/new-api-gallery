@@ -6,6 +6,7 @@ import (
 
 	"github.com/QuantumNous/new-api/common"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 // PromptGallery 提示词画廊条目
@@ -434,4 +435,96 @@ func AdminSetPromptGalleryHome(id int64, home bool) error {
 		return gorm.ErrRecordNotFound
 	}
 	return nil
+}
+
+// ----------------------------------------------------------------------------
+// 收藏（跨端同步的关键）
+//
+// 画廊页与画布（canvas.* 独立域名）是两个前端，localStorage 不互通，
+// 所以收藏必须落库：画廊页登录后写入本表，画布素材面板用同一个登录令牌读取，
+// 用户收藏的图片/视频就能直接出现在画布的「素材 → 已收藏」里。
+// ----------------------------------------------------------------------------
+
+// PromptGalleryFavorite 用户收藏（userId + galleryId 唯一）
+type PromptGalleryFavorite struct {
+	Id        int64 `json:"id" gorm:"primaryKey;autoIncrement"`
+	UserId    int   `json:"user_id" gorm:"uniqueIndex:idx_gallery_fav_user_prompt;index"`
+	GalleryId int64 `json:"gallery_id" gorm:"uniqueIndex:idx_gallery_fav_user_prompt;index"`
+	CreatedAt int64 `json:"created_at" gorm:"bigint"`
+}
+
+func (PromptGalleryFavorite) TableName() string {
+	return "prompt_gallery_favorites"
+}
+
+// TogglePromptGalleryFavorite 收藏 / 取消收藏，返回 (toggle 后是否已收藏, 收藏总数)
+func TogglePromptGalleryFavorite(userId int, galleryId int64) (bool, int64, error) {
+	if userId <= 0 || galleryId <= 0 {
+		return false, 0, gorm.ErrRecordNotFound
+	}
+	var existing PromptGalleryFavorite
+	err := DB.Where("user_id = ? AND gallery_id = ?", userId, galleryId).First(&existing).Error
+	favorited := false
+	switch {
+	case err == nil:
+		if err := DB.Where("id = ?", existing.Id).Delete(&PromptGalleryFavorite{}).Error; err != nil {
+			return false, 0, err
+		}
+	case err == gorm.ErrRecordNotFound:
+		item := PromptGalleryFavorite{UserId: userId, GalleryId: galleryId, CreatedAt: common.GetTimestamp()}
+		if err := DB.Clauses(clause.OnConflict{DoNothing: true}).Create(&item).Error; err != nil {
+			return false, 0, err
+		}
+		favorited = true
+	default:
+		return false, 0, err
+	}
+
+	var total int64
+	DB.Model(&PromptGalleryFavorite{}).Where("gallery_id = ?", galleryId).Count(&total)
+	return favorited, total, nil
+}
+
+// IsPromptGalleryFavorited 是否已收藏
+func IsPromptGalleryFavorited(userId int, galleryId int64) bool {
+	if userId <= 0 || galleryId <= 0 {
+		return false
+	}
+	var count int64
+	DB.Model(&PromptGalleryFavorite{}).Where("user_id = ? AND gallery_id = ?", userId, galleryId).Count(&count)
+	return count > 0
+}
+
+// ListFavoritePromptGalleryIDs 我收藏的作品 ID（新→旧）
+func ListFavoritePromptGalleryIDs(userId int) ([]int64, error) {
+	ids := make([]int64, 0)
+	if userId <= 0 {
+		return ids, nil
+	}
+	err := DB.Model(&PromptGalleryFavorite{}).
+		Where("user_id = ?", userId).
+		Order("id DESC").
+		Pluck("gallery_id", &ids).Error
+	return ids, err
+}
+
+// ListFavoritePromptGalleries 我收藏的作品（仅已发布，画布素材面板使用）
+func ListFavoritePromptGalleries(userId int, offset, limit int) ([]PromptGallery, int64, error) {
+	items := make([]PromptGallery, 0)
+	if userId <= 0 {
+		return items, 0, nil
+	}
+	if limit <= 0 || limit > 200 {
+		limit = 100
+	}
+	base := DB.Table("prompt_gallery_favorites AS f").
+		Joins("JOIN prompt_galleries AS p ON p.id = f.gallery_id").
+		Where("f.user_id = ? AND p.status = ?", userId, PromptGalleryStatusPublished)
+
+	var total int64
+	if err := base.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+	err := base.Select("p.*").Order("f.id DESC").Offset(offset).Limit(limit).Find(&items).Error
+	return items, total, err
 }

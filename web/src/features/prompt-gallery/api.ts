@@ -3,6 +3,8 @@ import { api } from '@/lib/api'
 import type {
   PromptGalleryAdminParams,
   PromptGalleryFacets,
+  PromptGalleryFavoriteToggleResult,
+  PromptGalleryFavoritesResult,
   PromptGalleryItem,
   PromptGalleryListParams,
   PromptGalleryListResult,
@@ -41,6 +43,22 @@ export async function likePromptGallery(
   id: number
 ): Promise<ApiEnvelope<{ likes: number }>> {
   const res = await api.post(`/api/prompt-gallery/v1/prompts/${id}/like`)
+  return res.data
+}
+
+/** 收藏 / 取消收藏（登录用户，落库 → 画布素材面板可见） */
+export async function togglePromptGalleryFavorite(
+  id: number
+): Promise<ApiEnvelope<PromptGalleryFavoriteToggleResult>> {
+  const res = await api.post(`/api/prompt-gallery/v1/prompts/${id}/favorite`)
+  return res.data
+}
+
+/** 我收藏的作品（登录用户） */
+export async function getMyPromptGalleryFavorites(
+  params: { offset?: number; limit?: number } = {}
+): Promise<ApiEnvelope<PromptGalleryFavoritesResult>> {
+  const res = await api.get('/api/prompt-gallery/v1/favorites', { params })
   return res.data
 }
 

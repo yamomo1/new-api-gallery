@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
-import { Copy, Check, Eye, Heart, Star, Video } from 'lucide-react'
+import { Copy, Check, Eye, Heart, Share2, Star, Video } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
@@ -14,7 +14,7 @@ import { cn } from '@/lib/utils'
 import { getPromptGalleryDetail } from '../api'
 import { useLikePromptGallery } from '../hooks/use-prompt-gallery'
 import type { PromptGalleryItem } from '../types'
-import { isVideoUrl, parseGalleryMedia, parseGalleryTags } from '../utils'
+import { copyText, isVideoUrl, parseGalleryMedia, parseGalleryTags } from '../utils'
 
 type GalleryDetailDialogProps = {
   id: number | null
@@ -26,6 +26,8 @@ type GalleryDetailDialogProps = {
   onLike?: (item: PromptGalleryItem) => void
   favorite?: boolean
   onToggleFavorite?: (id: number) => void
+  /** 分享单个作品（复制直达链接 / 系统分享） */
+  onShare?: (item: PromptGalleryItem) => void
 }
 
 /** 作品详情弹窗：媒体展示 + 完整提示词（复制）+ 点赞/收藏 */
@@ -38,6 +40,7 @@ export function GalleryDetailDialog({
   onLike,
   favorite,
   onToggleFavorite,
+  onShare,
 }: GalleryDetailDialogProps) {
   const { t } = useTranslation()
   const [copied, setCopied] = useState(false)
@@ -66,12 +69,16 @@ export function GalleryDetailDialog({
   const tags: string[] = item ? parseGalleryTags(item.tags) : []
   const current = media[Math.min(activeMedia, Math.max(media.length - 1, 0))]
 
-  const handleCopy = () => {
+  const handleCopy = async () => {
     if (!item) return
-    navigator.clipboard?.writeText(item.prompt)
-    setCopied(true)
-    toast.success(t('Prompt copied'))
-    setTimeout(() => setCopied(false), 1500)
+    const ok = await copyText(item.prompt)
+    if (ok) {
+      setCopied(true)
+      toast.success(t('Prompt copied'))
+      setTimeout(() => setCopied(false), 1500)
+    } else {
+      toast.error(t('Copy failed'))
+    }
   }
 
   const handleLike = () => {
@@ -195,7 +202,7 @@ export function GalleryDetailDialog({
                 </p>
               </div>
 
-              <div className='mt-auto flex items-center gap-2'>
+              <div className='mt-auto flex flex-wrap items-center gap-2'>
                 <Button
                   variant={liked ? 'default' : 'outline'}
                   size='sm'
@@ -215,6 +222,17 @@ export function GalleryDetailDialog({
                   >
                     <Star className={cn('size-4', favorite && 'fill-current')} />
                     {favorite ? t('Favorited') : t('Favorite')}
+                  </Button>
+                )}
+                {onShare && (
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    className='gap-1.5'
+                    onClick={() => onShare(item)}
+                  >
+                    <Share2 className='size-4' />
+                    {t('Share work')}
                   </Button>
                 )}
               </div>

@@ -84,6 +84,58 @@ func LikePromptGallery(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"success": true, "data": gin.H{"likes": likes}})
 }
 
+// TogglePromptGalleryFavorite 收藏 / 取消收藏（登录用户）
+// POST /api/prompt-gallery/v1/prompts/:id/favorite
+func TogglePromptGalleryFavorite(c *gin.Context) {
+	userId := c.GetInt("id")
+	if userId <= 0 {
+		common.ApiErrorMsg(c, "请先登录")
+		return
+	}
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		common.ApiErrorT(c, "Invalid gallery id")
+		return
+	}
+	if _, err := model.GetPromptGalleryById(id); err != nil {
+		common.ApiError(c, err)
+		return
+	}
+	favorited, total, err := model.TogglePromptGalleryFavorite(userId, id)
+	if err != nil {
+		common.ApiError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"data":    gin.H{"favorited": favorited, "total": total},
+	})
+}
+
+// GetMyPromptGalleryFavorites 我收藏的作品（登录用户；画布素材面板同样调用）
+// GET /api/prompt-gallery/v1/favorites
+func GetMyPromptGalleryFavorites(c *gin.Context) {
+	userId := c.GetInt("id")
+	offset, _ := strconv.Atoi(c.DefaultQuery("offset", "0"))
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "100"))
+	items, total, err := model.ListFavoritePromptGalleries(userId, offset, limit)
+	if err != nil {
+		common.ApiError(c, err)
+		return
+	}
+	ids, _ := model.ListFavoritePromptGalleryIDs(userId)
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"data": gin.H{
+			"items":  items,
+			"total":  total,
+			"ids":    ids,
+			"offset": offset,
+			"limit":  limit,
+		},
+	})
+}
+
 // GetPromptGalleryFacets 聚合分类/模型/类型
 // GET /api/prompt-gallery/v1/facets
 func GetPromptGalleryFacets(c *gin.Context) {

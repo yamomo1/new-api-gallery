@@ -377,6 +377,7 @@ func migrateDB() error {
 		&AuthzRole{},
 		&UserAccessToken{},
 		&PromptGallery{},
+		&PromptGalleryFavorite{},
 		&GalleryProject{},
 		&CanvasDocument{},
 	)

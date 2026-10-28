@@ -43,14 +43,14 @@ const TYPES: { value: PromptGalleryType | 'all'; labelKey: string }[] = [
 
 function chipClass(active: boolean) {
   return cn(
-    'shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-colors',
+    'shrink-0 whitespace-nowrap rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-all duration-200',
     active
-      ? 'bg-primary text-primary-foreground'
-      : 'bg-muted text-muted-foreground hover:text-foreground'
+      ? 'bg-primary text-primary-foreground shadow-sm'
+      : 'text-muted-foreground hover:bg-muted hover:text-foreground'
   )
 }
 
-/** 筛选面板（对标参考站）：分类 tab / 搜索+类型 / 模型+排序+随机 / 标签 */
+/** 筛选面板（对标参考站）：分类 / 搜索+类型 / 模型 / 标签，四行留白更宽松 */
 export function GalleryFilterPanel({
   facets,
   category,
@@ -75,10 +75,10 @@ export function GalleryFilterPanel({
   const tags = facets?.tags ?? []
 
   return (
-    <div className='mb-6 space-y-3.5 rounded-2xl border border-border bg-card p-4'>
-      {/* 行 1：分类 tab（横向滚动） */}
+    <div className='mb-10 space-y-5 rounded-[24px] border border-border/70 bg-card/60 px-4 py-5 shadow-sm backdrop-blur-sm md:px-6 md:py-6'>
+      {/* 行 1：分类 tab */}
       {categories.length > 0 && (
-        <div className='-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden'>
+        <div className='-mx-1 flex gap-2 overflow-x-auto px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden'>
           <button
             type='button'
             onClick={() => onCategoryChange('')}
@@ -99,18 +99,22 @@ export function GalleryFilterPanel({
         </div>
       )}
 
-      {/* 行 2：搜索 + 提示词类型 */}
-      <div className='flex flex-wrap items-center gap-3'>
-        <div className='relative min-w-[220px] flex-1'>
-          <Search className='pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground' />
+      {/* 分隔线：让筛选区呼吸感更强 */}
+      {categories.length > 0 && <div className='h-px bg-border/60' />}
+
+      {/* 行 2：搜索（收窄）+ 类型 + 右侧计数/排序/随机 */}
+      <div className='flex flex-wrap items-center gap-x-3 gap-y-3'>
+        <div className='relative w-[220px] max-w-full sm:w-[260px]'>
+          <Search className='pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground' />
           <Input
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder={t('Search prompts, styles and ideas')}
-            className='h-9 rounded-full pl-9'
+            className='h-9 rounded-full border-transparent bg-muted/60 pl-9 text-[13px] shadow-none transition-colors focus-visible:border-border focus-visible:bg-background'
           />
         </div>
-        <div className='inline-flex rounded-full border border-border bg-muted p-0.5'>
+
+        <div className='inline-flex rounded-full bg-muted/60 p-0.5'>
           {TYPES.map(({ value, labelKey }) => (
             <button
               key={value}
@@ -118,7 +122,7 @@ export function GalleryFilterPanel({
               aria-pressed={type === value}
               onClick={() => onTypeChange(value)}
               className={cn(
-                'rounded-full px-3 py-1 text-xs font-medium transition-colors',
+                'whitespace-nowrap rounded-full px-3 py-1.5 text-[13px] font-medium transition-colors',
                 type === value
                   ? 'bg-background text-foreground shadow-sm'
                   : 'text-muted-foreground hover:text-foreground'
@@ -128,37 +132,14 @@ export function GalleryFilterPanel({
             </button>
           ))}
         </div>
-      </div>
 
-      {/* 行 3：模型 chips + 计数 + 排序 + 随机 */}
-      <div className='flex flex-wrap items-center gap-2'>
-        <div className='flex min-w-0 flex-1 flex-wrap gap-1.5'>
-          <button
-            type='button'
-            onClick={() => onModelChange('')}
-            className={chipClass(model === '')}
-          >
-            {t('All Models')}
-          </button>
-          {models.map((m) => (
-            <button
-              key={m}
-              type='button'
-              onClick={() => onModelChange(m)}
-              className={chipClass(model === m)}
-              title={m}
-            >
-              {m}
-            </button>
-          ))}
-        </div>
-        <div className='flex shrink-0 items-center gap-2'>
+        <div className='ml-auto flex flex-wrap items-center gap-3'>
           {total !== undefined && (
-            <span className='whitespace-nowrap text-xs text-muted-foreground'>
+            <span className='whitespace-nowrap text-[13px] tabular-nums text-muted-foreground'>
               {t('{{count}} prompts', { count: total })}
             </span>
           )}
-          <div className='inline-flex gap-0.5'>
+          <div className='inline-flex items-center gap-0.5'>
             {SORTS.map(({ value, labelKey }) => (
               <button
                 key={value}
@@ -166,9 +147,9 @@ export function GalleryFilterPanel({
                 aria-pressed={sort === value}
                 onClick={() => onSortChange(value)}
                 className={cn(
-                  'rounded-md px-2 py-1 text-xs font-medium transition-colors',
+                  'whitespace-nowrap rounded-full px-2.5 py-1 text-[13px] font-medium transition-colors',
                   sort === value
-                    ? 'bg-muted text-foreground'
+                    ? 'bg-foreground/10 text-foreground'
                     : 'text-muted-foreground hover:text-foreground'
                 )}
               >
@@ -182,7 +163,7 @@ export function GalleryFilterPanel({
               onClick={onRandom}
               aria-label={t('Random')}
               title={t('Random')}
-              className='flex size-7 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:text-foreground'
+              className='flex size-8 items-center justify-center rounded-full border border-border/80 text-muted-foreground transition-colors hover:border-foreground/30 hover:text-foreground'
             >
               <Shuffle className='size-3.5' />
             </button>
@@ -190,29 +171,54 @@ export function GalleryFilterPanel({
         </div>
       </div>
 
-      {/* 行 4：标签 chips（横向滚动） */}
-      {tags.length > 0 && (
-        <div className='flex items-center gap-2'>
-          <div className='-mx-1 flex min-w-0 flex-1 gap-1.5 overflow-x-auto px-1 pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden'>
+      {/* 行 3：模型 chips（单行横向滚动，不换行更整齐） */}
+      {models.length > 0 && (
+        <div className='-mx-1 flex gap-2 overflow-x-auto px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden'>
+          <button
+            type='button'
+            onClick={() => onModelChange('')}
+            className={cn(chipClass(model === ''), 'text-xs')}
+          >
+            {t('All Models')}
+          </button>
+          {models.map((m) => (
             <button
+              key={m}
               type='button'
-              onClick={() => onTagChange('')}
-              className={chipClass(tag === '')}
+              onClick={() => onModelChange(m)}
+              className={cn(chipClass(model === m), 'text-xs')}
+              title={m}
             >
-              {t('All tags')}
+              {m}
             </button>
-            {tags.map((tg) => (
-              <button
-                key={tg}
-                type='button'
-                onClick={() => onTagChange(tg)}
-                className={chipClass(tag === tg)}
-              >
-                <Hash className='mr-0.5 inline size-3' />
-                {tg}
-              </button>
-            ))}
-          </div>
+          ))}
+        </div>
+      )}
+
+      {/* 行 4：标签 chips */}
+      {tags.length > 0 && (
+        <div className='-mx-1 flex items-center gap-2 overflow-x-auto px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden'>
+          <span className='shrink-0 text-[13px] text-muted-foreground/70'>
+            {t('Tags')}
+          </span>
+          <button
+            type='button'
+            onClick={() => onTagChange('')}
+            className={cn(chipClass(tag === ''), 'text-xs')}
+          >
+            {t('All tags')}
+          </button>
+          {tags.map((tg) => (
+            <button
+              key={tg}
+              type='button'
+              onClick={() => onTagChange(tg)}
+              className={cn(chipClass(tag === tg), 'text-xs')}
+            >
+              <Hash className='mr-0.5 inline size-3' />
+              {tg}
+            </button>
+          ))}
         </div>
       )}
     </div>
