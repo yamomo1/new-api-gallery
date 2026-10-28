@@ -7849,6 +7849,10 @@
     "Unlisted": "不列出",
     "Visibility": "可见性",
     "Visibility updated": "可见性已更新",
-    "Published to the gallery": "已发布到画布广场"
+    "Published to the gallery": "已发布到画布广场",
+    "Opening the canvas studio…": "正在打开画布工作台…",
+    "Open manually": "手动打开",
+    "The canvas studio URL is not configured yet.": "还没有配置画布工作台地址。",
+    "Set VITE_CANVAS_STUDIO_URL or edit features/canvas/studio.ts.": "请设置 VITE_CANVAS_STUDIO_URL，或修改 features/canvas/studio.ts。"
   }
 }

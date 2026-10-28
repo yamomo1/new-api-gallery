@@ -35,7 +35,7 @@ import {
   useDeleteCanvasDocument,
   useUpdateCanvasDocumentMeta,
 } from './hooks'
-import { CANVAS_STUDIO_URL, canvasStudioUrl } from './studio'
+import { CANVAS_STUDIO_URL, canvasStudioHomeUrl, canvasStudioUrl } from './studio'
 import type { CanvasDocumentSummary, CanvasVisibility } from './types'
 
 function formatTime(ts: number): string {
@@ -155,9 +155,10 @@ export function MyCanvases() {
           {CANVAS_STUDIO_URL && (
             <Button
               variant='outline'
-              onClick={() =>
-                window.open(CANVAS_STUDIO_URL, '_blank', 'noopener,noreferrer')
-              }
+              onClick={() => {
+                const url = canvasStudioHomeUrl()
+                if (url) window.open(url, '_blank', 'noopener,noreferrer')
+              }}
             >
               <Globe2 data-icon='inline-start' />
               <span>{t('Canvas studio')}</span>
