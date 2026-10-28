@@ -7838,6 +7838,17 @@
     "Links shown in the site header next to Home / Console.": "Links shown in the site header next to Home / Console.",
     "Links appended to a \"Custom\" group in the user sidebar.": "Links appended to a \"Custom\" group in the user sidebar.",
     "Link title": "Link title",
-    "Title cannot be empty": "Title cannot be empty"
+    "Title cannot be empty": "Title cannot be empty",
+    "Canvas gallery": "Canvas gallery",
+    "Canvases made by the community": "Canvases made by the community",
+    "Open a canvas to see how it was wired: nodes, prompts and references, all still editable.": "Open a canvas to see how it was wired: nodes, prompts and references, all still editable.",
+    "Create your own canvas": "Create your own canvas",
+    "Open in canvas studio": "Open in canvas studio",
+    "Private": "Private",
+    "Public": "Public",
+    "Unlisted": "Unlisted",
+    "Visibility": "Visibility",
+    "Visibility updated": "Visibility updated",
+    "Published to the gallery": "Published to the gallery"
   }
 }

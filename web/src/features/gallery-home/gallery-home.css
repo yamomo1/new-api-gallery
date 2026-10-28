@@ -878,6 +878,100 @@ html:not(.dark) .ghome {
 .ghome .gcard--big .gcard-info { padding-right: 62px; }
 
 /* ============================================================
+   画布广场（首页新增区块：用户发布到画廊的无限画布）
+   ============================================================ */
+.ghome .canvas-index {
+  display: inline-flex; align-items: center;
+  padding: 3px 8px; border-radius: 999px;
+  background: color-mix(in oklab, var(--primary) 16%, transparent);
+  color: var(--primary);
+  font-size: 9.5px; font-weight: 700; letter-spacing: 0.12em;
+}
+.ghome .canvas-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 16px; margin-top: 24px;
+}
+/* 不足 4 张时居中排布，避免右侧留下大片空白 */
+.ghome .canvas-grid--few {
+  grid-template-columns: repeat(auto-fit, minmax(0, 280px));
+  justify-content: center;
+}
+.ghome .canvas-card {
+  display: flex; flex-direction: column; overflow: hidden;
+  border-radius: 16px; border: 1px solid var(--border);
+  background: var(--card-2);
+  transition:
+    transform 0.34s cubic-bezier(0.22, 0.61, 0.36, 1),
+    border-color 0.28s,
+    box-shadow 0.34s;
+  contain: layout paint;
+}
+.ghome .canvas-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(233, 184, 122, 0.38);
+  box-shadow: 0 24px 56px -34px rgba(0, 0, 0, 0.85);
+}
+.ghome .canvas-card-cover {
+  position: relative; aspect-ratio: 4 / 3; overflow: hidden;
+  background: var(--card-2);
+}
+.ghome .canvas-card-art {
+  width: 100%; height: 100%; object-fit: cover;
+  transition: transform 0.9s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.ghome .canvas-card:hover .canvas-card-art { transform: scale(1.05); }
+/* 无封面占位：按标题哈希出固定色相，卡片之间不会撞色 */
+.ghome .canvas-card-ph {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+  color: color-mix(in oklab, hsl(var(--canvas-hue) 60% 30%) 88%, #000);
+  background:
+    radial-gradient(circle at 28% 18%, hsl(var(--canvas-hue) 82% 78% / 0.95), transparent 62%),
+    linear-gradient(150deg, hsl(var(--canvas-hue) 58% 92%), hsl(calc(var(--canvas-hue) + 32) 52% 86%));
+}
+html.dark .ghome .canvas-card-ph {
+  color: hsl(var(--canvas-hue) 70% 88%);
+  background:
+    radial-gradient(circle at 28% 18%, hsl(var(--canvas-hue) 62% 34% / 0.95), transparent 62%),
+    linear-gradient(150deg, hsl(var(--canvas-hue) 40% 16%), hsl(calc(var(--canvas-hue) + 32) 38% 11%));
+}
+.ghome .canvas-card-ph b { font-size: 30px; font-weight: 600; line-height: 1; }
+.ghome .canvas-card-cta {
+  position: absolute; right: 12px; bottom: 12px;
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 34px; height: 34px; border-radius: 50%;
+  background: var(--accent-gold, #e9b872); color: #120e07;
+  box-shadow: 0 12px 28px -14px rgba(233, 184, 122, 0.95);
+  opacity: 0; transform: translateY(12px) scale(0.9);
+  transition: opacity 0.28s ease, transform 0.4s cubic-bezier(0.34, 1.42, 0.44, 1);
+}
+.ghome .canvas-card:hover .canvas-card-cta {
+  opacity: 1; transform: translateY(0) scale(1);
+}
+.ghome .canvas-card-meta {
+  display: flex; flex-direction: column; gap: 4px;
+  padding: 12px 14px 14px;
+}
+.ghome .canvas-card-meta strong {
+  font-size: 14px; font-weight: 600; line-height: 1.4;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.ghome .canvas-card-meta p {
+  margin: 0; color: var(--muted); font-size: 12px; line-height: 1.5;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.ghome .canvas-card-meta span {
+  color: var(--muted); font-size: 11.5px; letter-spacing: 0.01em;
+}
+@media (max-width: 1100px) {
+  .ghome .canvas-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 640px) {
+  .ghome .canvas-grid { grid-template-columns: 1fr; }
+}
+
+
+/* ============================================================
    精选模型（04，对标 1:1：左预览 + 右列表，悬停换图）
    ============================================================ */
 .ghome .models-head { display: grid; grid-template-columns: minmax(0, 1fr) 460px; gap: 40px; align-items: start; }

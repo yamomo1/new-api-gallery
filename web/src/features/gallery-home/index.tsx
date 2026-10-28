@@ -172,6 +172,7 @@ import {
   HeroVideoStage,
 } from './components'
 import { useGalleryFeed, useGalleryHomeContent } from './api'
+import { CanvasGallerySection } from './canvas-gallery'
 import './gallery-home.css'
 
 const ICONS: Record<string, typeof LayoutGrid> = {
@@ -779,6 +780,9 @@ export function GalleryHome() {
             </div>
           </div>
         </section>
+
+        {/* ============ 4b. 画布广场（用户发布到画廊的无限画布） ============ */}
+        <CanvasGallerySection />
 
         {/* ============ 5. 精选模型（对标 04：左预览 + 右列表悬停换图） ============ */}
         <section className='section' id='home-models'>

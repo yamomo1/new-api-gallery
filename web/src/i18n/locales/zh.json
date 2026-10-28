@@ -7838,6 +7838,17 @@
     "Links shown in the site header next to Home / Console.": "显示在站点顶部导航「首页 / 控制台」旁边的链接。",
     "Links appended to a \"Custom\" group in the user sidebar.": "追加到用户侧边栏的「自定义」分组。",
     "Link title": "链接标题",
-    "Title cannot be empty": "标题不能为空"
+    "Title cannot be empty": "标题不能为空",
+    "Canvas gallery": "画布广场",
+    "Canvases made by the community": "大家创作的画布",
+    "Open a canvas to see how it was wired: nodes, prompts and references, all still editable.": "打开任意一张画布，看看它是怎么搭起来的——节点、提示词和参考图，都还能继续改。",
+    "Create your own canvas": "去画布工作台创作",
+    "Open in canvas studio": "在画布工作台打开",
+    "Private": "私密",
+    "Public": "公开",
+    "Unlisted": "不列出",
+    "Visibility": "可见性",
+    "Visibility updated": "可见性已更新",
+    "Published to the gallery": "已发布到画布广场"
   }
 }

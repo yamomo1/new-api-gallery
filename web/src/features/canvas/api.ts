@@ -1,11 +1,23 @@
 import { api } from '@/lib/api'
 
-import type { CanvasDocument, CanvasDocumentSummary } from './types'
+import type {
+  CanvasDocument,
+  CanvasDocumentSummary,
+  CanvasVisibility,
+} from './types'
 
 type ApiEnvelope<T> = {
   success: boolean
   message?: string
   data: T
+}
+
+export type CanvasDocumentPayload = {
+  title?: string
+  graph?: string
+  description?: string
+  visibility?: CanvasVisibility
+  thumbnail?: string
 }
 
 export async function listCanvasDocuments(): Promise<
@@ -15,10 +27,9 @@ export async function listCanvasDocuments(): Promise<
   return res.data
 }
 
-export async function createCanvasDocument(payload: {
-  title?: string
-  graph?: string
-}): Promise<ApiEnvelope<CanvasDocument>> {
+export async function createCanvasDocument(
+  payload: CanvasDocumentPayload
+): Promise<ApiEnvelope<CanvasDocument>> {
   const res = await api.post('/api/canvas/v1/documents', payload)
   return res.data
 }
@@ -32,7 +43,7 @@ export async function getCanvasDocument(
 
 export async function updateCanvasDocument(
   id: number,
-  payload: { title?: string; graph?: string }
+  payload: CanvasDocumentPayload
 ): Promise<ApiEnvelope<null>> {
   const res = await api.put(`/api/canvas/v1/documents/${id}`, payload)
   return res.data

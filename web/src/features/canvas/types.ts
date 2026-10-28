@@ -64,15 +64,26 @@ export type CanvasDocument = {
   user_id: number
   title: string
   graph: string
+  description: string
+  visibility: CanvasVisibility
+  thumbnail: string
+  author: string
   created_at: number
   updated_at: number
 }
+
+/** 可见性：public 进公开画廊；unlist 有链接可看但不列出；private 仅本人 */
+export type CanvasVisibility = 'public' | 'private' | 'unlist'
 
 /** 列表项（后端列表接口不含 graph 体） */
 export type CanvasDocumentSummary = {
   id: number
   user_id: number
   title: string
+  description: string
+  visibility: CanvasVisibility
+  thumbnail: string
+  author: string
   created_at: number
   updated_at: number
 }

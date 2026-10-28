@@ -9,6 +9,7 @@ import {
   getCanvasDocument,
   listCanvasDocuments,
   updateCanvasDocument,
+  type CanvasDocumentPayload,
 } from './api'
 
 export function useCanvasDocuments() {
@@ -65,6 +66,31 @@ export function useDeleteCanvasDocument() {
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['canvas', 'documents'] })
+      void queryClient.invalidateQueries({
+        queryKey: ['canvas', 'public-gallery'],
+      })
+    },
+  })
+}
+
+/** 改标题 / 可见性 / 描述等元信息（列表页用，改完同时刷新公开画廊） */
+export function useUpdateCanvasDocumentMeta() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({
+      id,
+      payload,
+    }: {
+      id: number
+      payload: CanvasDocumentPayload
+    }) => {
+      requireServerSuccess(await updateCanvasDocument(id, payload))
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['canvas', 'documents'] })
+      void queryClient.invalidateQueries({
+        queryKey: ['canvas', 'public-gallery'],
+      })
     },
   })
 }
