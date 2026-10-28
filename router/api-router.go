@@ -74,6 +74,9 @@ func SetApiRouter(router *gin.Engine) {
 			canvasRoute.GET("/documents/:id", middleware.UserAuth(), controller.GetMyCanvasDocument)
 			canvasRoute.PUT("/documents/:id", middleware.UserAuth(), controller.UpdateMyCanvasDocument)
 			canvasRoute.DELETE("/documents/:id", middleware.UserAuth(), controller.DeleteMyCanvasDocument)
+			// 公开画廊（免登录）：首页展示 + 打开公开画布
+			canvasRoute.GET("/gallery", controller.ListPublicCanvasDocuments)
+			canvasRoute.GET("/gallery/:id", controller.GetPublicCanvasDocument)
 		}
 		apiRouter.GET("/verification", middleware.EmailVerificationRateLimit(), middleware.TurnstileCheck(), controller.SendEmailVerification)
 		apiRouter.GET("/reset_password", middleware.CriticalRateLimit(), middleware.TurnstileCheck(), controller.SendPasswordResetEmail)
