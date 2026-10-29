@@ -31,8 +31,16 @@
 #   HEALTH_URL     健康检查地址，默认 http://127.0.0.1:3000/api/status（仅无容器ID时的兜底）
 #   APP_PORT       容器内服务端口，默认 3000（探活优先在容器内 wget 这个端口）
 #   REGISTRY       构建时的镜像加速器，默认读 Dockerfile.cn 里的值
+#   ALLOW_NO_BACKUP=1  允许在数据目录不存在时继续（仅限新装/已有外部库备份策略时）
+#
+# 安全约束（不要改）：
+#   · 数据目录不存在 -> 直接退出，不做无备份升级
+#   · 备份清理只碰 $BACKUP_DIR 下 *.bak 普通文件，且校验真实路径防误删
 
 set -euo pipefail
+
+# 脚本版本：用于确认服务器上跑的到底是不是修复版（事故后排查用）
+SCRIPT_VER="2026-10-29.3-fix-prune"
 
 APP_DIR="${APP_DIR:-/opt/new-api-gallery/new-api-gallery}"
 BASE_DIR="${BASE_DIR:-$(dirname "$APP_DIR")}"
@@ -80,9 +88,45 @@ probe_health() {
   curl -fsS --max-time 2 "$HEALTH_URL" 2>/dev/null | grep -q '"success":true'
 }
 
+# ---------- 备份清理（安全实现） ----------
+# 这段代码早期版本造成过两次生产事故，实现方式必须极度保守：
+#   旧写法 `ls -1t "$BACKUP_DIR"/*.bak | tail -n +11 | xargs rm -f`
+#   在 nullglob 打开且备份目录为空时，glob 展开为空 → `ls -1t` 无参数 = 列出【当前目录】
+#   （此时 cwd 已是代码目录）→ 删除仓库根目录第 11 项之后的普通文件。
+# 此处三重收紧：
+#   1) 只认 $BACKUP_DIR 这一层、普通文件、后缀 .bak —— 由 find 硬约束，完全不经过 shell glob
+#   2) 动手前校验解析后的真实路径不是 /，不是代码目录，不是项目根
+#   3) 逐个 rm -f --，路径带引号，不经 xargs
+safe_prune_backups() {
+  local real_backup real_app real_base total
+  [[ -d "$BACKUP_DIR" ]] || return 0
+
+  real_backup="$(cd "$BACKUP_DIR" 2>/dev/null && pwd -P)" || return 0
+  real_app="$(cd "$APP_DIR" 2>/dev/null && pwd -P || true)"
+  real_base="$(cd "$BASE_DIR" 2>/dev/null && pwd -P || true)"
+
+  if [[ -z "$real_backup" || "$real_backup" == "/" \
+        || "$real_backup" == "$real_app" || "$real_backup" == "$real_base" ]]; then
+    warn "  备份目录真实路径异常（${real_backup:-空}），跳过清理以免误删"
+    return 0
+  fi
+
+  total="$(find "$real_backup" -maxdepth 1 -type f -name '*.bak' 2>/dev/null | wc -l)"
+  [[ "$total" -gt "$KEEP_BACKUPS" ]] || return 0
+
+  find "$real_backup" -maxdepth 1 -type f -name '*.bak' -printf '%T@\t%p\n' 2>/dev/null \
+    | sort -rn \
+    | awk -v K="$KEEP_BACKUPS" 'NR > K { sub(/^[^\t]*\t/, ""); print }' \
+    | while IFS= read -r old; do
+        [[ -n "$old" ]] && rm -f -- "$old"
+      done
+  info "  已清理最旧的 $((total - KEEP_BACKUPS)) 份备份（保留最近 $KEEP_BACKUPS 份）"
+}
+
 # ---------- 环境体检 ----------
 check_env() {
   info "环境体检"
+  info "  脚本版本：$SCRIPT_VER"
   info "  代码目录：$APP_DIR"
   info "  项目根  ：$BASE_DIR"
   info "  数据目录：$DATA_DIR"
@@ -94,7 +138,20 @@ check_env() {
        首次部署请先执行：
          cp $APP_DIR/deploy/docker-compose.host.yml $BASE_DIR/docker-compose.yml
        然后把里面的 SESSION_SECRET 改成固定值。"
-  [[ -d "$DATA_DIR" ]]       || warn "  数据目录不存在：$DATA_DIR（新装可忽略，会由 Docker 自动创建）"
+  # 数据目录缺失 = 备份做不到。脚本的安全前提是"先备份再动手"，所以这里必须停下，
+  # 而不是打一行 warn 继续跑（旧行为：告警后照样构建重启，等于无备份升级）。
+  if [[ ! -d "$DATA_DIR" ]]; then
+    if [[ "${ALLOW_NO_BACKUP:-0}" == "1" ]]; then
+      warn "  数据目录不存在：$DATA_DIR —— ALLOW_NO_BACKUP=1，按你要求继续（本次没有数据库备份）"
+    else
+      fail "数据目录不存在：$DATA_DIR
+       → 本次做不了数据库备份，脚本拒绝继续（不允许无备份升级）
+       → 按情况选一条：
+         a) 新装、还没有任何数据：      ALLOW_NO_BACKUP=1 $0
+         b) 数据在别的路径（1Panel 等）：先跑 ./deploy/diagnose.sh 查出容器真实挂载，再 DATA_DIR=/真实路径 $0
+         c) 用的是 PostgreSQL/MySQL：   先自行 pg_dump/mysqldump 备份，再 ALLOW_NO_BACKUP=1 $0"
+    fi
+  fi
   if grep -q "CHANGE_ME" "$COMPOSE_FILE" 2>/dev/null; then
     warn "  编排里 SESSION_SECRET 还是 CHANGE_ME，务必改成固定随机值后再启动"
   fi
@@ -147,13 +204,8 @@ if [[ "$BACKED_UP" -eq 0 ]]; then
   warn "  $DATA_DIR 下没有 .db 文件（可能用的是 PostgreSQL/MySQL），跳过文件备份"
   warn "  PostgreSQL 用户请自行确认有定期 pg_dump 策略"
 fi
-# 只保留最近 N 份备份：用 find 限定目录/文件类型/扩展名，不依赖 glob 展开，杜绝误删
-if [[ -d "$BACKUP_DIR" ]]; then
-  find "$BACKUP_DIR" -maxdepth 1 -type f -name '*.bak' -printf '%T@\t%p\n' 2>/dev/null \
-    | sort -rn \
-    | awk -v K="$KEEP_BACKUPS" 'NR > K { sub(/^[^\t]*\t/, ""); print }' \
-    | xargs -r rm -f --
-fi
+# 只保留最近 N 份备份：交给 safe_prune_backups（find 硬约束 + 路径守卫，不用 glob）
+safe_prune_backups
 
 # ---------- 2. 记录回滚点 ----------
 info "步骤 2/6 记录当前镜像作为回滚点"
