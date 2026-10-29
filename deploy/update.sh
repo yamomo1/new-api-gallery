@@ -28,7 +28,8 @@
 #   IMAGE          镜像名，默认 new-api-gallery
 #   BRANCH         分支，默认 gallery-fork
 #   SERVICE        编排里的服务名，默认 new-api
-#   HEALTH_URL     健康检查地址，默认 http://127.0.0.1:3000/api/status
+#   HEALTH_URL     健康检查地址，默认 http://127.0.0.1:3000/api/status（仅无容器ID时的兜底）
+#   APP_PORT       容器内服务端口，默认 3000（探活优先在容器内 wget 这个端口）
 #   REGISTRY       构建时的镜像加速器，默认读 Dockerfile.cn 里的值
 
 set -euo pipefail
@@ -42,6 +43,7 @@ IMAGE="${IMAGE:-new-api-gallery}"
 BRANCH="${BRANCH:-gallery-fork}"
 SERVICE="${SERVICE:-new-api}"
 HEALTH_URL="${HEALTH_URL:-http://127.0.0.1:3000/api/status}"
+APP_PORT="${APP_PORT:-3000}"
 SKIP_GIT="${SKIP_GIT:-0}"
 KEEP_BACKUPS="${KEEP_BACKUPS:-10}"
 
@@ -57,6 +59,26 @@ elif command -v docker-compose >/dev/null 2>&1; then
 else
   fail "找不到 docker compose，请先安装 Docker Compose 插件"
 fi
+
+# ---------- 健康探活 ----------
+# 容器没有端口映射时 127.0.0.1 是不通的（反代直连容器 IP），所以按三层探：
+#   1) 容器内 wget（镜像自带 wget，最可靠，不依赖宿主机网络策略）
+#   2) 宿主机访问容器 IP（镜像里没 wget 时）
+#   3) HEALTH_URL（有端口映射的传统部署）
+probe_health() {
+  local cid ip
+  cid="$($DC -f "$COMPOSE_FILE" ps -q "$SERVICE" 2>/dev/null | head -1 || true)"
+  if [[ -n "$cid" ]]; then
+    if docker exec "$cid" wget -qO- --timeout=2 "http://127.0.0.1:${APP_PORT}/api/status" 2>/dev/null | grep -q '"success":true'; then
+      return 0
+    fi
+    ip="$(docker inspect --format '{{range .NetworkSettings.Networks}}{{.IPAddress}} {{end}}' "$cid" 2>/dev/null | awk '{print $1}' || true)"
+    if [[ -n "$ip" ]] && curl -fsS --max-time 2 "http://${ip}:${APP_PORT}/api/status" 2>/dev/null | grep -q '"success":true'; then
+      return 0
+    fi
+  fi
+  curl -fsS --max-time 2 "$HEALTH_URL" 2>/dev/null | grep -q '"success":true'
+}
 
 # ---------- 环境体检 ----------
 check_env() {
@@ -95,7 +117,7 @@ if [[ "${1:-}" == "--rollback" ]]; then
   $DC -f "$COMPOSE_FILE" up -d --force-recreate "$SERVICE"
   info "已回滚到上一个镜像，等待启动..."
   sleep 5
-  if curl -fsS "$HEALTH_URL" 2>/dev/null | grep -q '"success":true'; then
+  if probe_health; then
     info "回滚成功，服务已恢复"
   else
     fail "回滚后健康检查仍然失败，请查看：$DC -f $COMPOSE_FILE logs --tail=100 $SERVICE"
@@ -163,7 +185,7 @@ info "  容器已启动，等待健康检查..."
 info "步骤 6/6 健康检查"
 OK=0
 for i in $(seq 1 30); do
-  if curl -fsS "$HEALTH_URL" 2>/dev/null | grep -q '"success":true'; then
+  if probe_health; then
     OK=1
     break
   fi
@@ -183,7 +205,7 @@ if [[ -n "$PREV_ID" ]]; then
   docker tag "$PREV_ID" "${IMAGE}:latest"
   $DC -f "$COMPOSE_FILE" up -d --force-recreate "$SERVICE"
   sleep 5
-  if curl -fsS "$HEALTH_URL" 2>/dev/null | grep -q '"success":true'; then
+  if probe_health; then
     warn "已回滚到上一个版本，服务正常。请检查上面日志排查新版本问题。"
     exit 1
   fi
