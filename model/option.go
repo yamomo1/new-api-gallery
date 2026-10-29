@@ -11,6 +11,7 @@ import (
 	"github.com/QuantumNous/new-api/pkg/jsplugin"
 	"github.com/QuantumNous/new-api/setting"
 	"github.com/QuantumNous/new-api/setting/config"
+	"github.com/QuantumNous/new-api/setting/cost_setting"
 	"github.com/QuantumNous/new-api/setting/operation_setting"
 	"github.com/QuantumNous/new-api/setting/performance_setting"
 	"github.com/QuantumNous/new-api/setting/ratio_setting"
@@ -232,7 +233,7 @@ func InitOptionMap() {
 	common.OptionMap["StorageOverseasS3Secret"] = ""
 	common.OptionMap["StorageOverseasS3Domain"] = ""
 
-	// 自动添加所有注册的模型配置
+	common.OptionMap["UpstreamCostRatio"] = "{}" // 上游进货价表：{"模型名":{"in":0.5,"out":1.5}}（USD/1M tokens），毛利看板用它算成本
 	modelConfigs := config.GlobalConfig.ExportAllConfigs()
 	maps.Copy(common.OptionMap, modelConfigs)
 
@@ -263,6 +264,12 @@ func loadOptionsFromDatabase() {
 		}
 	}
 	applyPasskeyDomainOptions(passkeyOptions)
+	// 上游进货价表存在 options 里，需要单独载入内存供毛利核算使用
+	if v := common.OptionMap[cost_setting.UpstreamCostRatioKey]; v != "" {
+		if err := cost_setting.Update(v); err != nil {
+			common.SysLog(common.LogText("failed to load upstream cost ratio: %s", err.Error()))
+		}
+	}
 }
 
 func SyncOptions(frequency int) {

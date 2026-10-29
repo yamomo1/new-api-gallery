@@ -812,3 +812,37 @@ func DeleteOldLogBatch(ctx context.Context, targetTimestamp int64, limit int) (i
 	}
 	return result.RowsAffected, nil
 }
+
+// ModelProfitRow 单个模型的消耗汇总：请求数 / 输入输出 token / 实际扣费 quota（收入侧）。
+// 成本侧由 setting/cost_setting 按上游进货价另算，不在数据层混入售价逻辑。
+type ModelProfitRow struct {
+	ModelName        string `json:"model_name"`
+	Requests         int64  `json:"requests"`
+	PromptTokens     int64  `json:"prompt_tokens"`
+	CompletionTokens int64  `json:"completion_tokens"`
+	Quota            int64  `json:"quota"`
+}
+
+// GetModelProfitStats 按模型维度聚合消耗日志，按扣费额度倒序。
+// 只统计消费日志（LogTypeConsume），时间区间为 [startTimestamp, endTimestamp]，传 0 表示不限。
+func GetModelProfitStats(startTimestamp int64, endTimestamp int64) ([]ModelProfitRow, error) {
+	var rows []ModelProfitRow
+	tx := LOG_DB.Table("logs").
+		Select(`model_name,
+			count(*) requests,
+			COALESCE(sum(prompt_tokens), 0) prompt_tokens,
+			COALESCE(sum(completion_tokens), 0) completion_tokens,
+			COALESCE(sum(quota), 0) quota`).
+		Where("type = ?", LogTypeConsume)
+	if startTimestamp != 0 {
+		tx = tx.Where("created_at >= ?", startTimestamp)
+	}
+	if endTimestamp != 0 {
+		tx = tx.Where("created_at <= ?", endTimestamp)
+	}
+	err := tx.Group("model_name").Order("quota desc").Scan(&rows).Error
+	if err != nil {
+		return nil, err
+	}
+	return rows, nil
+}
