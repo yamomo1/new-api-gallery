@@ -15,14 +15,18 @@
 在 1Panel 左侧菜单 **主机 → 终端**(或 SSH)执行:
 
 ```bash
-# 选一个目录放源码,例如 /opt/new-api-gallery
-mkdir -p /opt/new-api-gallery && cd /opt/new-api-gallery
+# 目录约定（全项目统一）：
+#   /opt/new-api-gallery/                项目根
+#   └── new-api-gallery/                 git 仓库（代码放这里）
+mkdir -p /opt/new-api-gallery
+cd /opt/new-api-gallery
 
 # 拉取你的 fork(SSH 需先配好该服务器的 GitHub 访问;或用 HTTPS + token)
-git clone git@github.com:yamomo1/new-api-gallery.git .
+git clone -b gallery-fork https://github.com/yamomo1/new-api-gallery.git new-api-gallery
+cd /opt/new-api-gallery/new-api-gallery
 
 # 构建镜像(含你的二开前端/后端,产出 local image:new-api-gallery:latest)
-docker build -t new-api-gallery:latest .
+docker build -f Dockerfile.cn -t new-api-gallery:latest .
 
 docker images | grep new-api-gallery   # 确认已生成
 ```
@@ -133,9 +137,9 @@ docker ps --filter "network=1panel-network" --format "{{.Names}}\t{{.Image}}\t{{
 
 ```bash
 # 1) 服务器 pull 最新代码并重新构建镜像(覆盖 new-api-gallery:latest)
-cd /opt/new-api-gallery
+cd /opt/new-api-gallery/new-api-gallery
 git pull
-docker build -t new-api-gallery:latest .
+docker build -f Dockerfile.cn -t new-api-gallery:latest .
 ```
 
 ```
@@ -153,7 +157,7 @@ docker build -t new-api-gallery:latest .
 在服务器源码目录走 rebase(冲突只会落 3 个集成点),再走 A 的两步:
 
 ```bash
-cd /opt/new-api-gallery
+cd /opt/new-api-gallery/new-api-gallery
 git fetch upstream
 git rebase upstream/v1.0.0-rc.47     # 改成实际新 tag
 # 可能冲突的文件(仅这些):
@@ -161,7 +165,7 @@ git rebase upstream/v1.0.0-rc.47     # 改成实际新 tag
 #   model/main.go          AutoMigrate(&PromptGallery{})
 #   controller/misc.go     status.Theme 读 ThemePreset
 # 解决后 git rebase --continue
-docker build -t new-api-gallery:latest .
+docker build -f Dockerfile.cn -t new-api-gallery:latest .
 ```
 然后 **1Panel 编排点「重建」**。数据库靠 `AutoMigrate` 自动迁移,向后兼容。
 
@@ -191,9 +195,24 @@ docker build -t new-api-gallery:latest .
 
 ## 目录与数据
 
-- 编排文件:`/opt/1panel/apps/docker/compose/new-api-gallery/docker-compose.yml`(1Panel 生成)
-- 你的源码 + Dockerfile:建议放 `/opt/new-api-gallery/`(与编排目录分开,便于 `git pull`)
-- 应用数据:编排目录的 `./data`、`./logs`;Postgres 数据在命名卷 `pg_data`
+目录约定（全项目统一）：
+
+```
+/opt/new-api-gallery/                       项目根
+├── new-api-gallery/                        代码(git 仓库,git pull 在这里)
+├── data/                                   SQLite 数据(仓库之外,git clean 删不到)
+├── logs/                                   日志
+├── backups/                                数据库备份(update.sh 自动写)
+└── docker-compose.yml                      运行时编排(copy 自 deploy/docker-compose.host.yml)
+```
+
+- 编排文件(1Panel 生成):`/opt/1panel/apps/docker/compose/new-api-gallery/docker-compose.yml`
+  > 注意这里的 `./data`、`./logs` 相对的是**1Panel 编排目录**,不是 `/opt/new-api-gallery/`。
+- 你的源码 + Dockerfile:`/opt/new-api-gallery/new-api-gallery/`
+- 应用数据:按目录约定放 `/opt/new-api-gallery/data`;用 PG 时数据在命名卷 `pg_data`
+- **一键更新**:`/opt/new-api-gallery/new-api-gallery/deploy/update.sh`
+  (备份 → 回滚点 → `git pull` → build → 重启 → 健康检查,失败自动回滚)
+  用 1Panel 编排 + PG 时: `COMPOSE_FILE=/opt/1panel/apps/docker/compose/new-api-gallery/docker-compose.yml deploy/update.sh`
 
 ## AGPL 合规
 
