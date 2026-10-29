@@ -10,7 +10,9 @@
 #               需要在升级前自动备份，就传 DB_BACKUP_CMD（见下）
 #   · 数据挂载  deploy/data -> /data       deploy/logs -> /app/logs
 #   · 配置      deploy/.env（SESSION_SECRET / CRYPT_KEY / SQL_DSN …）
-#   · 对外      3000:3000；1Panel 反代可能写的是容器 IP
+#   · 对外      3000:3000；1Panel 反代目标 172.18.0.4:3000（可用 PROXY_ADDR 覆盖）
+#   · 网络      容器必须常驻 1panel-network（数据库按容器名解析）；
+#               compose 重建会丢掉它 → 每次 up 之后脚本自动补接
 #
 # 用法：
 #   ./deploy/upgrade.sh                        升级（默认动作）
@@ -19,6 +21,14 @@
 #   SKIP_GIT=1 ./deploy/upgrade.sh             代码已手动放好，跳过 git pull
 #   DB_BACKUP_CMD='pg_dump … > /root/db.sql' ./deploy/upgrade.sh
 #                                              升级前先跑你自己的备份命令，失败即中止
+#   PROXY_ADDR=172.18.0.5:3000 ./deploy/upgrade.sh
+#                                              反代地址变了时，验收按新地址查
+#   NEW_API_EXTRA_NETWORKS= ./deploy/upgrade.sh 关闭「自动补接 1panel-network」
+#
+# 退出码：
+#   0  更新完成，且验收（网络 / 反代 200）全部通过
+#   1  中途失败（构建失败 / pull 被拒 / 回滚后仍不可用），线上保持原样或已回滚
+#   2  服务已起来、探活通过，但验收有项没过（缺 1panel-network 或反代 200 不通过）
 #
 # 安全约定（两起误删事故之后立的规矩，逐条对应）：
 #   1. 全文没有任何 rm / rmdir / find -delete / git clean / xargs rm
@@ -31,7 +41,7 @@
 
 set -euo pipefail
 
-SCRIPT_VER="2026-10-29.8-net-default"
+SCRIPT_VER="2026-10-29.9-verify"
 
 # ---------- 自拷贝执行（见安全约定 6） ----------
 if [[ "${__UPGRADE_REEXEC:-0}" != "1" ]]; then
@@ -67,6 +77,9 @@ APP_PORT="${APP_PORT:-3000}"
 # 这个网络不在 deploy/docker-compose.yml 里，compose 重建容器后一定会丢 → 每次起来都补一遍。
 # 想关掉： NEW_API_EXTRA_NETWORKS= ./deploy/upgrade.sh
 EXTRA_NETS="${NEW_API_EXTRA_NETWORKS-1panel-network}"
+# 1Panel 里这个站点的反代目标（写死的就是它）。验收时会去访问这个地址，
+# 变了就在这里覆盖： PROXY_ADDR=172.18.0.5:3000 ./deploy/upgrade.sh
+PROXY_ADDR="${PROXY_ADDR:-172.18.0.4:3000}"
 STAMP="$(date +%Y%m%d-%H%M%S)"
 
 info() { printf '[upgrade] %s\n' "$*"; }
@@ -87,6 +100,26 @@ container_ip() {
 container_mounts() {
   docker inspect "$CONTAINER" \
     --format '{{range .Mounts}}{{.Source}} -> {{.Destination}}{{"\n"}}{{end}}' 2>/dev/null || true
+}
+
+# 容器在指定网络上的 IP（1Panel 反代要指向这个）
+container_ip_on() {
+  local net="${1:-}"
+  [[ -n "$net" ]] || return 0
+  docker inspect "$CONTAINER" \
+    --format "{{with index .NetworkSettings.Networks \"$net\"}}{{.IPAddress}}{{end}}" 2>/dev/null || true
+}
+
+# 取 /api/status 的 HTTP 状态码；不通时回 000
+http_code() {
+  local addr="$1" code=""
+  if have_curl; then
+    code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 3 "http://${addr}/api/status" 2>/dev/null || true)"
+  elif command -v wget >/dev/null 2>&1; then
+    code="$(wget -qS -O /dev/null --timeout=3 "http://${addr}/api/status" 2>&1 \
+            | awk '/HTTP\//{c=$2} END{print c}' || true)"
+  fi
+  printf '%s' "${code:-000}"
 }
 
 # ---------- docker 网络保持 ----------
@@ -203,6 +236,53 @@ probe() {
   return 1
 }
 
+# ---------- 更新后验收：网络 + 反代 ----------
+# 探活只证明「容器自己能起来」，这两项才证明「外面能正常用」：
+#   ① 容器是否还挂在 1panel-network 上（数据库按容器名解析，丢了就崩）
+#   ② 1Panel 反代写的那个地址是否真的返回 200（容器重建后 IP 变了就会打到空气上）
+VERIFY_FAIL=0
+verify_after() {
+  local nets ip code proxy_ip
+  VERIFY_FAIL=0
+  step "验收（网络 + 反代）"
+
+  nets="$(container_nets)"
+  if [[ -n "${EXTRA_NETS:-}" ]]; then
+    if printf '%s\n' "$nets" | grep -qxF -- "$EXTRA_NETS"; then
+      info "  ① 网络：$(printf '%s' "$nets" | tr '\n' ' ') → 含 $EXTRA_NETS  [OK]"
+    else
+      warn "  ① 网络：$(printf '%s' "$nets" | tr '\n' ' ') → 缺 $EXTRA_NETS  [FAIL]"
+      warn "     缺了它，数据库按容器名解析会失败（hostname resolving error）"
+      warn "     修： docker network connect $EXTRA_NETS $CONTAINER && docker restart $CONTAINER"
+      VERIFY_FAIL=$((VERIFY_FAIL + 1))
+    fi
+  else
+    info "  ① 网络：$(printf '%s' "$nets" | tr '\n' ' ')"
+  fi
+
+  ip="$(container_ip_on "${EXTRA_NETS:-}")"
+  if [[ -n "$ip" ]]; then
+    info "  ② 容器在 ${EXTRA_NETS} 上的地址：$ip:${APP_PORT}"
+  fi
+
+  code="$(http_code "$PROXY_ADDR")"
+  if [[ "$code" == "200" ]]; then
+    info "  ③ 反代 $PROXY_ADDR/api/status → $code  [OK]"
+  else
+    warn "  ③ 反代 $PROXY_ADDR/api/status → $code  [FAIL]"
+    proxy_ip="${PROXY_ADDR%%:*}"
+    if [[ -n "$ip" ]] && [[ "$ip" != "$proxy_ip" ]]; then
+      warn "     反代指向 $proxy_ip，容器现在是 $ip（重建后 IP 变了）"
+      warn "     → 1Panel 里把反代改成 http://$ip:${APP_PORT}，"
+      warn "       或一劳永逸改成 http://127.0.0.1:${APP_PORT}（端口已发布到宿主机，以后不受 IP 漂移影响）"
+    else
+      warn "     → IP 没变还打不通，去 1Panel 看这个站点的反代配置，或手动 curl 复核"
+    fi
+    VERIFY_FAIL=$((VERIFY_FAIL + 1))
+  fi
+  return 0
+}
+
 # ---------- 体检 ----------
 check_env() {
   local head branch dirty behind
@@ -213,6 +293,7 @@ check_env() {
   info "  配置文件：$ENV_FILE"
   info "  数据目录：$DATA_DIR"
   info "  备份目录：$BACKUP_DIR"
+  info "  必须挂的网络：${EXTRA_NETS:-（无）}    验收反代地址：$PROXY_ADDR"
 
   [[ -d "$REPO/.git" ]]    || fail "不是 git 仓库：$REPO"
   [[ -f "$COMPOSE_FILE" ]] || fail "找不到编排文件：$COMPOSE_FILE"
@@ -359,9 +440,15 @@ fi
 if [[ "$MODE" == "rollback" ]]; then
   check_env
   step "回滚到上一版镜像"
+  capture_networks
   do_rollback
   if probe; then
-    info "回滚完成，服务已恢复（HEAD 未变，仍是 $(git -C "$REPO" rev-parse --short HEAD)）"
+    verify_after
+    if [[ "$VERIFY_FAIL" == "0" ]]; then
+      info "回滚完成，服务已恢复（HEAD 未变，仍是 $(git -C "$REPO" rev-parse --short HEAD)）"
+    else
+      warn "已回滚且探活通过，但验收有 $VERIFY_FAIL 项没过 —— 见上面 [FAIL]"
+    fi
     info "如需连代码一起退回，看 $BACKUP_DIR 下的 commit.*.txt 里记录的旧 HEAD"
   else
     fail "回滚后仍探活失败，请人工检查： docker compose -f $COMPOSE_FILE logs --tail=100 $SERVICE"
@@ -475,15 +562,17 @@ restore_networks
 
 info "  探活 http://127.0.0.1:${APP_PORT}/api/status（最多 ${PROBE_TIMEOUT} 秒）…"
 if probe; then
+  verify_after
   NEW_IP="$(container_ip)"
   printf '\n'
-  info "升级完成"
+  if [[ "$VERIFY_FAIL" == "0" ]]; then
+    info "更新完成"
+  else
+    warn "服务已起来（探活通过），但验收有 $VERIFY_FAIL 项没过 —— 见上面 [FAIL]"
+  fi
   info "  代码版本：$(git -C "$REPO" rev-parse --short HEAD)"
   info "  镜像时间：$(docker image inspect --format '{{.Created}}' "${IMAGE}:latest" 2>/dev/null || echo '?')"
   info "  容器 IP ：${NEW_IP:-未知}"
-  if [[ -n "$NEW_IP" ]]; then
-    info "  → 1Panel 反代若写的是容器 IP，请确认就是 $NEW_IP；不一致就改反代（也可改成 127.0.0.1:${APP_PORT}，端口已发布，以后不再受 IP 漂移影响）"
-  fi
   info "  挂载检查："
   container_mounts | sed 's/^/        /'
   if ! container_mounts | grep -qF "$DATA_DIR -> /data"; then
@@ -491,6 +580,7 @@ if probe; then
   fi
   info "  备份留在：$BACKUP_DIR（env.$STAMP / commit.$STAMP.txt）"
   info "  需要回滚：$ME --rollback"
+  [[ "$VERIFY_FAIL" == "0" ]] || exit 2
 else
   warn "${PROBE_TIMEOUT} 秒内探活未通过，自动回滚到上一版"
   compose logs --tail=40 "$SERVICE" 2>/dev/null || true
