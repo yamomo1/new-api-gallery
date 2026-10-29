@@ -53,15 +53,38 @@ RUN --mount=type=cache,target=/go/pkg/mod go mod download
 
 COPY . .
 COPY --from=builder /build/web/dist ./web/dist
-# BuildKit 缓存挂载(两个都要挂,缺一不可):
-#   /go/pkg/mod           —— 模块缓存。关键:-pgo 里 $(go list -m -f '{{.Dir}}' moejs)
-#                            是 shell 先求值再跑 go build,求值那一刻 moejs 必须已在
-#                            /go/pkg/mod 里,否则 .Dir 解析为空 → 路径变 /default.pgo → 报错。
-#                            与上面 go mod download 共用同一 target,缓存已填充。
-#   /root/.cache/go-build —— 编译缓存持久化,二次起 go build 走增量。
+# ============ go build(含 PGO 自愈)============
+# 坑的来源:-pgo 的值是 shell 先求值、再把结果交给 go build 的。
+#   $(go list -m -f '{{.Dir}}' github.com/Calcium-Ion/moejs) 只有在 moejs 源码
+#   【已经落在 /go/pkg/mod 里】时才返回路径;没下载时返回空串 → 拼出来就是
+#   "/default.pgo" → go build 报 preprofile: error opening profile: /default.pgo。
+# 为什么会没下载:上面那条 `go mod download` 挂了 BuildKit cache mount,模块写进
+#   缓存卷而不是镜像层。于是只要 go.mod 没变,这条 RUN 就命中【层缓存】被整段跳过;
+#   而缓存卷一旦被 docker builder prune / docker system prune / 磁盘清理清掉,
+#   求值那一刻 moejs 就不在 → 必炸。这是纯「Docker 缓存状态」问题,与代码无关,
+#   所以改代码后第一次 build 就踩上了。
+# 处理:不再赌缓存。这里先自检模块在不在,不在就补下载;补完仍拿不到就退化成
+#   -pgo=off(仅少一点编译期优化,功能与产物体积基本无差别),保证任何缓存状态下都能编出来。
+# 两个 cache mount 仍都挂上:
+#   /go/pkg/mod           —— 模块缓存(与上面 go mod download 共用同一 target)
+#   /root/.cache/go-build —— 编译缓存持久化,二次起 go build 走增量
 RUN --mount=type=cache,target=/go/pkg/mod \
     --mount=type=cache,target=/root/.cache/go-build \
-    go build -pgo="$(go list -m -f '{{.Dir}}' github.com/Calcium-Ion/moejs)/default.pgo" -ldflags "-s -w -X 'github.com/QuantumNous/new-api/common.Version=$(cat VERSION)'" -o new-api
+    set -eu; \
+    moddir="$(go list -m -f '{{.Dir}}' github.com/Calcium-Ion/moejs 2>/dev/null || true)"; \
+    if [ -z "$moddir" ] || [ ! -f "$moddir/default.pgo" ]; then \
+        echo ">>> moejs 不在模块缓存中,补下载…"; \
+        go mod download github.com/Calcium-Ion/moejs || true; \
+        moddir="$(go list -m -f '{{.Dir}}' github.com/Calcium-Ion/moejs 2>/dev/null || true)"; \
+    fi; \
+    pgoflag="-pgo=off"; \
+    if [ -n "$moddir" ] && [ -f "$moddir/default.pgo" ]; then \
+        pgoflag="-pgo=$moddir/default.pgo"; \
+    else \
+        echo ">>> 警告: 取不到 moejs/default.pgo,本次改用 -pgo=off 构建(功能不受影响)"; \
+    fi; \
+    echo ">>> PGO 参数: $pgoflag"; \
+    go build $pgoflag -ldflags "-s -w -X 'github.com/QuantumNous/new-api/common.Version=$(cat VERSION)'" -o new-api
 
 # ---- 阶段 3:运行时 ----
 ARG REGISTRY

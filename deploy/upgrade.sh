@@ -31,7 +31,7 @@
 
 set -euo pipefail
 
-SCRIPT_VER="2026-10-29.4-compose-1panel-pg"
+SCRIPT_VER="2026-10-29.5-dockerfilecn-pgo-selfheal"
 
 # ---------- 自拷贝执行（见安全约定 6） ----------
 if [[ "${__UPGRADE_REEXEC:-0}" != "1" ]]; then
@@ -363,8 +363,20 @@ fi
 
 # ---------- 5. 构建（旧容器仍在服务） ----------
 step "5/6 构建镜像（旧容器继续对外服务，这一步最慢）"
-if ! compose build "$SERVICE"; then
+# 用哪个 Dockerfile：
+#   Dockerfile.cn  —— 国内加速版（goproxy.cn + npmmirror + 基础镜像走加速器），国内服务器必须用这个。
+#   上游 Dockerfile —— 直连 docker.io 与 proxy.golang.org，国内基本拉不动/极慢。
+# 这里自己 docker build 而不用 compose build，是为了不受 compose 里 dockerfile 那行影响
+# （服务器上那行可能被手工改过，改了下次 pull 还会冲突）。
+DOCKERFILE="${NEW_API_DOCKERFILE:-}"
+if [[ -z "$DOCKERFILE" ]]; then
+  if [[ -f "$REPO/Dockerfile.cn" ]]; then DOCKERFILE="Dockerfile.cn"; else DOCKERFILE="Dockerfile"; fi
+fi
+[[ -f "$REPO/$DOCKERFILE" ]] || fail "找不到 $REPO/$DOCKERFILE（代码不完整？）"
+info "  使用 $DOCKERFILE 构建 ${IMAGE}:latest"
+if ! docker build -f "$REPO/$DOCKERFILE" -t "${IMAGE}:latest" "$REPO"; then
   warn "构建失败，线上仍是旧容器，服务未受影响"
+  warn "若报 preprofile / default.pgo：是旧版 Dockerfile.cn 的 PGO 路径问题，git pull 到最新代码即可（已修）"
   [[ "$(git -C "$REPO" rev-parse HEAD)" != "$PRE_HEAD" ]] \
     && warn "注意：代码已更新到 $(git -C "$REPO" rev-parse --short HEAD)，但镜像是旧的；修好后重跑本脚本即可（幂等）"
   exit 1
