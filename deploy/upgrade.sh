@@ -13,6 +13,8 @@
 #   · 对外      3000:3000；1Panel 反代目标 172.18.0.4:3000（可用 PROXY_ADDR 覆盖）
 #   · 网络      容器必须常驻 1panel-network（数据库按容器名解析）；
 #               compose 重建会丢掉它 → 每次 up 之后脚本自动补接
+#   · 画布      /studio/ 由本服务直接托管，产物编在二进制里
+#               （升级 new-api 就等于升级画布，不用再单独传文件）
 #
 # 用法：
 #   ./deploy/upgrade.sh                        升级（默认动作）
@@ -41,7 +43,7 @@
 
 set -euo pipefail
 
-SCRIPT_VER="2026-10-29.12-studio"
+SCRIPT_VER="2026-10-29.13-studio-embed"
 
 # ---------- 自拷贝执行（见安全约定 6） ----------
 if [[ "${__UPGRADE_REEXEC:-0}" != "1" ]]; then
@@ -112,14 +114,26 @@ container_ip_on() {
 
 # 取 /api/status 的 HTTP 状态码；不通时回 000
 http_code() {
-  local addr="$1" code=""
+  # http_code <host:port> [路径，默认 /api/status]
+  local addr="$1" p="${2:-/api/status}" code=""
   if have_curl; then
-    code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 3 "http://${addr}/api/status" 2>/dev/null || true)"
+    code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 3 "http://${addr}${p}" 2>/dev/null || true)"
   elif command -v wget >/dev/null 2>&1; then
-    code="$(wget -qS -O /dev/null --timeout=3 "http://${addr}/api/status" 2>&1 \
+    code="$(wget -qS -O /dev/null --timeout=3 "http://${addr}${p}" 2>&1 \
             | awk '/HTTP\//{c=$2} END{print c}' || true)"
   fi
   printf '%s' "${code:-000}"
+}
+
+# 取响应体（拿不到就返回空，绝不报错中断）
+http_body() {
+  local url="$1"
+  if have_curl; then
+    curl -fsS --max-time 5 "$url" 2>/dev/null || true
+  elif command -v wget >/dev/null 2>&1; then
+    wget -q -O - --timeout=5 "$url" 2>/dev/null || true
+  fi
+  return 0
 }
 
 # ---------- docker 网络保持 ----------
@@ -289,11 +303,21 @@ verify_after() {
     VERIFY_FAIL=$((VERIFY_FAIL + 1))
   fi
 
-  # ④ 画布工作台：纯提示，不参与判定（没上传也不该算失败）
-  if [[ -f "$DATA_DIR/studio/index.html" ]]; then
-    info "  ④ 画布工作台：已部署 → http://127.0.0.1:${APP_PORT}/studio/"
+  # ④ 画布工作台：产物编在二进制里，升级 new-api 就等于升级画布，所以这里直接报版本
+  local scode sjson sver
+  scode="$(http_code "127.0.0.1:${APP_PORT}" "/studio/build-info.json")"
+  if [[ "$scode" == "200" ]]; then
+    sjson="$(http_body "http://127.0.0.1:${APP_PORT}/studio/build-info.json")"
+    sver="$(printf '%s' "$sjson" | sed -n 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -1)"
+    if printf '%s' "$sjson" | grep -q '"dirty"[[:space:]]*:[[:space:]]*true'; then
+      info "  ④ 画布工作台：内置 ${sver:-未知版本}（构建时画布仓库有未提交改动）→ http://127.0.0.1:${APP_PORT}/studio/"
+    else
+      info "  ④ 画布工作台：内置 ${sver:-未知版本} → http://127.0.0.1:${APP_PORT}/studio/  [OK]"
+    fi
+  elif [[ "$scode" == "000" ]]; then
+    info "  ④ 画布工作台：探测不到（服务端口不通，看上面 ③）"
   else
-    info "  ④ 画布工作台：未部署（把画布产物解压到 $DATA_DIR/studio 即可，不用重建镜像）"
+    info "  ④ 画布工作台：本次构建不含画布产物（/studio 未启用，HTTP $scode）"
   fi
   return 0
 }
@@ -358,6 +382,20 @@ check_env() {
     info "  数据目录：存在（$(du -sh "$DATA_DIR" 2>/dev/null | cut -f1) / $(find "$DATA_DIR" -maxdepth 1 -type f 2>/dev/null | wc -l) 个文件）"
   else
     warn "  数据目录不存在：$DATA_DIR —— 升级会被拒绝（不会自动创建空目录）"
+  fi
+
+  # 画布：产物已经编进二进制（升级 new-api 即升级画布）。
+  # 早期版本要求手工把产物解压到 $DATA_DIR/studio —— 那个目录现在默认不生效，
+  # 留着会让人以为「改了文件却没变化」，所以主动提示。
+  if [[ -f "$DATA_DIR/studio/index.html" ]]; then
+    if docker inspect "$CONTAINER" --format '{{range .Config.Env}}{{println .}}{{end}}' 2>/dev/null \
+         | grep -q '^CANVAS_STUDIO_DIR='; then
+      info "  $DATA_DIR/studio：作为画布覆盖目录生效（容器设了 CANVAS_STUDIO_DIR）"
+    else
+      warn "  $DATA_DIR/studio 存在，但画布已内置在二进制里，这个目录【不会生效】"
+      warn "    想让它覆盖内置版本：在 deploy/.env 里加 CANVAS_STUDIO_DIR=$DATA_DIR/studio"
+      warn "    不需要覆盖就可以删掉它（升级后以内置版本为准，脚本里能看到版本号）"
+    fi
   fi
 
   info "  镜像 ${IMAGE}:latest   $(docker image inspect --format '{{.Created}}' "${IMAGE}:latest" 2>/dev/null || echo '（无）')"
