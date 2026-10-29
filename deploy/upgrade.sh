@@ -31,7 +31,7 @@
 
 set -euo pipefail
 
-SCRIPT_VER="2026-10-29.6-env-recover"
+SCRIPT_VER="2026-10-29.7-netkeep"
 
 # ---------- 自拷贝执行（见安全约定 6） ----------
 if [[ "${__UPGRADE_REEXEC:-0}" != "1" ]]; then
@@ -82,6 +82,55 @@ container_ip() {
 container_mounts() {
   docker inspect "$CONTAINER" \
     --format '{{range .Mounts}}{{.Source}} -> {{.Destination}}{{"\n"}}{{end}}' 2>/dev/null || true
+}
+
+# ---------- docker 网络保持 ----------
+# 为什么要这个：容器可能被【手工】接到 compose 之外的其他 docker 网络上
+# （典型：数据库是 1Panel 装的，SQL_DSN 里写的是 1Panel-postgresql-xxx 这种容器名，
+#  只有和它同处一个网络才能被 docker 内置 DNS 解析）。
+# 而 `compose up` 一旦重建容器，这些手工接的网络会【全部丢失】→ 起来就报
+#   hostname resolving error: lookup 1Panel-postgresql-xxx ... server misbehaving
+# 所以：重建前记下现有网络，重建后把缺的补回去。
+PRE_NETS=""
+capture_networks() {
+  PRE_NETS="$(docker inspect "$CONTAINER" \
+    --format '{{range $k, $v := .NetworkSettings.Networks}}{{println $k}}{{end}}' 2>/dev/null || true)"
+}
+
+container_nets() {
+  docker inspect "$CONTAINER" \
+    --format '{{range $k, $v := .NetworkSettings.Networks}}{{println $k}}{{end}}' 2>/dev/null || true
+}
+
+restore_networks() {
+  [[ -n "${PRE_NETS:-}" ]] || return 0
+  local cur net
+  cur="$(container_nets)"
+  while IFS= read -r net; do
+    [[ -n "$net" ]] || continue
+    if printf '%s\n' "$cur" | grep -qxF "$net"; then
+      continue
+    fi
+    if docker network connect "$net" "$CONTAINER" >/dev/null 2>&1; then
+      info "  已补接重建时丢失的 docker 网络：$net"
+    else
+      warn "  补接网络失败：$net（确认它还在： docker network ls）"
+    fi
+  done <<< "$PRE_NETS"
+}
+
+# 探活失败时，从日志里认一下是不是「数据库主机名解析不了」这种网络问题
+db_net_hint() {
+  local logs
+  logs="$(compose logs --tail=80 "$SERVICE" 2>/dev/null || true)"
+  if printf '%s' "$logs" | grep -qE 'hostname resolving error|no such host|server misbehaving'; then
+    warn "  日志显示【数据库主机名解析失败】—— 不是代码问题，是容器没接上数据库所在的 docker 网络"
+    warn "  现场修（把 <pg容器名> 换成 SQL_DSN 里那个主机名）："
+    warn "    docker inspect <pg容器名> --format '看它的 Networks'   # 查在哪个网络"
+    warn "    docker network connect <网络名> $CONTAINER"
+    warn "    docker restart $CONTAINER"
+    warn "  查你现在接了哪些网络： docker inspect $CONTAINER --format '看它的 Networks'"
+  fi
 }
 
 # ---------- 数据库现状（只读判断，不做备份） ----------
@@ -259,6 +308,7 @@ do_rollback() {
   info "把 ${IMAGE}:previous 重新打为 ${IMAGE}:latest"
   docker tag "${IMAGE}:previous" "${IMAGE}:latest"
   compose up -d --no-deps --force-recreate "$SERVICE"
+  restore_networks
 }
 
 # ==================================================================
@@ -311,6 +361,10 @@ mkdir -p "$BACKUP_DIR"
 [[ -w "$BACKUP_DIR" ]] || fail "备份目录不可写：$BACKUP_DIR"
 
 PRE_HEAD="$(git -C "$REPO" rev-parse HEAD)"
+capture_networks
+if [[ -n "$PRE_NETS" ]]; then
+  info "  容器现有 docker 网络：$(printf '%s' "$PRE_NETS" | tr '\n' ' ')"
+fi
 
 # ---------- 1. 回滚点 ----------
 step "1/6 记录回滚点"
@@ -394,6 +448,7 @@ if ! compose up -d --no-deps "$SERVICE"; then
   probe && warn "已回滚，服务正常" || fail "回滚后仍不可用，请人工介入"
   exit 1
 fi
+restore_networks
 
 info "  探活 http://127.0.0.1:${APP_PORT}/api/status（最多 ${PROBE_TIMEOUT} 秒）…"
 if probe; then
@@ -416,6 +471,7 @@ if probe; then
 else
   warn "${PROBE_TIMEOUT} 秒内探活未通过，自动回滚到上一版"
   compose logs --tail=40 "$SERVICE" 2>/dev/null || true
+  db_net_hint
   do_rollback
   if probe; then
     fail "已回滚，服务恢复正常。请把上面的日志发出来排查新版本"
