@@ -210,6 +210,27 @@ func InitOptionMap() {
 	common.OptionMap["StorageS3AccessKey"] = ""
 	common.OptionMap["StorageS3Secret"] = ""
 	common.OptionMap["StorageS3Domain"] = ""
+	// 海外镜像存储（国内/国外双写，前端按用户地域择优展示）
+	common.OptionMap["StorageOverseasEnabled"] = "false"
+	common.OptionMap["StorageOverseasProvider"] = "s3" // S3 兼容：Cloudflare R2 / AWS S3 / 腾讯云 COS
+	common.OptionMap["StorageOverseasLocalDir"] = ""
+	common.OptionMap["StorageOverseasLocalBaseURL"] = ""
+	common.OptionMap["StorageOverseasAliOSSBucket"] = ""
+	common.OptionMap["StorageOverseasAliOSSEndpoint"] = ""
+	common.OptionMap["StorageOverseasAliOSSAccessKey"] = ""
+	common.OptionMap["StorageOverseasAliOSSSecret"] = ""
+	common.OptionMap["StorageOverseasAliOSSDomain"] = ""
+	common.OptionMap["StorageOverseasQiniuBucket"] = ""
+	common.OptionMap["StorageOverseasQiniuAccessKey"] = ""
+	common.OptionMap["StorageOverseasQiniuSecretKey"] = ""
+	common.OptionMap["StorageOverseasQiniuDomain"] = ""
+	common.OptionMap["StorageOverseasQiniuRegion"] = "na0"
+	common.OptionMap["StorageOverseasS3Bucket"] = ""
+	common.OptionMap["StorageOverseasS3Endpoint"] = ""
+	common.OptionMap["StorageOverseasS3Region"] = "auto"
+	common.OptionMap["StorageOverseasS3AccessKey"] = ""
+	common.OptionMap["StorageOverseasS3Secret"] = ""
+	common.OptionMap["StorageOverseasS3Domain"] = ""
 
 	// 自动添加所有注册的模型配置
 	modelConfigs := config.GlobalConfig.ExportAllConfigs()

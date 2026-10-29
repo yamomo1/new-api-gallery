@@ -15,9 +15,10 @@ type LocalProvider struct {
 	BaseURL string // 对外访问前缀，如 /storage/static
 }
 
-func NewLocal() *LocalProvider {
-	root := opt("StorageLocalDir", "/data/uploads")
-	base := opt("StorageLocalBaseURL", "/storage/static")
+// NewLocal 构造本地存储。prefix 为 ""（国内主存储，StorageXxx）或 "Overseas"（StorageOverseasXxx）。
+func NewLocal(prefix string) *LocalProvider {
+	root := opt("Storage"+prefix+"LocalDir", "/data/uploads")
+	base := opt("Storage"+prefix+"LocalBaseURL", "/storage/static")
 	return &LocalProvider{Root: root, BaseURL: strings.TrimRight(base, "/")}
 }
 

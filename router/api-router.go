@@ -27,6 +27,8 @@ func SetApiRouter(router *gin.Engine) {
 
 	// 全站图片上传接口（二开新增）：登录用户上传，返回可访问 URL
 	apiRouter.POST("/storage/upload", middleware.UserAuth(), controller.StorageUpload)
+	// 公开：前端按用户地域解析国内外图片地址（只含公开基址，不含密钥）
+	apiRouter.GET("/storage/config", controller.StorageConfig)
 
 	// 本地存储的静态访问目录（与 StorageLocalDir 对应，默认 /data/uploads）
 	localStorageDir := strings.TrimSpace(common.OptionMap["StorageLocalDir"])

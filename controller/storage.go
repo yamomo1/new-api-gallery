@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/QuantumNous/new-api/common"
 	"github.com/QuantumNous/new-api/service/storage"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -65,7 +66,24 @@ func StorageUpload(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "message": "上传失败：" + err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"success": true, "data": url})
+
+	// 海外镜像双写：开通后异步写入，失败仅记日志，不影响主流程。
+	// 前端按用户地域决定展示国内还是海外地址，两边内容一致。
+	if overseas, ok := storage.GetOverseas(); ok {
+		go func(k, cType string, body []byte) {
+			if _, err := overseas.Upload(k, cType, body); err != nil {
+				common.SysError("[storage] 海外镜像上传失败 key=" + k + ": " + err.Error())
+			}
+		}(key, ct, data)
+	}
+
+	c.JSON(http.StatusOK, gin.H{"success": true, "data": url, "key": key})
+}
+
+// StorageConfig 公开端点：返回双存储的公开访问基址（不含任何密钥），
+// 前端据此按用户地域把图片 key 解析成国内/海外 URL。
+func StorageConfig(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{"success": true, "data": storage.GetPublicConfig()})
 }
 
 // extFromContentType 把 image/* 映射成文件后缀（用于生成 key 的扩展名）。

@@ -1,3 +1,5 @@
+import { resolveImageUrl } from '@/lib/storage'
+
 import type { PromptGalleryItem } from './types'
 
 // ----------------------------------------------------------------------------
@@ -7,18 +9,23 @@ import type { PromptGalleryItem } from './types'
 const FAVORITES_KEY = 'prompt-gallery:favorites'
 const LIKED_KEY = 'prompt-gallery:liked'
 
-/** 解析 media 字段（JSON 数组字符串），失败时回退 cover */
+/** 解析 media 字段（JSON 数组字符串），失败时回退 cover；每项按用户地域解析成国内外地址 */
 export function parseGalleryMedia(item: PromptGalleryItem): string[] {
+  const list: string[] = []
   try {
     const parsed = JSON.parse(item.media || '[]')
     if (Array.isArray(parsed)) {
-      const urls = parsed.filter((v) => typeof v === 'string' && v)
-      if (urls.length > 0) return urls
+      for (const v of parsed) {
+        if (typeof v === 'string' && v) list.push(resolveImageUrl(v))
+      }
     }
   } catch {
     // 忽略解析失败
   }
-  return item.cover ? [item.cover] : []
+  if (list.length === 0 && item.cover) {
+    list.push(resolveImageUrl(item.cover))
+  }
+  return list
 }
 
 /** 解析 tags 字段：兼容 JSON 数组字符串与逗号分隔字符串 */

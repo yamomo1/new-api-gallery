@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { Copy, Eye, Heart, Play, Share2, Star, Video } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
+import { resolveImageUrl } from '@/lib/storage'
 
 import type { PromptGalleryItem } from '../types'
 import { isVideoUrl, parseGalleryMedia } from '../utils'
@@ -33,7 +34,7 @@ export function GalleryCard({
 }: GalleryCardProps) {
   const { t } = useTranslation()
   const media = parseGalleryMedia(item)
-  const cover = item.cover || media[0]
+  const cover = resolveImageUrl(item.cover) || media[0]
 
   // 视频类型：若封面本身就是视频文件则直接可播，否则用封面图 + 播放键
   const coverIsVideo = cover ? isVideoUrl(cover) : false

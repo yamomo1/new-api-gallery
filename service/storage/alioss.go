@@ -22,13 +22,13 @@ type AliOSSProvider struct {
 	Domain    string // 可选自定义域名，填了就用它拼 URL
 }
 
-func NewAliOSS() *AliOSSProvider {
+func NewAliOSS(prefix string) *AliOSSProvider {
 	return &AliOSSProvider{
-		Bucket:    opt("StorageAliOSSBucket", ""),
-		Endpoint:  strings.TrimSpace(opt("StorageAliOSSEndpoint", "")),
-		AccessKey: opt("StorageAliOSSAccessKey", ""),
-		Secret:    opt("StorageAliOSSSecret", ""),
-		Domain:    strings.TrimSpace(opt("StorageAliOSSDomain", "")),
+		Bucket:    opt("Storage"+prefix+"AliOSSBucket", ""),
+		Endpoint:  strings.TrimSpace(opt("Storage"+prefix+"AliOSSEndpoint", "")),
+		AccessKey: opt("Storage"+prefix+"AliOSSAccessKey", ""),
+		Secret:    opt("Storage"+prefix+"AliOSSSecret", ""),
+		Domain:    strings.TrimSpace(opt("Storage"+prefix+"AliOSSDomain", "")),
 	}
 }
 

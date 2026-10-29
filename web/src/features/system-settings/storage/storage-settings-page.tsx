@@ -30,6 +30,25 @@ const STORAGE_KEYS = [
   'StorageS3AccessKey',
   'StorageS3Secret',
   'StorageS3Domain',
+  // 海外镜像（国内/国外双写，前端按用户地域择优展示）
+  'StorageOverseasEnabled',
+  'StorageOverseasProvider',
+  'StorageOverseasAliOSSBucket',
+  'StorageOverseasAliOSSEndpoint',
+  'StorageOverseasAliOSSAccessKey',
+  'StorageOverseasAliOSSSecret',
+  'StorageOverseasAliOSSDomain',
+  'StorageOverseasQiniuBucket',
+  'StorageOverseasQiniuAccessKey',
+  'StorageOverseasQiniuSecretKey',
+  'StorageOverseasQiniuDomain',
+  'StorageOverseasQiniuRegion',
+  'StorageOverseasS3Bucket',
+  'StorageOverseasS3Endpoint',
+  'StorageOverseasS3Region',
+  'StorageOverseasS3AccessKey',
+  'StorageOverseasS3Secret',
+  'StorageOverseasS3Domain',
 ] as const
 
 type StorageMap = Record<(typeof STORAGE_KEYS)[number], string>
@@ -54,6 +73,24 @@ const DEFAULTS: StorageMap = {
   StorageS3AccessKey: '',
   StorageS3Secret: '',
   StorageS3Domain: '',
+  StorageOverseasEnabled: 'false',
+  StorageOverseasProvider: 's3',
+  StorageOverseasAliOSSBucket: '',
+  StorageOverseasAliOSSEndpoint: '',
+  StorageOverseasAliOSSAccessKey: '',
+  StorageOverseasAliOSSSecret: '',
+  StorageOverseasAliOSSDomain: '',
+  StorageOverseasQiniuBucket: '',
+  StorageOverseasQiniuAccessKey: '',
+  StorageOverseasQiniuSecretKey: '',
+  StorageOverseasQiniuDomain: '',
+  StorageOverseasQiniuRegion: 'na0',
+  StorageOverseasS3Bucket: '',
+  StorageOverseasS3Endpoint: '',
+  StorageOverseasS3Region: 'auto',
+  StorageOverseasS3AccessKey: '',
+  StorageOverseasS3Secret: '',
+  StorageOverseasS3Domain: '',
 }
 
 export function StorageSettingsPage() {
@@ -288,14 +325,262 @@ export function StorageSettingsPage() {
               </Row>
             </>
           )}
-
-          <div className="pt-2">
-            <Button type="primary" loading={saving} onClick={save}>
-              {t('Save')}
-            </Button>
-          </div>
         </div>
       </Card>
+
+      <Card>
+        <div className="space-y-4">
+          <div>
+            <h3 className="flex items-center gap-2 text-base font-semibold">
+              {t('storage.overseas.title', { defaultValue: '海外镜像存储' })}
+            </h3>
+            <p className="mt-1 text-sm text-stone-500">
+              {t('storage.overseas.desc', {
+                defaultValue:
+                  '开通后上传会同时写入海外存储（失败不影响主流程），国外用户自动访问海外地址，国内用户不受影响。推荐 Cloudflare R2：零出流量费、全球 CDN。',
+              })}
+            </p>
+          </div>
+
+          <Row label={t('storage.overseas.enabled', { defaultValue: '开通海外' })}>
+            <Select
+              value={form.StorageOverseasEnabled}
+              onChange={(v) => set('StorageOverseasEnabled', v)}
+              style={{ width: 200 }}
+              options={[
+                { value: 'false', label: t('storage.off', { defaultValue: '关闭' }) },
+                { value: 'true', label: t('storage.on', { defaultValue: '开启' }) },
+              ]}
+            />
+          </Row>
+
+          {form.StorageOverseasEnabled === 'true' && (
+            <>
+              <Row
+                label={t('storage.overseas.provider', {
+                  defaultValue: '海外存储方式',
+                })}
+              >
+                <Select
+                  value={form.StorageOverseasProvider}
+                  onChange={(v) => set('StorageOverseasProvider', v)}
+                  style={{ width: 340 }}
+                  options={[
+                    {
+                      value: 's3',
+                      label: t('storage.s3', {
+                        defaultValue: 'S3 兼容（R2 / AWS S3 / 腾讯云 COS）',
+                      }),
+                    },
+                    { value: 'qiniu', label: '七牛云（海外机房 na0/as0）' },
+                    { value: 'alioss', label: '阿里云 OSS' },
+                  ]}
+                />
+              </Row>
+
+              {form.StorageOverseasProvider === 's3' && (
+                <>
+                  <Row label="Bucket">
+                    <Input
+                      value={form.StorageOverseasS3Bucket}
+                      onChange={(e) =>
+                        set('StorageOverseasS3Bucket', e.target.value)
+                      }
+                    />
+                  </Row>
+                  <Row
+                    label={
+                      <>
+                        Endpoint
+                        <span className="block text-xs text-stone-400">
+                          R2: https://&lt;account_id&gt;.r2.cloudflarestorage.com
+                        </span>
+                      </>
+                    }
+                  >
+                    <Input
+                      value={form.StorageOverseasS3Endpoint}
+                      onChange={(e) =>
+                        set('StorageOverseasS3Endpoint', e.target.value)
+                      }
+                      placeholder="https://<account_id>.r2.cloudflarestorage.com"
+                    />
+                  </Row>
+                  <Row
+                    label={
+                      <>
+                        Region
+                        <span className="block text-xs text-stone-400">
+                          R2 / COS 填 auto
+                        </span>
+                      </>
+                    }
+                  >
+                    <Input
+                      value={form.StorageOverseasS3Region}
+                      onChange={(e) =>
+                        set('StorageOverseasS3Region', e.target.value)
+                      }
+                      placeholder="auto"
+                    />
+                  </Row>
+                  <Row label="AccessKeyId">
+                    <Input
+                      value={form.StorageOverseasS3AccessKey}
+                      onChange={(e) =>
+                        set('StorageOverseasS3AccessKey', e.target.value)
+                      }
+                    />
+                  </Row>
+                  <Row label="SecretAccessKey">
+                    <Input.Password
+                      value={form.StorageOverseasS3Secret}
+                      onChange={(e) =>
+                        set('StorageOverseasS3Secret', e.target.value)
+                      }
+                    />
+                  </Row>
+                  <Row
+                    label={
+                      <>
+                        {t('storage.domain', { defaultValue: '访问域名（必填）' })}
+                        <span className="block text-xs text-stone-400">
+                          R2 绑定的自定义域或 r2.dev 公开域，否则前端无法访问
+                        </span>
+                      </>
+                    }
+                  >
+                    <Input
+                      value={form.StorageOverseasS3Domain}
+                      onChange={(e) =>
+                        set('StorageOverseasS3Domain', e.target.value)
+                      }
+                      placeholder="https://cdn.example.com"
+                    />
+                  </Row>
+                </>
+              )}
+
+              {form.StorageOverseasProvider === 'qiniu' && (
+                <>
+                  <Row label="Bucket">
+                    <Input
+                      value={form.StorageOverseasQiniuBucket}
+                      onChange={(e) =>
+                        set('StorageOverseasQiniuBucket', e.target.value)
+                      }
+                    />
+                  </Row>
+                  <Row label="AccessKey">
+                    <Input
+                      value={form.StorageOverseasQiniuAccessKey}
+                      onChange={(e) =>
+                        set('StorageOverseasQiniuAccessKey', e.target.value)
+                      }
+                    />
+                  </Row>
+                  <Row label="SecretKey">
+                    <Input.Password
+                      value={form.StorageOverseasQiniuSecretKey}
+                      onChange={(e) =>
+                        set('StorageOverseasQiniuSecretKey', e.target.value)
+                      }
+                    />
+                  </Row>
+                  <Row
+                    label={t('storage.domain', {
+                      defaultValue: '访问域名（必填）',
+                    })}
+                  >
+                    <Input
+                      value={form.StorageOverseasQiniuDomain}
+                      onChange={(e) =>
+                        set('StorageOverseasQiniuDomain', e.target.value)
+                      }
+                      placeholder="https://cdn.example.com"
+                    />
+                  </Row>
+                  <Row
+                    label={
+                      <>
+                        {t('storage.region', { defaultValue: '机房' })}
+                        <span className="block text-xs text-stone-400">
+                          海外填 na0（北美）或 as0（东南亚）
+                        </span>
+                      </>
+                    }
+                  >
+                    <Input
+                      value={form.StorageOverseasQiniuRegion}
+                      onChange={(e) =>
+                        set('StorageOverseasQiniuRegion', e.target.value)
+                      }
+                      placeholder="na0"
+                    />
+                  </Row>
+                </>
+              )}
+
+              {form.StorageOverseasProvider === 'alioss' && (
+                <>
+                  <Row label="Bucket">
+                    <Input
+                      value={form.StorageOverseasAliOSSBucket}
+                      onChange={(e) =>
+                        set('StorageOverseasAliOSSBucket', e.target.value)
+                      }
+                    />
+                  </Row>
+                  <Row label="Endpoint">
+                    <Input
+                      value={form.StorageOverseasAliOSSEndpoint}
+                      onChange={(e) =>
+                        set('StorageOverseasAliOSSEndpoint', e.target.value)
+                      }
+                      placeholder="oss-ap-southeast-1.aliyuncs.com"
+                    />
+                  </Row>
+                  <Row label="AccessKeyId">
+                    <Input
+                      value={form.StorageOverseasAliOSSAccessKey}
+                      onChange={(e) =>
+                        set('StorageOverseasAliOSSAccessKey', e.target.value)
+                      }
+                    />
+                  </Row>
+                  <Row label="AccessKeySecret">
+                    <Input.Password
+                      value={form.StorageOverseasAliOSSSecret}
+                      onChange={(e) =>
+                        set('StorageOverseasAliOSSSecret', e.target.value)
+                      }
+                    />
+                  </Row>
+                  <Row
+                    label={t('storage.domain', {
+                      defaultValue: '访问域名（必填）',
+                    })}
+                  >
+                    <Input
+                      value={form.StorageOverseasAliOSSDomain}
+                      onChange={(e) =>
+                        set('StorageOverseasAliOSSDomain', e.target.value)
+                      }
+                      placeholder="https://cdn.example.com"
+                    />
+                  </Row>
+                </>
+              )}
+            </>
+          )}
+        </div>
+      </Card>
+
+      <div className="pb-4">
+        <Button type="primary" loading={saving} onClick={save}>
+          {t('Save')}
+        </Button>
+      </div>
     </div>
   )
 }
@@ -304,7 +589,7 @@ function Row({
   label,
   children,
 }: {
-  label: string
+  label: ReactNode
   children: ReactNode
 }) {
   return (

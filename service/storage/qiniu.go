@@ -30,8 +30,8 @@ type qiniuPutPolicy struct {
 	ReturnBody string `json:"returnBody,omitempty"`
 }
 
-func NewQiniu() *QiniuProvider {
-	region := opt("StorageQiniuRegion", "z2")
+func NewQiniu(prefix string) *QiniuProvider {
+	region := opt("Storage"+prefix+"QiniuRegion", "z2")
 	hosts := map[string]string{
 		"z0":        "https://up.qiniup.com",
 		"z1":        "https://up-z1.qiniup.com",
@@ -45,10 +45,10 @@ func NewQiniu() *QiniuProvider {
 		host = "https://up-z2.qiniup.com"
 	}
 	return &QiniuProvider{
-		Bucket:     opt("StorageQiniuBucket", ""),
-		AccessKey:  opt("StorageQiniuAccessKey", ""),
-		SecretKey:  opt("StorageQiniuSecretKey", ""),
-		Domain:     strings.TrimSpace(opt("StorageQiniuDomain", "")),
+		Bucket:     opt("Storage"+prefix+"QiniuBucket", ""),
+		AccessKey:  opt("Storage"+prefix+"QiniuAccessKey", ""),
+		SecretKey:  opt("Storage"+prefix+"QiniuSecretKey", ""),
+		Domain:     strings.TrimSpace(opt("Storage"+prefix+"QiniuDomain", "")),
 		UploadHost: host,
 	}
 }

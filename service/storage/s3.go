@@ -24,14 +24,14 @@ type S3Provider struct {
 	Domain    string // 可选：公开访问域名，填了就用它拼 URL
 }
 
-func NewS3() *S3Provider {
+func NewS3(prefix string) *S3Provider {
 	return &S3Provider{
-		Bucket:    opt("StorageS3Bucket", ""),
-		Endpoint:  strings.TrimRight(opt("StorageS3Endpoint", ""), "/"),
-		Region:    opt("StorageS3Region", "auto"),
-		AccessKey: opt("StorageS3AccessKey", ""),
-		Secret:    opt("StorageS3Secret", ""),
-		Domain:    strings.TrimSpace(opt("StorageS3Domain", "")),
+		Bucket:    opt("Storage"+prefix+"S3Bucket", ""),
+		Endpoint:  strings.TrimRight(opt("Storage"+prefix+"S3Endpoint", ""), "/"),
+		Region:    opt("Storage"+prefix+"S3Region", "auto"),
+		AccessKey: opt("Storage"+prefix+"S3AccessKey", ""),
+		Secret:    opt("Storage"+prefix+"S3Secret", ""),
+		Domain:    strings.TrimSpace(opt("Storage"+prefix+"S3Domain", "")),
 	}
 }
 

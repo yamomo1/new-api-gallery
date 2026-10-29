@@ -2,17 +2,19 @@ import { type ChangeEvent, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ImagePlus, Loader2, X } from 'lucide-react'
 
-import { uploadImage } from '@/lib/storage'
+import { uploadImage, useResolvedImageUrl } from '@/lib/storage'
 
 interface ImageUploadProps {
+  /** 可以是上传返回的 key（uploads/...）或任意完整 URL；预览时自动按地域解析 */
   value?: string
-  onChange?: (url: string) => void
+  /** 上传成功后回调，传相对 key（数据库存 key，展示时按地域解析成国内外地址） */
+  onChange?: (value: string) => void
   placeholder?: string
   disabled?: boolean
 }
 
-// 全站通用的图片上传组件：点击选择文件 -> 调 /api/storage/upload -> 回填 URL。
-// 不关心底层是本地还是云存储（由后台设置决定）。
+// 全站通用的图片上传组件：点击选择文件 -> 调 /api/storage/upload -> 回填 key。
+// 不关心底层是本地还是云存储、国内还是海外镜像（由后台设置决定）。
 export function ImageUpload({
   value,
   onChange,
@@ -23,6 +25,7 @@ export function ImageUpload({
   const inputRef = useRef<HTMLInputElement>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string>()
+  const previewUrl = useResolvedImageUrl(value)
 
   async function handleChange(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -32,8 +35,8 @@ export function ImageUpload({
     setError(undefined)
     setLoading(true)
     try {
-      const url = await uploadImage(file)
-      onChange?.(url)
+      const { key } = await uploadImage(file)
+      onChange?.(key)
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err))
     } finally {
@@ -51,10 +54,10 @@ export function ImageUpload({
         onChange={handleChange}
         disabled={disabled || loading}
       />
-      {value ? (
+      {previewUrl ? (
         <div className="group relative overflow-hidden rounded-lg border border-stone-200 dark:border-stone-700">
           <img
-            src={value}
+            src={previewUrl}
             alt=""
             className="h-40 w-full object-cover"
             loading="lazy"
@@ -90,7 +93,7 @@ export function ImageUpload({
           </span>
         </button>
       )}
-      {!value && !disabled && (
+      {!previewUrl && !disabled && (
         <button
           type="button"
           disabled={loading}

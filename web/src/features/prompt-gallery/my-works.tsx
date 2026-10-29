@@ -32,6 +32,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ImageUpload } from '@/components/common/image-upload'
+import { useResolvedImageUrl } from '@/lib/storage'
 
 import type { PromptGallerySubmit } from './api'
 import type { PromptGalleryItem } from './types'
@@ -163,11 +164,9 @@ export function MyWorks() {
               >
                 <div className='aspect-[4/3] overflow-hidden bg-muted'>
                   {item.cover ? (
-                    <img
+                    <ResolvedCoverImage
                       src={item.cover}
                       alt={item.title}
-                      loading='lazy'
-                      className='h-full w-full object-cover'
                     />
                   ) : (
                     <div className='flex h-full items-center justify-center text-muted-foreground'>
@@ -336,3 +335,16 @@ export function MyWorks() {
 }
 
 export default MyWorks
+
+/** 封面缩略图：value 可以是 key 或完整 URL，展示时按用户地域解析成国内外地址 */
+function ResolvedCoverImage({ src, alt }: { src: string; alt: string }) {
+  const url = useResolvedImageUrl(src)
+  return (
+    <img
+      src={url}
+      alt={alt}
+      loading='lazy'
+      className='h-full w-full object-cover'
+    />
+  )
+}
