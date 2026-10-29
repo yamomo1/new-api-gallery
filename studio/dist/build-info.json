@@ -1,8 +1,8 @@
 {
-  "version": "5eb377a",
-  "commit": "5eb377aae6432c81b44a82107da108761052eea4",
+  "version": "2b18f2c",
+  "commit": "2b18f2cd373c2f42c246fa030b2b2bef7c3d1f34",
   "branch": "gallery-integration",
-  "builtAt": "2026-10-29T11:45:02Z",
+  "builtAt": "2026-10-29T12:14:44Z",
   "dirty": false,
   "files": 14,
   "syncedBy": "sync-studio.sh/1"
