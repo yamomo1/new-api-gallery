@@ -41,7 +41,7 @@
 
 set -euo pipefail
 
-SCRIPT_VER="2026-10-29.9-verify"
+SCRIPT_VER="2026-10-29.10-pg-ddl"
 
 # ---------- 自拷贝执行（见安全约定 6） ----------
 if [[ "${__UPGRADE_REEXEC:-0}" != "1" ]]; then
@@ -176,6 +176,14 @@ db_net_hint() {
     warn "    docker network connect ${EXTRA_NETS:-1panel-network} $CONTAINER"
     warn "    docker restart $CONTAINER"
     warn "  查现状： docker inspect $CONTAINER --format '{{range \$k,\$v := .NetworkSettings.Networks}}{{println \$k}}{{end}}'"
+  elif printf '%s' "$logs" | grep -qE '初始化数据库失败|SQLSTATE|does not exist'; then
+    warn "  日志显示【建表 / 数据库迁移失败】—— 不是网络问题，是模型里的列类型和你的库不匹配"
+    printf '%s' "$logs" | grep -oE 'SQLSTATE [0-9A-Z]+|type "[A-Za-z]+" does not exist' \
+      | sort -u | head -3 | sed 's/^/        /'
+    warn "  常见成因：模型里写了 MySQL 专有的列类型（mediumtext / longtext / tinyint 等），"
+    warn "           PostgreSQL 不认 → AutoMigrate 整段失败 → 进程起不来"
+    warn "  这是代码问题，改镜像才能修；先回滚恢复服务： $ME --rollback"
+    warn "  然后把上面几行日志发出来"
   fi
 }
 

@@ -18,11 +18,25 @@ import (
 //   - thumbnail：封面 data URL（仅供画廊网格展示，列表不返回 graph 体）
 //   - description：简介
 //   - author：作者展示名（冗余存储，画廊直接读，避免逐条 join 用户表）
+//
+// 关于 Graph 的列类型（改之前务必读完）：
+// 这里**故意不带 type 标签**，让 GORM 按数据库方言各自生成：
+//
+//	PostgreSQL -> text      （不限长度）
+//	SQLite     -> text      （不限长度）
+//	MySQL      -> longtext  （不限长度）
+//
+// 不能写 type:mediumtext —— 那是 MySQL 专有类型，PG 上会直接
+//
+//	ERROR: type "mediumtext" does not exist (SQLSTATE 42704)
+//
+// 导致 AutoMigrate 整段失败、进程起不来；
+// 也不能写 type:text —— MySQL 的 TEXT 只有 64KB，大画布（上限 12MB）存不进去。
 type CanvasDocument struct {
 	Id          int64  `json:"id" gorm:"primaryKey;autoIncrement"`
 	UserId      int    `json:"user_id" gorm:"index;not null"`
 	Title       string `json:"title" gorm:"type:varchar(191);not null"`
-	Graph       string `json:"graph" gorm:"type:mediumtext"` // 画布数据 JSON（可较大）
+	Graph       string `json:"graph"` // 画布数据 JSON（可较大）—— 故意不带 type 标签，见上方说明
 	Description string `json:"description" gorm:"type:text"`
 	Visibility  string `json:"visibility" gorm:"type:varchar(16);index;default:'private'"` // public / private / unlist
 	Thumbnail   string `json:"thumbnail" gorm:"type:text"`                                 // 封面 data URL
