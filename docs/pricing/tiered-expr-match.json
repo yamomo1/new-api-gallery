@@ -1,0 +1,156 @@
+{
+  "gpt-6.1-sol": {
+    "billing_mode": "tiered_expr",
+    "billing_expr": "len > 200000 ? tier(\"xl\", p * 5.5 + c * 27.5) : len > 100000 ? tier(\"long\", p * 3.75 + c * 18.75) : tier(\"normal\", p * 2.5 + c * 12.5)",
+    "_cost_in": 2.0,
+    "_cost_out": 10.0,
+    "_markup": 1.25
+  },
+  "gpt-5.5": {
+    "billing_mode": "tiered_expr",
+    "billing_expr": "len > 200000 ? tier(\"xl\", p * 14.3 + c * 85.8) : len > 100000 ? tier(\"long\", p * 9.75 + c * 58.5) : tier(\"normal\", p * 6.5 + c * 39.0)",
+    "_cost_in": 5.0,
+    "_cost_out": 30.0,
+    "_markup": 1.3
+  },
+  "gpt-6-luna": {
+    "billing_mode": "tiered_expr",
+    "billing_expr": "len > 200000 ? tier(\"xl\", p * 0.264 + c * 1.32) : len > 100000 ? tier(\"long\", p * 0.18 + c * 0.9) : tier(\"normal\", p * 0.12 + c * 0.6)",
+    "_cost_in": 0.1,
+    "_cost_out": 0.5,
+    "_markup": 1.2
+  },
+  "claude-opus-5.5": {
+    "billing_mode": "tiered_expr",
+    "billing_expr": "len > 200000 ? tier(\"xl\", p * 11.44 + c * 57.2) : len > 100000 ? tier(\"long\", p * 7.8 + c * 39.0) : tier(\"normal\", p * 5.2 + c * 26.0)",
+    "_cost_in": 4.0,
+    "_cost_out": 20.0,
+    "_markup": 1.3
+  },
+  "claude-sonnet-5.5": {
+    "billing_mode": "tiered_expr",
+    "billing_expr": "len > 200000 ? tier(\"xl\", p * 5.72 + c * 28.6) : len > 100000 ? tier(\"long\", p * 3.9 + c * 19.5) : tier(\"normal\", p * 2.6 + c * 13.0)",
+    "_cost_in": 2.0,
+    "_cost_out": 10.0,
+    "_markup": 1.3
+  },
+  "claude-haiku-5.5": {
+    "billing_mode": "tiered_expr",
+    "billing_expr": "len > 200000 ? tier(\"xl\", p * 0.275 + c * 1.375) : len > 100000 ? tier(\"long\", p * 0.1875 + c * 0.9375) : tier(\"normal\", p * 0.125 + c * 0.625)",
+    "_cost_in": 0.1,
+    "_cost_out": 0.5,
+    "_markup": 1.25
+  },
+  "gemini-3.1-pro": {
+    "billing_mode": "tiered_expr",
+    "billing_expr": "len > 200000 ? tier(\"xl\", p * 5.5 + c * 33.0) : len > 100000 ? tier(\"long\", p * 3.75 + c * 22.5) : tier(\"normal\", p * 2.5 + c * 15.0)",
+    "_cost_in": 2.0,
+    "_cost_out": 12.0,
+    "_markup": 1.25
+  },
+  "gemini-3.8-flash": {
+    "billing_mode": "tiered_expr",
+    "billing_expr": "len > 200000 ? tier(\"xl\", p * 1.98 + c * 9.9) : len > 100000 ? tier(\"long\", p * 1.35 + c * 6.75) : tier(\"normal\", p * 0.9 + c * 4.5)",
+    "_cost_in": 0.75,
+    "_cost_out": 3.75,
+    "_markup": 1.2
+  },
+  "gemini-3.1-flash-lite": {
+    "billing_mode": "tiered_expr",
+    "billing_expr": "len > 200000 ? tier(\"xl\", p * 0.6325 + c * 3.795) : len > 100000 ? tier(\"long\", p * 0.43125 + c * 2.5875) : tier(\"normal\", p * 0.2875 + c * 1.725)",
+    "_cost_in": 0.25,
+    "_cost_out": 1.5,
+    "_markup": 1.15
+  },
+  "deepseek-v4-pro": {
+    "billing_mode": "tiered_expr",
+    "billing_expr": "len > 200000 ? tier(\"xl\", p * 3.4848 + c * 10.4544) : len > 100000 ? tier(\"long\", p * 2.376 + c * 7.128) : tier(\"normal\", p * 1.584 + c * 4.752)",
+    "_cost_in": 1.32,
+    "_cost_out": 3.96,
+    "_markup": 1.2
+  },
+  "deepseek-v4.1-flash": {
+    "billing_mode": "tiered_expr",
+    "billing_expr": "len > 200000 ? tier(\"xl\", p * 0.504086 + c * 2.016586) : len > 100000 ? tier(\"long\", p * 0.343695 + c * 1.374945) : tier(\"normal\", p * 0.22913 + c * 0.91663)",
+    "_cost_in": 0.2083,
+    "_cost_out": 0.8333,
+    "_markup": 1.1
+  },
+  "qwen3.8-flash": {
+    "billing_mode": "tiered_expr",
+    "billing_expr": "len > 200000 ? tier(\"xl\", p * 0.281083 + c * 0.94875) : len > 100000 ? tier(\"long\", p * 0.191647 + c * 0.646875) : tier(\"normal\", p * 0.127765 + c * 0.43125)",
+    "_cost_in": 0.1111,
+    "_cost_out": 0.375,
+    "_markup": 1.15
+  },
+  "qwen-plus": {
+    "billing_mode": "tiered_expr",
+    "billing_expr": "len > 200000 ? tier(\"xl\", p * 0.281083 + c * 0.702834) : len > 100000 ? tier(\"long\", p * 0.191647 + c * 0.479205) : tier(\"normal\", p * 0.127765 + c * 0.31947)",
+    "_cost_in": 0.1111,
+    "_cost_out": 0.2778,
+    "_markup": 1.15
+  },
+  "qwen3.7-max": {
+    "billing_mode": "tiered_expr",
+    "billing_expr": "len > 200000 ? tier(\"xl\", p * 4.583425 + c * 13.75) : len > 100000 ? tier(\"long\", p * 3.125063 + c * 9.375) : tier(\"normal\", p * 2.083375 + c * 6.25)",
+    "_cost_in": 1.6667,
+    "_cost_out": 5.0,
+    "_markup": 1.25
+  },
+  "doubao-2.1-lite": {
+    "billing_mode": "tiered_expr",
+    "billing_expr": "len > 200000 ? tier(\"xl\", p * 0.281083 + c * 0.94875) : len > 100000 ? tier(\"long\", p * 0.191647 + c * 0.646875) : tier(\"normal\", p * 0.127765 + c * 0.43125)",
+    "_cost_in": 0.1111,
+    "_cost_out": 0.375,
+    "_markup": 1.15
+  },
+  "doubao-2.1-pro": {
+    "billing_mode": "tiered_expr",
+    "billing_expr": "len > 200000 ? tier(\"xl\", p * 2.291575 + c * 11.458425) : len > 100000 ? tier(\"long\", p * 1.562438 + c * 7.812562) : tier(\"normal\", p * 1.041625 + c * 5.208375)",
+    "_cost_in": 0.8333,
+    "_cost_out": 4.1667,
+    "_markup": 1.25
+  },
+  "hunyuan-turbos": {
+    "billing_mode": "tiered_expr",
+    "billing_expr": "len > 200000 ? tier(\"xl\", p * 0.281083 + c * 0.702834) : len > 100000 ? tier(\"long\", p * 0.191647 + c * 0.479205) : tier(\"normal\", p * 0.127765 + c * 0.31947)",
+    "_cost_in": 0.1111,
+    "_cost_out": 0.2778,
+    "_markup": 1.15
+  },
+  "hunyuan-hy4": {
+    "billing_mode": "tiered_expr",
+    "billing_expr": "len > 200000 ? tier(\"xl\", p * 2.291575 + c * 6.875) : len > 100000 ? tier(\"long\", p * 1.562438 + c * 4.6875) : tier(\"normal\", p * 1.041625 + c * 3.125)",
+    "_cost_in": 0.8333,
+    "_cost_out": 2.5,
+    "_markup": 1.25
+  },
+  "glm-5.3": {
+    "billing_mode": "tiered_expr",
+    "billing_expr": "len > 200000 ? tier(\"xl\", p * 3.5904 + c * 11.229075) : len > 100000 ? tier(\"long\", p * 2.448 + c * 7.656188) : tier(\"normal\", p * 1.632 + c * 5.104125)",
+    "_cost_in": 1.3056,
+    "_cost_out": 4.0833,
+    "_markup": 1.25
+  },
+  "kimi-k3": {
+    "billing_mode": "tiered_expr",
+    "billing_expr": "len > 200000 ? tier(\"xl\", p * 7.63895 + c * 38.194475) : len > 100000 ? tier(\"long\", p * 5.208375 + c * 26.041688) : tier(\"normal\", p * 3.47225 + c * 17.361125)",
+    "_cost_in": 2.7778,
+    "_cost_out": 13.8889,
+    "_markup": 1.25
+  },
+  "minimax-m3.1-flash": {
+    "billing_mode": "tiered_expr",
+    "billing_expr": "len > 200000 ? tier(\"xl\", p * 0.351417 + c * 1.405668) : len > 100000 ? tier(\"long\", p * 0.239602 + c * 0.95841) : tier(\"normal\", p * 0.159735 + c * 0.63894)",
+    "_cost_in": 0.1389,
+    "_cost_out": 0.5556,
+    "_markup": 1.15
+  },
+  "ernie-5": {
+    "billing_mode": "tiered_expr",
+    "billing_expr": "len > 200000 ? tier(\"xl\", p * 2.291575 + c * 8.4029) : len > 100000 ? tier(\"long\", p * 1.562438 + c * 5.72925) : tier(\"normal\", p * 1.041625 + c * 3.8195)",
+    "_cost_in": 0.8333,
+    "_cost_out": 3.0556,
+    "_markup": 1.25
+  }
+}
