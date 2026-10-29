@@ -73,7 +73,9 @@ check_env() {
          cp $APP_DIR/deploy/docker-compose.host.yml $BASE_DIR/docker-compose.yml
        然后把里面的 SESSION_SECRET 改成固定值。"
   [[ -d "$DATA_DIR" ]]       || warn "  数据目录不存在：$DATA_DIR（新装可忽略，会由 Docker 自动创建）"
-  grep -q "CHANGE_ME" "$COMPOSE_FILE" && warn "  编排里 SESSION_SECRET 还是 CHANGE_ME，务必改成固定随机值后再启动"
+  if grep -q "CHANGE_ME" "$COMPOSE_FILE" 2>/dev/null; then
+    warn "  编排里 SESSION_SECRET 还是 CHANGE_ME，务必改成固定随机值后再启动"
+  fi
   info "  compose ：$DC"
   info "  镜像    ：$IMAGE（当前 latest：$(docker image inspect --format '{{.Created}}' "${IMAGE}:latest" 2>/dev/null || echo '无')）"
 }
