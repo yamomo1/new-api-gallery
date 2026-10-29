@@ -1,0 +1,156 @@
+{
+  "gpt-6.1-sol": {
+    "billing_mode": "tiered_expr",
+    "billing_expr": "len > 200000 ? tier(\"xl\", p * 11.0 + c * 55.0) : len > 100000 ? tier(\"long\", p * 7.5 + c * 37.5) : tier(\"normal\", p * 5.0 + c * 25.0)",
+    "_cost_in": 2.0,
+    "_cost_out": 10.0,
+    "_markup": 2.5
+  },
+  "gpt-5.5": {
+    "billing_mode": "tiered_expr",
+    "billing_expr": "len > 200000 ? tier(\"xl\", p * 38.5 + c * 231.0) : len > 100000 ? tier(\"long\", p * 26.25 + c * 157.5) : tier(\"normal\", p * 17.5 + c * 105.0)",
+    "_cost_in": 5.0,
+    "_cost_out": 30.0,
+    "_markup": 3.5
+  },
+  "gpt-6-luna": {
+    "billing_mode": "tiered_expr",
+    "billing_expr": "len > 200000 ? tier(\"xl\", p * 0.44 + c * 2.2) : len > 100000 ? tier(\"long\", p * 0.3 + c * 1.5) : tier(\"normal\", p * 0.2 + c * 1.0)",
+    "_cost_in": 0.1,
+    "_cost_out": 0.5,
+    "_markup": 2.0
+  },
+  "claude-opus-5.5": {
+    "billing_mode": "tiered_expr",
+    "billing_expr": "len > 200000 ? tier(\"xl\", p * 30.8 + c * 154.0) : len > 100000 ? tier(\"long\", p * 21.0 + c * 105.0) : tier(\"normal\", p * 14.0 + c * 70.0)",
+    "_cost_in": 4.0,
+    "_cost_out": 20.0,
+    "_markup": 3.5
+  },
+  "claude-sonnet-5.5": {
+    "billing_mode": "tiered_expr",
+    "billing_expr": "len > 200000 ? tier(\"xl\", p * 13.2 + c * 66.0) : len > 100000 ? tier(\"long\", p * 9.0 + c * 45.0) : tier(\"normal\", p * 6.0 + c * 30.0)",
+    "_cost_in": 2.0,
+    "_cost_out": 10.0,
+    "_markup": 3.0
+  },
+  "claude-haiku-5.5": {
+    "billing_mode": "tiered_expr",
+    "billing_expr": "len > 200000 ? tier(\"xl\", p * 0.55 + c * 2.75) : len > 100000 ? tier(\"long\", p * 0.375 + c * 1.875) : tier(\"normal\", p * 0.25 + c * 1.25)",
+    "_cost_in": 0.1,
+    "_cost_out": 0.5,
+    "_markup": 2.5
+  },
+  "gemini-3.1-pro": {
+    "billing_mode": "tiered_expr",
+    "billing_expr": "len > 200000 ? tier(\"xl\", p * 11.0 + c * 66.0) : len > 100000 ? tier(\"long\", p * 7.5 + c * 45.0) : tier(\"normal\", p * 5.0 + c * 30.0)",
+    "_cost_in": 2.0,
+    "_cost_out": 12.0,
+    "_markup": 2.5
+  },
+  "gemini-3.8-flash": {
+    "billing_mode": "tiered_expr",
+    "billing_expr": "len > 200000 ? tier(\"xl\", p * 3.3 + c * 16.5) : len > 100000 ? tier(\"long\", p * 2.25 + c * 11.25) : tier(\"normal\", p * 1.5 + c * 7.5)",
+    "_cost_in": 0.75,
+    "_cost_out": 3.75,
+    "_markup": 2.0
+  },
+  "gemini-3.1-flash-lite": {
+    "billing_mode": "tiered_expr",
+    "billing_expr": "len > 200000 ? tier(\"xl\", p * 0.88 + c * 5.28) : len > 100000 ? tier(\"long\", p * 0.6 + c * 3.6) : tier(\"normal\", p * 0.4 + c * 2.4)",
+    "_cost_in": 0.25,
+    "_cost_out": 1.5,
+    "_markup": 1.6
+  },
+  "deepseek-v4-pro": {
+    "billing_mode": "tiered_expr",
+    "billing_expr": "len > 200000 ? tier(\"xl\", p * 7.26 + c * 21.78) : len > 100000 ? tier(\"long\", p * 4.95 + c * 14.85) : tier(\"normal\", p * 3.3 + c * 9.9)",
+    "_cost_in": 1.32,
+    "_cost_out": 3.96,
+    "_markup": 2.5
+  },
+  "deepseek-v4.1-flash": {
+    "billing_mode": "tiered_expr",
+    "billing_expr": "len > 200000 ? tier(\"xl\", p * 0.733216 + c * 2.933216) : len > 100000 ? tier(\"long\", p * 0.49992 + c * 1.99992) : tier(\"normal\", p * 0.33328 + c * 1.33328)",
+    "_cost_in": 0.2083,
+    "_cost_out": 0.8333,
+    "_markup": 1.6
+  },
+  "qwen3.8-flash": {
+    "billing_mode": "tiered_expr",
+    "billing_expr": "len > 200000 ? tier(\"xl\", p * 0.391072 + c * 1.32) : len > 100000 ? tier(\"long\", p * 0.26664 + c * 0.9) : tier(\"normal\", p * 0.17776 + c * 0.6)",
+    "_cost_in": 0.1111,
+    "_cost_out": 0.375,
+    "_markup": 1.6
+  },
+  "qwen-plus": {
+    "billing_mode": "tiered_expr",
+    "billing_expr": "len > 200000 ? tier(\"xl\", p * 0.391072 + c * 0.977856) : len > 100000 ? tier(\"long\", p * 0.26664 + c * 0.66672) : tier(\"normal\", p * 0.17776 + c * 0.44448)",
+    "_cost_in": 0.1111,
+    "_cost_out": 0.2778,
+    "_markup": 1.6
+  },
+  "qwen3.7-max": {
+    "billing_mode": "tiered_expr",
+    "billing_expr": "len > 200000 ? tier(\"xl\", p * 9.16685 + c * 27.5) : len > 100000 ? tier(\"long\", p * 6.250125 + c * 18.75) : tier(\"normal\", p * 4.16675 + c * 12.5)",
+    "_cost_in": 1.6667,
+    "_cost_out": 5.0,
+    "_markup": 2.5
+  },
+  "doubao-2.1-lite": {
+    "billing_mode": "tiered_expr",
+    "billing_expr": "len > 200000 ? tier(\"xl\", p * 0.391072 + c * 1.32) : len > 100000 ? tier(\"long\", p * 0.26664 + c * 0.9) : tier(\"normal\", p * 0.17776 + c * 0.6)",
+    "_cost_in": 0.1111,
+    "_cost_out": 0.375,
+    "_markup": 1.6
+  },
+  "doubao-2.1-pro": {
+    "billing_mode": "tiered_expr",
+    "billing_expr": "len > 200000 ? tier(\"xl\", p * 4.58315 + c * 22.91685) : len > 100000 ? tier(\"long\", p * 3.124875 + c * 15.625125) : tier(\"normal\", p * 2.08325 + c * 10.41675)",
+    "_cost_in": 0.8333,
+    "_cost_out": 4.1667,
+    "_markup": 2.5
+  },
+  "hunyuan-turbos": {
+    "billing_mode": "tiered_expr",
+    "billing_expr": "len > 200000 ? tier(\"xl\", p * 0.391072 + c * 0.977856) : len > 100000 ? tier(\"long\", p * 0.26664 + c * 0.66672) : tier(\"normal\", p * 0.17776 + c * 0.44448)",
+    "_cost_in": 0.1111,
+    "_cost_out": 0.2778,
+    "_markup": 1.6
+  },
+  "hunyuan-hy4": {
+    "billing_mode": "tiered_expr",
+    "billing_expr": "len > 200000 ? tier(\"xl\", p * 4.58315 + c * 13.75) : len > 100000 ? tier(\"long\", p * 3.124875 + c * 9.375) : tier(\"normal\", p * 2.08325 + c * 6.25)",
+    "_cost_in": 0.8333,
+    "_cost_out": 2.5,
+    "_markup": 2.5
+  },
+  "glm-5.3": {
+    "billing_mode": "tiered_expr",
+    "billing_expr": "len > 200000 ? tier(\"xl\", p * 7.1808 + c * 22.45815) : len > 100000 ? tier(\"long\", p * 4.896 + c * 15.312375) : tier(\"normal\", p * 3.264 + c * 10.20825)",
+    "_cost_in": 1.3056,
+    "_cost_out": 4.0833,
+    "_markup": 2.5
+  },
+  "kimi-k3": {
+    "billing_mode": "tiered_expr",
+    "billing_expr": "len > 200000 ? tier(\"xl\", p * 15.2779 + c * 76.38895) : len > 100000 ? tier(\"long\", p * 10.41675 + c * 52.083375) : tier(\"normal\", p * 6.9445 + c * 34.72225)",
+    "_cost_in": 2.7778,
+    "_cost_out": 13.8889,
+    "_markup": 2.5
+  },
+  "minimax-m3.1-flash": {
+    "billing_mode": "tiered_expr",
+    "billing_expr": "len > 200000 ? tier(\"xl\", p * 0.488928 + c * 1.955712) : len > 100000 ? tier(\"long\", p * 0.33336 + c * 1.33344) : tier(\"normal\", p * 0.22224 + c * 0.88896)",
+    "_cost_in": 0.1389,
+    "_cost_out": 0.5556,
+    "_markup": 1.6
+  },
+  "ernie-5": {
+    "billing_mode": "tiered_expr",
+    "billing_expr": "len > 200000 ? tier(\"xl\", p * 4.58315 + c * 16.8058) : len > 100000 ? tier(\"long\", p * 3.124875 + c * 11.4585) : tier(\"normal\", p * 2.08325 + c * 7.639)",
+    "_cost_in": 0.8333,
+    "_cost_out": 3.0556,
+    "_markup": 2.5
+  }
+}
