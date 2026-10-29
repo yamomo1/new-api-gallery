@@ -41,3 +41,8 @@ electron/** linguist-vendored
 
 # TanStack Router regenerates this manifest from the route source files.
 web/src/routeTree.gen.ts linguist-generated
+
+# 画布前端产物（studio/dist）是构建输出，按字节原样保存：
+# 不做换行转换、不做编码猜测。这样本地/服务器/镜像里是同一份字节，
+# 将来产物里出现字体(woff2)、图片(png)也不会被当成文本损坏。
+studio/dist/** -text
