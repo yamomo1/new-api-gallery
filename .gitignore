@@ -30,6 +30,12 @@ tiktoken_cache
 electron/node_modules
 electron/dist
 /data/
+
+# 部署运行时数据（deploy/docker-compose.yml 的 ./data 与 ./logs 挂载点）
+# 这两个目录在 git 工作树内部，必须排除，否则 git clean / git checkout 会动到线上数据
+deploy/data/
+deploy/logs/
+deploy/backups/
 .gomodcache/
 .gocache-temp
 .gopath
