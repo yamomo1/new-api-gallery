@@ -5,29 +5,44 @@
 # 做六件事：备份数据库 -> 记录回滚点 -> 拉代码 -> 构建镜像 -> 重启 -> 健康检查
 # 健康检查失败会自动回滚到上一个镜像。
 #
+# 目录约定（与本仓库 deploy/docker-compose.host.yml 一致）：
+#   /opt/new-api-gallery/                   项目根 BASE_DIR
+#   ├── new-api-gallery/                    git 仓库 APP_DIR（本脚本所在仓库）
+#   ├── data/                               SQLite 数据
+#   ├── logs/                               日志
+#   ├── backups/                            备份
+#   └── docker-compose.yml                  运行时编排
+#
 # 用法（在服务器上）：
-#   ./deploy/update.sh              正常更新
-#   ./deploy/update.sh --rollback   手动回滚到上一个版本
-#   SKIP_GIT=1 ./deploy/update.sh   代码已手动上传，跳过 git pull
+#   /opt/new-api-gallery/new-api-gallery/deploy/update.sh            正常更新
+#   /opt/new-api-gallery/new-api-gallery/deploy/update.sh --rollback 手动回滚到上一版
+#   SKIP_GIT=1 ./deploy/update.sh            代码已手动上传，跳过 git pull
+#   ./deploy/update.sh --check               只做环境体检，不改任何东西
 #
 # 可用环境变量覆盖（一般不改）：
-#   APP_DIR        部署目录，默认 /opt/new-api-gallery
+#   APP_DIR        代码目录，默认 /opt/new-api-gallery/new-api-gallery
+#   BASE_DIR       项目根，默认 APP_DIR 的上一级 = /opt/new-api-gallery
+#   DATA_DIR       数据目录，默认 $BASE_DIR/data
+#   BACKUP_DIR     备份目录，默认 $BASE_DIR/backups
+#   COMPOSE_FILE   编排文件，默认 $BASE_DIR/docker-compose.yml
 #   IMAGE          镜像名，默认 new-api-gallery
 #   BRANCH         分支，默认 gallery-fork
-#   COMPOSE_FILE   编排文件，默认 deploy/docker-compose.1panel.yml
 #   SERVICE        编排里的服务名，默认 new-api
 #   HEALTH_URL     健康检查地址，默认 http://127.0.0.1:3000/api/status
+#   REGISTRY       构建时的镜像加速器，默认读 Dockerfile.cn 里的值
 
 set -euo pipefail
 
-APP_DIR="${APP_DIR:-/opt/new-api-gallery}"
+APP_DIR="${APP_DIR:-/opt/new-api-gallery/new-api-gallery}"
+BASE_DIR="${BASE_DIR:-$(dirname "$APP_DIR")}"
+DATA_DIR="${DATA_DIR:-$BASE_DIR/data}"
+BACKUP_DIR="${BACKUP_DIR:-$BASE_DIR/backups}"
+COMPOSE_FILE="${COMPOSE_FILE:-$BASE_DIR/docker-compose.yml}"
 IMAGE="${IMAGE:-new-api-gallery}"
 BRANCH="${BRANCH:-gallery-fork}"
-COMPOSE_FILE="${COMPOSE_FILE:-deploy/docker-compose.1panel.yml}"
 SERVICE="${SERVICE:-new-api}"
 HEALTH_URL="${HEALTH_URL:-http://127.0.0.1:3000/api/status}"
 SKIP_GIT="${SKIP_GIT:-0}"
-BACKUP_DIR="${BACKUP_DIR:-$APP_DIR/backups}"
 KEEP_BACKUPS="${KEEP_BACKUPS:-10}"
 
 info()  { printf '\033[36m[update]\033[0m %s\n' "$*"; }
@@ -43,7 +58,30 @@ else
   fail "找不到 docker compose，请先安装 Docker Compose 插件"
 fi
 
-cd "$APP_DIR" || fail "部署目录不存在：$APP_DIR"
+# ---------- 环境体检 ----------
+check_env() {
+  info "环境体检"
+  info "  代码目录：$APP_DIR"
+  info "  项目根  ：$BASE_DIR"
+  info "  数据目录：$DATA_DIR"
+  info "  备份目录：$BACKUP_DIR"
+  info "  编排文件：$COMPOSE_FILE"
+
+  [[ -d "$APP_DIR" ]]        || fail "代码目录不存在：$APP_DIR（git clone 到了别处？用 APP_DIR=... 指定）"
+  [[ -f "$COMPOSE_FILE" ]]   || fail "编排文件不存在：$COMPOSE_FILE
+       首次部署请先执行：
+         cp $APP_DIR/deploy/docker-compose.host.yml $BASE_DIR/docker-compose.yml
+       然后把里面的 SESSION_SECRET 改成固定值。"
+  [[ -d "$DATA_DIR" ]]       || warn "  数据目录不存在：$DATA_DIR（新装可忽略，会由 Docker 自动创建）"
+  grep -q "CHANGE_ME" "$COMPOSE_FILE" && warn "  编排里 SESSION_SECRET 还是 CHANGE_ME，务必改成固定随机值后再启动"
+  info "  compose ：$DC"
+  info "  镜像    ：$IMAGE（当前 latest：$(docker image inspect --format '{{.Created}}' "${IMAGE}:latest" 2>/dev/null || echo '无')）"
+}
+
+if [[ "${1:-}" == "--check" ]]; then
+  check_env
+  exit 0
+fi
 
 # ---------- 回滚模式 ----------
 if [[ "${1:-}" == "--rollback" ]]; then
@@ -63,20 +101,23 @@ if [[ "${1:-}" == "--rollback" ]]; then
   exit 0
 fi
 
+check_env
+cd "$APP_DIR" || fail "无法进入代码目录：$APP_DIR"
+
 # ---------- 1. 备份数据库 ----------
 info "步骤 1/6 备份数据库"
 mkdir -p "$BACKUP_DIR"
 STAMP="$(date +%Y%m%d-%H%M%S)"
 BACKED_UP=0
 shopt -s nullglob
-for db in "$APP_DIR"/data/*.db; do
+for db in "$DATA_DIR"/*.db; do
   base="$(basename "$db")"
   cp -a "$db" "$BACKUP_DIR/${base}.${STAMP}.bak"
-  info "  已备份 $base -> backups/${base}.${STAMP}.bak"
+  info "  已备份 $base -> $BACKUP_DIR/${base}.${STAMP}.bak"
   BACKED_UP=1
 done
 if [[ "$BACKED_UP" -eq 0 ]]; then
-  warn "  data/ 下没有 .db 文件（可能用的是 PostgreSQL/MySQL），跳过文件备份"
+  warn "  $DATA_DIR 下没有 .db 文件（可能用的是 PostgreSQL/MySQL），跳过文件备份"
   warn "  PostgreSQL 用户请自行确认有定期 pg_dump 策略"
 fi
 # 只保留最近 N 份备份
@@ -105,7 +146,9 @@ info "  当前代码版本：$NEW_TAG"
 
 # ---------- 4. 构建镜像 ----------
 info "步骤 4/6 构建镜像 ${IMAGE}:${NEW_TAG}（首次较慢，之后走缓存）"
-docker build -f Dockerfile.cn -t "${IMAGE}:${NEW_TAG}" -t "${IMAGE}:latest" . \
+BUILD_ARGS=()
+[[ -n "${REGISTRY:-}" ]] && BUILD_ARGS+=(--build-arg "REGISTRY=${REGISTRY}")
+docker build -f Dockerfile.cn "${BUILD_ARGS[@]}" -t "${IMAGE}:${NEW_TAG}" -t "${IMAGE}:latest" . \
   || fail "镜像构建失败，服务未受影响，仍是旧版本"
 info "  构建完成"
 

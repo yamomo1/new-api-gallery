@@ -1,0 +1,53 @@
+# New API 二开 · 单容器运行时编排（SQLite + 宿主机目录挂载）
+# ------------------------------------------------------------------
+# 这份是「真正跑起来」的编排，不是模板集合。放在：
+#   /opt/new-api-gallery/docker-compose.yml
+#
+# 目录约定（全项目统一，别改）：
+#   /opt/new-api-gallery/                   项目根
+#   ├── new-api-gallery/                    git 仓库（代码，git pull 在这里）
+#   ├── data/                               数据（one-api.db），仓库之外，git clean 删不到
+#   ├── logs/                               错误日志
+#   ├── backups/                            数据库备份（update.sh 自动写入）
+#   └── docker-compose.yml                  本文件
+#
+# 首次使用：
+#   cp /opt/new-api-gallery/new-api-gallery/deploy/docker-compose.host.yml \
+#      /opt/new-api-gallery/docker-compose.yml
+#   然后把下面的 SESSION_SECRET 改成固定值（别用随机，改了全员掉线）
+#
+# 之后更新只需一条命令，本文件不用再动：
+#   /opt/new-api-gallery/new-api-gallery/deploy/update.sh
+# ------------------------------------------------------------------
+
+services:
+  new-api:
+    image: new-api-gallery:latest
+    container_name: new-api-gallery
+    restart: always
+    command: --log-dir /app/logs
+    ports:
+      # 只监听本机，外网一律走 1Panel 反代。
+      # 备案没下来、想先用 IP:3000 直接访问时，临时改成 "3000:3000"。
+      - "127.0.0.1:3000:3000"
+    volumes:
+      # 【生死线】SQLite 数据。要沿用旧站数据，把这里指向旧目录（或用软链，见手册）
+      - ./data:/data
+      - ./logs:/app/logs
+    environment:
+      - TZ=Asia/Shanghai
+      - PORT=3000
+      # 【必改】固定成你自己的一串随机值，之后永远不要再改
+      - SESSION_SECRET=CHANGE_ME_TO_A_FIXED_RANDOM_STRING
+      - ERROR_LOG_ENABLED=true
+      - DEFAULT_LANGUAGE=zh-CN
+      # 用外部 PostgreSQL 时打开（容器连宿主机 PG 用 172.17.0.1，别写 127.0.0.1）
+      # - SQL_DSN=postgresql://user:pass@172.17.0.1:5432/new-api
+      # 用 Redis 时打开
+      # - REDIS_CONN_STRING=redis://:pass@172.17.0.1:6379
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://localhost:3000/api/status | grep -o '\"success\":\\s*true' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
