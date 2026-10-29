@@ -95,7 +95,7 @@ import {
   type GallerySource,
   type GalleryWork,
 } from './gallery-items-card'
-import { FooterCard, type FooterColumn, type FooterLink } from './footer-card'
+import { FooterCard, type FooterBeian, type FooterColumn, type FooterLink } from './footer-card'
 
 const HOME_CONFIG_KEY = 'HomeConfig'
 
@@ -664,6 +664,7 @@ export function HomeSettings() {
   }).footer
   const sharedFooterColumns = getPath(draft.shared, 'footer.columns')
   const sharedFooterLegal = getPath(draft.shared, 'footer.legal')
+  const sharedFooterBeian = getPath(draft.shared, 'footer.beian')
   const footerColumns = (
     Array.isArray(sharedFooterColumns) ? sharedFooterColumns : (defaultFooter?.columns ?? [])
   ) as FooterColumn[]
@@ -1070,12 +1071,16 @@ export function HomeSettings() {
                   <FooterCard
                     columns={footerColumns}
                     legal={footerLegal}
+                    beian={sharedFooterBeian as FooterBeian | undefined}
                     columnsOverridden={Array.isArray(sharedFooterColumns)}
                     legalOverridden={Array.isArray(sharedFooterLegal)}
+                    beianOverridden={sharedFooterBeian !== undefined && sharedFooterBeian !== null}
                     onChangeColumns={(items) => setSharedValue('footer.columns', items)}
                     onChangeLegal={(items) => setSharedValue('footer.legal', items)}
+                    onChangeBeian={(b) => setSharedValue('footer.beian', b)}
                     onResetColumns={() => setSharedValue('footer.columns', '')}
                     onResetLegal={() => setSharedValue('footer.legal', '')}
+                    onResetBeian={() => setSharedValue('footer.beian', '')}
                   />
                 )}
               </>

@@ -607,6 +607,8 @@ console.log(resp.choices[0].message.content)`,
       company: '成都亚默默科技有限公司',
       icp: '蜀ICP备18009444号-1',
       icpHref: 'https://beian.miit.gov.cn/',
+      telecomLicense: '增值电信业务经营许可证 川B2-20231491',
+      telecomLicenseHref: 'https://dxzhgl.miit.gov.cn/',
     },
   },
   closing: {

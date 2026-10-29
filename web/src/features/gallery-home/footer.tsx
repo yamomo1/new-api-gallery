@@ -119,7 +119,7 @@ export function SiteFooter() {
             {data.copyright && (
               <p className='site-footer-copyright'>{data.copyright}</p>
             )}
-            {beian && (beian.company || beian.icp) && (
+            {beian && (beian.company || beian.icp || beian.telecomLicense) && (
               <div className='site-footer-beian'>
                 {beian.company && (
                   <span className='site-footer-beian-company'>
@@ -134,6 +134,16 @@ export function SiteFooter() {
                     rel='noreferrer'
                   >
                     {beian.icp}
+                  </a>
+                )}
+                {beian.telecomLicense && (
+                  <a
+                    className='site-footer-beian-link'
+                    href={beian.telecomLicenseHref ?? 'https://dxzhgl.miit.gov.cn/'}
+                    target='_blank'
+                    rel='noreferrer'
+                  >
+                    {beian.telecomLicense}
                   </a>
                 )}
               </div>

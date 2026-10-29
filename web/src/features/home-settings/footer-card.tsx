@@ -39,17 +39,29 @@ import { Label } from '@/components/ui/label'
 
 export type FooterLink = { label: string; href: string }
 export type FooterColumn = { title?: string; items?: FooterLink[] }
+export type FooterBeian = {
+  company?: string
+  icp?: string
+  icpHref?: string
+  /** 增值电信业务经营许可证（文本） */
+  telecomLicense?: string
+  telecomLicenseHref?: string
+}
 
 type Props = {
   columns: FooterColumn[]
   legal: FooterLink[]
+  beian?: FooterBeian
   /** 数组是否已被后台覆盖（用于显示「恢复默认」） */
   columnsOverridden: boolean
   legalOverridden: boolean
+  beianOverridden: boolean
   onChangeColumns: (columns: FooterColumn[]) => void
   onChangeLegal: (links: FooterLink[]) => void
+  onChangeBeian: (beian: FooterBeian) => void
   onResetColumns: () => void
   onResetLegal: () => void
+  onResetBeian: () => void
 }
 
 const EMPTY_LINK: FooterLink = { label: '', href: '/' }
@@ -68,14 +80,21 @@ function move<T>(arr: T[], i: number, dir: -1 | 1): T[] {
 export function FooterCard({
   columns,
   legal,
+  beian,
   columnsOverridden,
   legalOverridden,
+  beianOverridden,
   onChangeColumns,
   onChangeLegal,
+  onChangeBeian,
   onResetColumns,
   onResetLegal,
+  onResetBeian,
 }: Props) {
   const { t } = useTranslation()
+
+  const updateBeian = (patch: Partial<FooterBeian>) =>
+    onChangeBeian({ ...beian, ...patch })
 
   const updateColumn = (ci: number, patch: Partial<FooterColumn>) => {
     onChangeColumns(
@@ -315,6 +334,81 @@ export function FooterCard({
                 {t('No legal links yet.')}
               </p>
             )}
+          </div>
+        </div>
+
+        {/* 备案信息（页脚最底部一行） */}
+        <div className='rounded-lg border bg-card/40 p-3'>
+          <div className='mb-2 flex flex-wrap items-center justify-between gap-2'>
+            <div>
+              <Label className='text-[11px]'>
+                {t('Beian row (bottom)')}
+              </Label>
+              <p className='mt-0.5 text-xs text-muted-foreground'>
+                {t(
+                  'Company name, ICP number and telecom license shown at the very bottom. ICP links to MIIT.',
+                )}
+              </p>
+            </div>
+            {beianOverridden && (
+              <Button variant='outline' size='sm' onClick={onResetBeian}>
+                <RotateCcw className='size-3.5' /> {t('Restore default')}
+              </Button>
+            )}
+          </div>
+          <div className='grid grid-cols-1 gap-2 sm:grid-cols-2'>
+            <div className='space-y-1'>
+              <Label className='text-[11px]'>
+                {t('Company name')}
+              </Label>
+              <Input
+                value={beian?.company ?? ''}
+                placeholder={t('Chengdu Yamo Technology Co., Ltd.')}
+                onChange={(e) => updateBeian({ company: e.target.value })}
+              />
+            </div>
+            <div className='space-y-1'>
+              <Label className='text-[11px]'>{t('ICP number')}</Label>
+              <Input
+                value={beian?.icp ?? ''}
+                placeholder='蜀ICP备18009444号-1'
+                onChange={(e) => updateBeian({ icp: e.target.value })}
+              />
+            </div>
+            <div className='space-y-1'>
+              <Label className='text-[11px]'>{t('ICP link')}</Label>
+              <Input
+                value={beian?.icpHref ?? ''}
+                placeholder='https://beian.miit.gov.cn/'
+                onChange={(e) => updateBeian({ icpHref: e.target.value })}
+              />
+            </div>
+            <div className='space-y-1'>
+              <Label className='text-[11px]'>
+                {t('Telecom license')}
+              </Label>
+              <Input
+                value={beian?.telecomLicense ?? ''}
+                placeholder={t(
+                  'Value-added telecom license 川B2-20231491',
+                )}
+                onChange={(e) =>
+                  updateBeian({ telecomLicense: e.target.value })
+                }
+              />
+            </div>
+            <div className='space-y-1 sm:col-span-2'>
+              <Label className='text-[11px]'>
+                {t('Telecom license link')}
+              </Label>
+              <Input
+                value={beian?.telecomLicenseHref ?? ''}
+                placeholder='https://dxzhgl.miit.gov.cn/'
+                onChange={(e) =>
+                  updateBeian({ telecomLicenseHref: e.target.value })
+                }
+              />
+            </div>
           </div>
         </div>
       </CardContent>

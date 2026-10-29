@@ -148,6 +148,9 @@ const footerSchema = z.object({
       company: short(60).optional(),
       icp: short(120).optional(),
       icpHref: text(300).optional(),
+      /** 增值电信业务经营许可证（文本，如：增值电信业务经营许可证 川B2-20231491） */
+      telecomLicense: short(120).optional(),
+      telecomLicenseHref: text(300).optional(),
     })
     .optional(),
 })
