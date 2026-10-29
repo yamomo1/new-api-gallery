@@ -19,9 +19,10 @@ For commercial licensing, please contact support@quantumnous.com
 import type { TFunction } from 'i18next'
 import {
   Box,
+  HardDrive,
+  Images,
   Route,
   CreditCard,
-  HardDrive,
   Layout,
   Settings,
   Shield,
@@ -100,6 +101,20 @@ function getSystemSettingsNavGroups(t: TFunction): NavGroup[] {
             {
               title: t('storage.nav', { defaultValue: '存储设置' }),
               url: '/system-settings/storage',
+            },
+          ],
+        },
+        {
+          title: t('Fork settings'),
+          icon: Images,
+          items: [
+            {
+              title: t('Home settings'),
+              url: '/admin/home-settings',
+            },
+            {
+              title: t('Gallery review'),
+              url: '/admin/prompt-gallery',
             },
           ],
         },

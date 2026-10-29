@@ -31,7 +31,6 @@ export type SidebarGroupKey =
   | 'general'
   | 'personal'
   | 'admin'
-  | 'fork'
   | 'custom'
 
 /** 分组下拉选项：id + i18n key（复用侧边栏既有分组标题） */
@@ -43,7 +42,6 @@ export const SIDEBAR_GROUP_OPTIONS: {
   { id: 'general', titleKey: 'General' },
   { id: 'personal', titleKey: 'Personal' },
   { id: 'admin', titleKey: 'Admin' },
-  { id: 'fork', titleKey: 'Fork Settings' },
   { id: 'custom', titleKey: 'Custom' },
 ]
 
@@ -76,7 +74,7 @@ export type CustomNavLink = {
   requireAuth?: boolean
   /** 侧边栏图标（lucide 名，见 ICON_MAP）；顶部导航忽略 */
   icon?: string
-  /** 侧边栏：归属分组（chat/general/personal/admin/fork/custom）。顶部导航忽略 */
+  /** 侧边栏：归属分组（chat/general/personal/admin/custom）。顶部导航忽略 */
   group?: SidebarGroupKey
   /** 侧边栏：可见最低角色（ROLE 值）；未设置则所有人可见。顶部导航忽略 */
   requiredRole?: number

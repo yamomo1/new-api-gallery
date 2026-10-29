@@ -25,7 +25,6 @@ import {
   FlaskConical,
   FolderOpen,
   Frame,
-  Home,
   Images,
   Key,
   LayoutDashboard,
@@ -207,22 +206,6 @@ export function useSidebarData(): SidebarData {
             activeUrls: ['/system-settings'],
             icon: Settings,
             requiredRole: ROLE.SUPER_ADMIN,
-          },
-        ],
-      },
-      {
-        id: 'fork',
-        title: t('Fork Settings'),
-        items: [
-          {
-            title: t('Home Settings'),
-            url: '/admin/home-settings',
-            icon: Home,
-          },
-          {
-            title: t('Gallery review'),
-            url: '/admin/prompt-gallery',
-            icon: Images,
           },
         ],
       },
