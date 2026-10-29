@@ -31,7 +31,7 @@
 
 set -euo pipefail
 
-SCRIPT_VER="2026-10-29.5-dockerfilecn-pgo-selfheal"
+SCRIPT_VER="2026-10-29.6-env-recover"
 
 # ---------- 自拷贝执行（见安全约定 6） ----------
 if [[ "${__UPGRADE_REEXEC:-0}" != "1" ]]; then
@@ -156,7 +156,10 @@ check_env() {
   [[ -f "$COMPOSE_FILE" ]] || fail "找不到编排文件：$COMPOSE_FILE"
   [[ -f "$ENV_FILE" ]]     || fail "找不到 $ENV_FILE
        → 里面的 SESSION_SECRET / CRYPT_KEY 丢了会导致全员掉线
-       → 若确实没有，说明不是用 deploy/deploy.sh 部署的，先人工确认再继续"
+       → 先跑这条把它找回来（会先用 deploy/backups/env.* 备份，没有就从运行中的容器取）：
+           $DIR/restore-env.sh --dry-run   # 先看会从哪恢复
+           $DIR/restore-env.sh             # 真的恢复
+       → 若上面两条都不行，先人工确认，别急着重建容器"
   docker compose version >/dev/null 2>&1 || fail "找不到 docker compose"
 
   head="$(git -C "$REPO" rev-parse --short HEAD 2>/dev/null || echo '?')"
