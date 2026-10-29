@@ -41,7 +41,7 @@
 
 set -euo pipefail
 
-SCRIPT_VER="2026-10-29.10-pg-ddl"
+SCRIPT_VER="2026-10-29.11-safe-rollback"
 
 # ---------- 自拷贝执行（见安全约定 6） ----------
 if [[ "${__UPGRADE_REEXEC:-0}" != "1" ]]; then
@@ -487,8 +487,20 @@ fi
 # ---------- 1. 回滚点 ----------
 step "1/6 记录回滚点"
 if docker image inspect "${IMAGE}:latest" >/dev/null 2>&1; then
-  docker tag "${IMAGE}:latest" "${IMAGE}:previous"
-  info "  当前镜像已标记为 ${IMAGE}:previous（回滚用）"
+  # 当前容器没在正常跑（崩了/停了）说明 :latest 本身是坏的，
+  # 这时绝不能覆盖 :previous —— 它才是最后一个能用的版本。
+  cur_running="$(docker inspect -f '{{.State.Running}}' "$CONTAINER" 2>/dev/null || echo unknown)"
+  cur_restarting="$(docker inspect -f '{{.State.Restarting}}' "$CONTAINER" 2>/dev/null || echo unknown)"
+  if [[ "$cur_running" == "true" && "$cur_restarting" != "true" ]]; then
+    docker tag "${IMAGE}:latest" "${IMAGE}:previous"
+    info "  当前镜像已标记为 ${IMAGE}:previous（回滚用）"
+  elif docker image inspect "${IMAGE}:previous" >/dev/null 2>&1; then
+    warn "  当前容器没在正常运行（running=$cur_running restarting=$cur_restarting）"
+    warn "  → 不覆盖 ${IMAGE}:previous，保留它作为回滚点（它才可能最后一个可用）"
+  else
+    docker tag "${IMAGE}:latest" "${IMAGE}:previous"
+    warn "  当前容器没在正常运行，且没有 ${IMAGE}:previous，只能把当前镜像标为回滚点"
+  fi
 else
   warn "  没有 ${IMAGE}:latest，本次构建失败将无法自动回滚"
 fi
