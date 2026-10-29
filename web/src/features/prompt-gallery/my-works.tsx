@@ -31,6 +31,7 @@ import {
 } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
+import { ImageUpload } from '@/components/common/image-upload'
 
 import type { PromptGallerySubmit } from './api'
 import type { PromptGalleryItem } from './types'
@@ -281,12 +282,11 @@ export function MyWorks() {
             </div>
 
             <div className='space-y-1.5'>
-              <Label htmlFor='cover'>{t('Cover image URL')}</Label>
-              <Input
-                id='cover'
+              <Label htmlFor='cover'>{t('Cover image')}</Label>
+              <ImageUpload
                 value={form.cover}
-                onChange={(e) => set('cover', e.target.value)}
-                placeholder='https://…'
+                onChange={(url) => set('cover', url)}
+                placeholder={t('Upload a cover image')}
               />
             </div>
 

@@ -2,7 +2,10 @@ package router
 
 import (
 	"net/http"
+	"path/filepath"
+	"strings"
 
+	"github.com/QuantumNous/new-api/common"
 	"github.com/QuantumNous/new-api/controller"
 	"github.com/QuantumNous/new-api/middleware"
 	"github.com/QuantumNous/new-api/service/authz"
@@ -21,6 +24,18 @@ func SetApiRouter(router *gin.Engine) {
 	apiRouter.Use(middleware.AccessTokenAudit())
 	apiRouter.Use(middleware.BodyStorageCleanup()) // 清理请求体存储
 	apiRouter.Use(middleware.GlobalAPIRateLimit())
+
+	// 全站图片上传接口（二开新增）：登录用户上传，返回可访问 URL
+	apiRouter.POST("/storage/upload", middleware.UserAuth(), controller.StorageUpload)
+
+	// 本地存储的静态访问目录（与 StorageLocalDir 对应，默认 /data/uploads）
+	localStorageDir := strings.TrimSpace(common.OptionMap["StorageLocalDir"])
+	if localStorageDir == "" {
+		localStorageDir = "/data/uploads"
+	}
+	if absDir, err := filepath.Abs(localStorageDir); err == nil {
+		router.Static("/storage/static", absDir)
+	}
 	anonymousRequestBodyLimit := middleware.AnonymousRequestBodyLimit()
 	{
 		apiRouter.GET("/setup", controller.GetSetup)

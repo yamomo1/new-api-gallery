@@ -21,6 +21,7 @@ import {
   Box,
   Route,
   CreditCard,
+  HardDrive,
   Layout,
   Settings,
   Shield,
@@ -91,6 +92,16 @@ function getSystemSettingsNavGroups(t: TFunction): NavGroup[] {
           title: t('Operations'),
           icon: Wrench,
           items: getOperationsSectionNavItems(t),
+        },
+        {
+          title: t('storage.group', { defaultValue: '存储' }),
+          icon: HardDrive,
+          items: [
+            {
+              title: t('storage.nav', { defaultValue: '存储设置' }),
+              url: '/system-settings/storage',
+            },
+          ],
         },
       ],
     },

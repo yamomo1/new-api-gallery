@@ -190,6 +190,27 @@ func InitOptionMap() {
 	common.OptionMap["AutomaticRetryStatusCodes"] = operation_setting.AutomaticRetryStatusCodesToString()
 	common.OptionMap["ExposeRatioEnabled"] = strconv.FormatBool(ratio_setting.IsExposeRatioEnabled())
 
+	// ===== 存储设置（二开新增：全站图片上传，本地/阿里云OSS/七牛/S3 兼容）=====
+	common.OptionMap["StorageProvider"] = "local"
+	common.OptionMap["StorageLocalDir"] = "/data/uploads" // 与 deploy 的 bind mount 对齐
+	common.OptionMap["StorageLocalBaseURL"] = "/storage/static"
+	common.OptionMap["StorageAliOSSBucket"] = ""
+	common.OptionMap["StorageAliOSSEndpoint"] = ""
+	common.OptionMap["StorageAliOSSAccessKey"] = ""
+	common.OptionMap["StorageAliOSSSecret"] = ""
+	common.OptionMap["StorageAliOSSDomain"] = ""
+	common.OptionMap["StorageQiniuBucket"] = ""
+	common.OptionMap["StorageQiniuAccessKey"] = ""
+	common.OptionMap["StorageQiniuSecretKey"] = ""
+	common.OptionMap["StorageQiniuDomain"] = ""
+	common.OptionMap["StorageQiniuRegion"] = "z2"
+	common.OptionMap["StorageS3Bucket"] = ""
+	common.OptionMap["StorageS3Endpoint"] = ""
+	common.OptionMap["StorageS3Region"] = "auto"
+	common.OptionMap["StorageS3AccessKey"] = ""
+	common.OptionMap["StorageS3Secret"] = ""
+	common.OptionMap["StorageS3Domain"] = ""
+
 	// 自动添加所有注册的模型配置
 	modelConfigs := config.GlobalConfig.ExportAllConfigs()
 	maps.Copy(common.OptionMap, modelConfigs)
