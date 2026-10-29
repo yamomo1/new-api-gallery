@@ -133,8 +133,11 @@ info "步骤 1/6 备份数据库"
 mkdir -p "$BACKUP_DIR"
 STAMP="$(date +%Y%m%d-%H%M%S)"
 BACKED_UP=0
-shopt -s nullglob
+# 注意：这里刻意不使用 shopt -s nullglob。
+# 一旦开启 nullglob，任何 "$DIR"/*.ext 在无匹配时会展开成空参数，
+# `ls -1t "$DIR"/*.bak` 就会退化成 `ls -1t`（列当前目录），再接 xargs rm 会误删工作目录内容。
 for db in "$DATA_DIR"/*.db; do
+  [[ -e "$db" ]] || continue
   base="$(basename "$db")"
   cp -a "$db" "$BACKUP_DIR/${base}.${STAMP}.bak"
   info "  已备份 $base -> $BACKUP_DIR/${base}.${STAMP}.bak"
@@ -144,8 +147,13 @@ if [[ "$BACKED_UP" -eq 0 ]]; then
   warn "  $DATA_DIR 下没有 .db 文件（可能用的是 PostgreSQL/MySQL），跳过文件备份"
   warn "  PostgreSQL 用户请自行确认有定期 pg_dump 策略"
 fi
-# 只保留最近 N 份备份
-ls -1t "$BACKUP_DIR"/*.bak 2>/dev/null | tail -n +$((KEEP_BACKUPS + 1)) | xargs -r rm -f
+# 只保留最近 N 份备份：用 find 限定目录/文件类型/扩展名，不依赖 glob 展开，杜绝误删
+if [[ -d "$BACKUP_DIR" ]]; then
+  find "$BACKUP_DIR" -maxdepth 1 -type f -name '*.bak' -printf '%T@\t%p\n' 2>/dev/null \
+    | sort -rn \
+    | awk -v K="$KEEP_BACKUPS" 'NR > K { sub(/^[^\t]*\t/, ""); print }' \
+    | xargs -r rm -f --
+fi
 
 # ---------- 2. 记录回滚点 ----------
 info "步骤 2/6 记录当前镜像作为回滚点"

@@ -514,8 +514,13 @@ do_upgrade() {
   else
     swarn "  数据库在外部（SQL_DSN），本脚本不备份；确认你已有 pg_dump/mysqldump 策略"
   fi
-  # 只保留最近 10 份
-  ls -1t "$BACKUP_DIR"/one-api.db.*.bak 2>/dev/null | tail -n +11 | xargs -r rm -f 2>/dev/null || true
+  # 只保留最近 10 份：find 限定目录+文件类型，不依赖 glob（空 glob 会让 ls 列当前目录）
+  if [[ -d "$BACKUP_DIR" ]]; then
+    find "$BACKUP_DIR" -maxdepth 1 -type f -name 'one-api.db.*.bak' -printf '%T@\t%p\n' 2>/dev/null \
+      | sort -rn \
+      | awk 'NR > 10 { sub(/^[^\t]*\t/, ""); print }' \
+      | xargs -r rm -f --
+  fi
 
   # --- 3 回滚点 ---
   say "3/8 记录回滚点"
