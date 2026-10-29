@@ -41,7 +41,7 @@
 
 set -euo pipefail
 
-SCRIPT_VER="2026-10-29.11-safe-rollback"
+SCRIPT_VER="2026-10-29.12-studio"
 
 # ---------- 自拷贝执行（见安全约定 6） ----------
 if [[ "${__UPGRADE_REEXEC:-0}" != "1" ]]; then
@@ -287,6 +287,13 @@ verify_after() {
       warn "     → IP 没变还打不通，去 1Panel 看这个站点的反代配置，或手动 curl 复核"
     fi
     VERIFY_FAIL=$((VERIFY_FAIL + 1))
+  fi
+
+  # ④ 画布工作台：纯提示，不参与判定（没上传也不该算失败）
+  if [[ -f "$DATA_DIR/studio/index.html" ]]; then
+    info "  ④ 画布工作台：已部署 → http://127.0.0.1:${APP_PORT}/studio/"
+  else
+    info "  ④ 画布工作台：未部署（把画布产物解压到 $DATA_DIR/studio 即可，不用重建镜像）"
   fi
   return 0
 }

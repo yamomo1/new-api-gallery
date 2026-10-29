@@ -11,13 +11,15 @@ const ENV_STUDIO_URL = (
   import.meta as unknown as { env?: Record<string, string | undefined> }
 ).env?.VITE_CANVAS_STUDIO_URL
 
-/** 本地开发默认指向画布 dev/preview 服务，线上默认指向画布子域 */
+/** 本地开发默认指向画布 dev/preview 服务，线上与主站同域（由后端托管在 /studio/） */
 function defaultStudioUrl(): string {
   if (typeof window !== 'undefined') {
     const host = window.location.hostname
     if (host === '127.0.0.1' || host === 'localhost') {
       return 'http://127.0.0.1:5189'
     }
+    // 与主站同域：不需要另开域名/证书/反代，画布产物传到 deploy/data/studio 即可
+    return `${window.location.origin}/studio`
   }
   return 'https://canvas.cdymm.com'
 }

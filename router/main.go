@@ -14,6 +14,8 @@ import (
 
 func SetRouter(router *gin.Engine, assets WebAssets) {
 	SetApiRouter(router)
+	// 二开：/studio 托管画布工作台静态产物（目录不存在时自动跳过）
+	SetStudioRouter(router)
 	SetDashboardRouter(router)
 	SetRelayRouter(router)
 	SetTaskPluginProtocolRouter(router)
