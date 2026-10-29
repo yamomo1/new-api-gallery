@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 #
-# new-api 现状诊断（只读，不改任何东西）
+# new-api 现状诊断 + 一步升级
 # ------------------------------------------------------------------
-# 作用：把服务器上正在跑的 new-api 摸清楚，输出一份可以直接粘贴给 AI/同事的报告，
-#       并顺带打印一份「按你当前容器 1:1 生成」的 compose 草稿。
+# 作用：把服务器上正在跑的 new-api 摸清楚，输出一份可直接粘贴给 AI/同事的报告，
+#       按当前容器 1:1 生成 compose 草稿，并给出一份只针对本机的升级计划。
+#       加 --upgrade 就地执行升级（备份/构建/切容器/探活/失败回滚全自动）。
 #
 # 用法：
 #   ./deploy/diagnose.sh               只诊断：输出报告 + 本机专属升级计划（口令已脱敏）
@@ -33,7 +34,7 @@ for arg in "$@"; do
     --plan|-p)    DO_PLAN=1 ;;
     --yes|-y)     ASSUME_YES=1 ;;
     --skip-git)   SKIP_GIT=1 ;;
-    -h|--help)    sed -n '2,24p' "$0"; exit 0 ;;
+    -h|--help)    awk 'NR>1 && /^#/ {print; next} NR>1 {exit}' "$0"; exit 0 ;;
     -*)           printf '未知参数：%s（-h 看用法）\n' "$arg" >&2; exit 2 ;;
     *)            C_NAME="$arg" ;;
   esac
