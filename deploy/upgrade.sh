@@ -31,7 +31,7 @@
 
 set -euo pipefail
 
-SCRIPT_VER="2026-10-29.7-netkeep"
+SCRIPT_VER="2026-10-29.8-net-default"
 
 # ---------- 自拷贝执行（见安全约定 6） ----------
 if [[ "${__UPGRADE_REEXEC:-0}" != "1" ]]; then
@@ -62,6 +62,11 @@ SERVICE="new-api"
 CONTAINER="new-api-gallery"
 BRANCH="${BRANCH:-gallery-fork}"
 APP_PORT="${APP_PORT:-3000}"
+# 这台机器上，SQL_DSN 写的是 1Panel 侧 PostgreSQL 的【容器名】，只能靠 docker 内置 DNS 解析，
+# 所以本容器必须常驻 1panel-network（172.18.0.0/16，1Panel 里所有容器——含商店装的 PG/Redis——都在这个网）。
+# 这个网络不在 deploy/docker-compose.yml 里，compose 重建容器后一定会丢 → 每次起来都补一遍。
+# 想关掉： NEW_API_EXTRA_NETWORKS= ./deploy/upgrade.sh
+EXTRA_NETS="${NEW_API_EXTRA_NETWORKS-1panel-network}"
 STAMP="$(date +%Y%m%d-%H%M%S)"
 
 info() { printf '[upgrade] %s\n' "$*"; }
@@ -103,20 +108,29 @@ container_nets() {
 }
 
 restore_networks() {
-  [[ -n "${PRE_NETS:-}" ]] || return 0
-  local cur net
+  local cur net want
   cur="$(container_nets)"
+  # 要保证在的网络 = 升级前就有的（可能含手工接的） + 固定要求的 EXTRA_NETS
+  want="$(printf '%s\n%s\n' "${PRE_NETS:-}" "${EXTRA_NETS:-}" | sed '/^[[:space:]]*$/d' | sort -u || true)"
+  if [[ -z "$want" ]]; then
+    return 0
+  fi
   while IFS= read -r net; do
     [[ -n "$net" ]] || continue
-    if printf '%s\n' "$cur" | grep -qxF "$net"; then
+    if printf '%s\n' "$cur" | grep -qxF -- "$net"; then
+      continue
+    fi
+    if ! docker network inspect "$net" >/dev/null 2>&1; then
+      warn "  docker 网络不存在，跳过：$net（核对： docker network ls）"
       continue
     fi
     if docker network connect "$net" "$CONTAINER" >/dev/null 2>&1; then
-      info "  已补接重建时丢失的 docker 网络：$net"
+      info "  已接上 docker 网络：$net"
     else
-      warn "  补接网络失败：$net（确认它还在： docker network ls）"
+      warn "  接不上网络 $net（docker network connect 失败，查： docker inspect $CONTAINER）"
     fi
-  done <<< "$PRE_NETS"
+  done <<< "$want"
+  return 0
 }
 
 # 探活失败时，从日志里认一下是不是「数据库主机名解析不了」这种网络问题
@@ -125,11 +139,10 @@ db_net_hint() {
   logs="$(compose logs --tail=80 "$SERVICE" 2>/dev/null || true)"
   if printf '%s' "$logs" | grep -qE 'hostname resolving error|no such host|server misbehaving'; then
     warn "  日志显示【数据库主机名解析失败】—— 不是代码问题，是容器没接上数据库所在的 docker 网络"
-    warn "  现场修（把 <pg容器名> 换成 SQL_DSN 里那个主机名）："
-    warn "    docker inspect <pg容器名> --format '看它的 Networks'   # 查在哪个网络"
-    warn "    docker network connect <网络名> $CONTAINER"
+    warn "  现场修（这台机器就是 1panel-network）："
+    warn "    docker network connect ${EXTRA_NETS:-1panel-network} $CONTAINER"
     warn "    docker restart $CONTAINER"
-    warn "  查你现在接了哪些网络： docker inspect $CONTAINER --format '看它的 Networks'"
+    warn "  查现状： docker inspect $CONTAINER --format '{{range \$k,\$v := .NetworkSettings.Networks}}{{println \$k}}{{end}}'"
   fi
 }
 
@@ -214,6 +227,16 @@ check_env() {
   head="$(git -C "$REPO" rev-parse --short HEAD 2>/dev/null || echo '?')"
   branch="$(git -C "$REPO" branch --show-current 2>/dev/null || echo '?')"
   info "  仓库 HEAD：$head（分支 $branch）"
+  if docker inspect "$CONTAINER" >/dev/null 2>&1; then
+    local nets
+    nets="$(container_nets)"
+    info "  容器网络：$(printf '%s' "$nets" | tr '\n' ' ')"
+    if [[ -n "${EXTRA_NETS:-}" ]] && [[ -n "$nets" ]] && ! printf '%s\n' "$nets" | grep -qxF -- "$EXTRA_NETS"; then
+      warn "  容器没接到 $EXTRA_NETS —— 数据库是 1Panel 的 PG，SQL_DSN 用容器名，"
+      warn "  不在同一网络就会 hostname resolving error 起不来。升级时脚本会自动补接；"
+      warn "  现在就想修： docker network connect $EXTRA_NETS $CONTAINER && docker restart $CONTAINER"
+    fi
+  fi
   [[ "$branch" == "$BRANCH" ]] || warn "  当前分支是 $branch，不是 $BRANCH，pull 可能不符合预期"
 
   if git -C "$REPO" fetch --prune -q origin "$BRANCH" 2>/dev/null; then
