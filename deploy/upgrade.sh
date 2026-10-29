@@ -1,62 +1,138 @@
 #!/usr/bin/env bash
 #
-# new-api 二开 生产升级脚本
-# ------------------------------------------------------------------
-# 适配布局：本仓库自带的 deploy/docker-compose.yml
-#   new-api（本仓库镜像，3000）+ postgres（数据在命名卷 pg_data）+ redis
-#   数据挂载：deploy/data -> /data   deploy/logs -> /app/logs
-#   配置来源：deploy/.env（含 SESSION_SECRET / CRYPT_KEY / 库口令）
+# new-api 二开 · 生产升级脚本（这台服务器唯一入口）
+# ==================================================================
+# 适配形态（按你服务器实测核对，不是通用模板）：
+#   · 仓库      /opt/new-api-gallery/new-api-gallery
+#   · 编排      deploy/docker-compose.yml（new-api + redis + postgres 定义）
+#   · 数据库    PostgreSQL 由 1Panel 侧承载 → 本脚本【不做数据库备份】
+#               重建应用容器不会触碰数据库；DB 备份走你自己的 1Panel 计划任务
+#               需要在升级前自动备份，就传 DB_BACKUP_CMD（见下）
+#   · 数据挂载  deploy/data -> /data       deploy/logs -> /app/logs
+#   · 配置      deploy/.env（SESSION_SECRET / CRYPT_KEY / SQL_DSN …）
+#   · 对外      3000:3000；1Panel 反代可能写的是容器 IP
 #
 # 用法：
-#   ./deploy/upgrade.sh              正常升级（备份 -> 拉码 -> 重建 -> 探活）
-#   ./deploy/upgrade.sh --check      只体检，不改任何东西
-#   SKIP_GIT=1 ./deploy/upgrade.sh   代码已手动上传，跳过 git pull
-#   SKIP_DB_BACKUP=1 ./deploy/upgrade.sh   跳过 pg_dump（已有其它备份策略时）
+#   ./deploy/upgrade.sh                        升级（默认动作）
+#   ./deploy/upgrade.sh --check                只体检，不改任何东西
+#   ./deploy/upgrade.sh --rollback             镜像换回上一版并重启
+#   SKIP_GIT=1 ./deploy/upgrade.sh             代码已手动放好，跳过 git pull
+#   DB_BACKUP_CMD='pg_dump … > /root/db.sql' ./deploy/upgrade.sh
+#                                              升级前先跑你自己的备份命令，失败即中止
 #
-# 本脚本的设计约束：
-#   · 全程没有任何 rm / find -delete / git clean。删除类操作一律没有。
-#   · 备份只增不减，由你自己决定什么时候清。
-#   · 工作树不干净就不拉代码，避免把未提交改动和远端混在一起。
-#   · 探活失败自动把镜像换回上一版并重启。
-#
-# 与 update.sh 的区别：
-#   update.sh 适配「数据在 /opt/new-api-gallery/data、单容器 SQLite」的布局；
-#   你这台机器是 compose 三容器 + PostgreSQL，用本脚本，不要用 update.sh。
-# ------------------------------------------------------------------
+# 安全约定（两起误删事故之后立的规矩，逐条对应）：
+#   1. 全文没有任何 rm / rmdir / find -delete / git clean / xargs rm
+#   2. 备份只增不减，什么时候清理由你自己决定
+#   3. 数据目录不存在直接拒绝，不"顺手"建一个空目录顶上
+#   4. 工作树只有权限位变化时自动修掉；有真实内容改动就拒绝 pull
+#   5. 构建失败线上不受影响；探活失败自动换回上一版镜像
+#   6. 脚本先把自己复制到 /tmp 再执行，避免 pull 改到脚本自身时 bash 读错位置
+# ==================================================================
 
 set -euo pipefail
 
-SCRIPT_VER="2026-10-29.1-compose"
+SCRIPT_VER="2026-10-29.4-compose-1panel-pg"
 
-DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# ---------- 自拷贝执行（见安全约定 6） ----------
+if [[ "${__UPGRADE_REEXEC:-0}" != "1" ]]; then
+  __src="${BASH_SOURCE[0]}"
+  case "$__src" in
+    /*) ;;
+    *) __src="$(cd "$(dirname "$__src")" && pwd)/$(basename "$__src")" ;;
+  esac
+  __copy="${TMPDIR:-/tmp}/newapi-upgrade-run.sh"
+  cp -f -- "$__src" "$__copy"
+  chmod 700 "$__copy"
+  export __UPGRADE_REEXEC=1
+  export __UPGRADE_DIR="$(dirname "$__src")"
+  export __UPGRADE_NAME="$(basename "$__src")"
+  exec bash "$__copy" "$@"
+fi
+
+DIR="${__UPGRADE_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)}"
+ME="$DIR/${__UPGRADE_NAME:-upgrade.sh}"
 REPO="$(cd "$DIR/.." && pwd)"
-BACKUP_DIR="$DIR/backups"
-ENV_FILE="$DIR/.env"
 COMPOSE_FILE="$DIR/docker-compose.yml"
+ENV_FILE="$DIR/.env"
+DATA_DIR="$DIR/data"
+LOG_DIR="$DIR/logs"
+BACKUP_DIR="$DIR/backups"
 IMAGE="new-api-gallery"
 SERVICE="new-api"
-PG_SERVICE="postgres"
+CONTAINER="new-api-gallery"
 BRANCH="${BRANCH:-gallery-fork}"
 APP_PORT="${APP_PORT:-3000}"
-SKIP_GIT="${SKIP_GIT:-0}"
-SKIP_DB_BACKUP="${SKIP_DB_BACKUP:-0}"
 STAMP="$(date +%Y%m%d-%H%M%S)"
 
-info() { printf '\033[36m[upgrade]\033[0m %s\n' "$*"; }
-warn() { printf '\033[33m[warn]\033[0m %s\n' "$*"; }
-fail() { printf '\033[31m[fail]\033[0m %s\n' "$*" >&2; exit 1; }
+info() { printf '[upgrade] %s\n' "$*"; }
+warn() { printf '[warn] %s\n' "$*"; }
+fail() { printf '[fail] %s\n' "$*" >&2; exit 1; }
+step() { printf '\n===== %s =====\n' "$*"; }
 
-# ---------- 探活 ----------
-# 优先容器内 wget（镜像自带），其次宿主机 3000 端口（compose 已发布 3000:3000）
+compose() { docker compose -f "$COMPOSE_FILE" "$@"; }
+
+have_curl() { command -v curl >/dev/null 2>&1; }
+
+container_ip() {
+  docker inspect "$CONTAINER" \
+    --format '{{range .NetworkSettings.Networks}}{{.IPAddress}} {{end}}' 2>/dev/null \
+    | awk 'NF { print $1; exit }' || true
+}
+
+container_mounts() {
+  docker inspect "$CONTAINER" \
+    --format '{{range .Mounts}}{{.Source}} -> {{.Destination}}{{"\n"}}{{end}}' 2>/dev/null || true
+}
+
+# ---------- 数据库现状（只读判断，不做备份） ----------
+PG_HOST=""
+PG_KIND=""
+detect_pg() {
+  PG_HOST=""
+  if [[ ! -f "$ENV_FILE" ]]; then
+    PG_KIND="未知（deploy/.env 不存在）"
+    return 0
+  fi
+  local line dsn host
+  line="$(grep -m1 -E '^[[:space:]]*SQL_DSN=' "$ENV_FILE" 2>/dev/null || true)"
+  if [[ -z "$line" ]]; then
+    PG_KIND="未设置 SQL_DSN（默认 SQLite）"
+    return 0
+  fi
+  dsn="$(printf '%s' "${line#*=}" | tr -d "\"'")"
+  host="${dsn#*://}"
+  host="${host#*@}"
+  host="${host%%/*}"
+  host="${host%%:*}"
+  PG_HOST="$host"
+  case "$host" in
+    postgres|new-api-gallery-pg) PG_KIND="compose 内置 PostgreSQL（$host）" ;;
+    localhost|127.0.0.1|host.docker.internal) PG_KIND="宿主机上的 PostgreSQL（$host）" ;;
+    "") PG_KIND="SQL_DSN 解析不出主机" ;;
+    *) PG_KIND="外部 PostgreSQL（$host，1Panel 侧）" ;;
+  esac
+}
+
+# ---------- 探活：容器内 → 宿主机端口 → 容器 IP ----------
+# 按墙钟截止，不会被多端点超时叠加成几分钟（最坏 ceil(PROBE_TIMEOUT/2) 轮）
+PROBE_TIMEOUT="${PROBE_TIMEOUT:-90}"
 probe() {
-  local i
-  for i in $(seq 1 40); do
-    if docker compose -f "$COMPOSE_FILE" exec -T "$SERVICE" \
-         wget -qO- --timeout=2 "http://127.0.0.1:${APP_PORT}/api/status" 2>/dev/null \
+  local deadline=$(( SECONDS + PROBE_TIMEOUT ))
+  local ip
+  while [[ $SECONDS -lt $deadline ]]; do
+    if compose exec -T "$SERVICE" wget -qO- --timeout=2 \
+         "http://127.0.0.1:${APP_PORT}/api/status" 2>/dev/null \
          | grep -q '"success":true'; then
       return 0
     fi
-    if curl -fsS --max-time 2 "http://127.0.0.1:${APP_PORT}/api/status" 2>/dev/null \
+    if have_curl && curl -fsS --max-time 2 \
+         "http://127.0.0.1:${APP_PORT}/api/status" 2>/dev/null \
+         | grep -q '"success":true'; then
+      return 0
+    fi
+    ip="$(container_ip)"
+    if [[ -n "$ip" ]] && have_curl && curl -fsS --max-time 2 \
+         "http://$ip:${APP_PORT}/api/status" 2>/dev/null \
          | grep -q '"success":true'; then
       return 0
     fi
@@ -67,29 +143,35 @@ probe() {
 
 # ---------- 体检 ----------
 check_env() {
+  local head branch dirty behind
   info "环境体检"
   info "  脚本版本：$SCRIPT_VER"
   info "  仓库目录：$REPO"
   info "  编排文件：$COMPOSE_FILE"
   info "  配置文件：$ENV_FILE"
+  info "  数据目录：$DATA_DIR"
   info "  备份目录：$BACKUP_DIR"
 
-  [[ -d "$REPO/.git" ]]      || fail "不是 git 仓库：$REPO"
-  [[ -f "$COMPOSE_FILE" ]]   || fail "找不到编排文件：$COMPOSE_FILE"
-  [[ -f "$ENV_FILE" ]]       || fail "找不到 $ENV_FILE
-       → 这个文件存着 SESSION_SECRET 和数据库口令，丢了会导致全员掉线、连不上库
-       → 如果你确实没有它，说明不是用 deploy/deploy.sh 部署的，别继续，先跑 ./deploy/diagnose.sh"
+  [[ -d "$REPO/.git" ]]    || fail "不是 git 仓库：$REPO"
+  [[ -f "$COMPOSE_FILE" ]] || fail "找不到编排文件：$COMPOSE_FILE"
+  [[ -f "$ENV_FILE" ]]     || fail "找不到 $ENV_FILE
+       → 里面的 SESSION_SECRET / CRYPT_KEY 丢了会导致全员掉线
+       → 若确实没有，说明不是用 deploy/deploy.sh 部署的，先人工确认再继续"
   docker compose version >/dev/null 2>&1 || fail "找不到 docker compose"
 
-  if grep -q "CHANGE_ME" "$ENV_FILE" 2>/dev/null; then
-    warn "  .env 里还有 CHANGE_ME 占位值，请先改成真实值"
+  head="$(git -C "$REPO" rev-parse --short HEAD 2>/dev/null || echo '?')"
+  branch="$(git -C "$REPO" branch --show-current 2>/dev/null || echo '?')"
+  info "  仓库 HEAD：$head（分支 $branch）"
+  [[ "$branch" == "$BRANCH" ]] || warn "  当前分支是 $branch，不是 $BRANCH，pull 可能不符合预期"
+
+  if git -C "$REPO" fetch --prune -q origin "$BRANCH" 2>/dev/null; then
+    behind="$(git -C "$REPO" rev-list --count "HEAD..origin/$BRANCH" 2>/dev/null || echo '?')"
+    info "  远端落后：$behind 个提交（origin/$BRANCH）"
+  else
+    warn "  git fetch 失败（网络或凭据问题），无法判断是否有新版本"
   fi
 
-  info "  当前镜像：${IMAGE}:latest $(docker image inspect --format '{{.Created}}' "${IMAGE}:latest" 2>/dev/null || echo '（无）')"
-  info "  仓库 HEAD：$(git -C "$REPO" rev-parse --short HEAD 2>/dev/null || echo '?')（分支 $(git -C "$REPO" branch --show-current 2>/dev/null || echo '?')）"
-
-  local dirty
-  dirty="$(git -C "$REPO" status --porcelain 2>/dev/null | head -5 || true)"
+  dirty="$(git -C "$REPO" status --porcelain --untracked-files=no 2>/dev/null || true)"
   if [[ -n "$dirty" ]]; then
     warn "  工作树有未提交改动："
     printf '%s\n' "$dirty" | sed 's/^/        /'
@@ -97,105 +179,232 @@ check_env() {
     info "  工作树：干净"
   fi
 
-  local ip
-  ip="$(docker inspect "$IMAGE" --format '{{range .NetworkSettings.Networks}}{{.IPAddress}} {{end}}' 2>/dev/null | awk '{print $1}' || true)"
+  detect_pg
+  info "  数据库：$PG_KIND"
+  info "  数据库备份：本脚本不做（重建应用容器不触碰数据库）"
+
+  if [[ -d "$DATA_DIR" ]]; then
+    info "  数据目录：存在（$(du -sh "$DATA_DIR" 2>/dev/null | cut -f1) / $(find "$DATA_DIR" -maxdepth 1 -type f 2>/dev/null | wc -l) 个文件）"
+  else
+    warn "  数据目录不存在：$DATA_DIR —— 升级会被拒绝（不会自动创建空目录）"
+  fi
+
+  info "  镜像 ${IMAGE}:latest   $(docker image inspect --format '{{.Created}}' "${IMAGE}:latest" 2>/dev/null || echo '（无）')"
+  info "  镜像 ${IMAGE}:previous $(docker image inspect --format '{{.Created}}' "${IMAGE}:previous" 2>/dev/null || echo '（无，首次升级后才有）')"
+
+  local st ip
+  st="$(docker inspect "$CONTAINER" --format '{{.State.Status}}' 2>/dev/null || echo '不存在')"
+  info "  容器 $CONTAINER：$st"
+  ip="$(container_ip)"
   if [[ -n "$ip" ]]; then
-    info "  容器 IP：$ip（如果 1Panel 反代写的是容器 IP，重建后可能要改）"
+    info "  容器 IP：$ip  ← 1Panel 反代若写的是容器 IP，重建后请确认仍是这个（或改成 127.0.0.1:${APP_PORT}）"
+  fi
+  if [[ "$st" == "running" ]]; then
+    info "  当前挂载："
+    container_mounts | sed 's/^/        /'
   fi
 }
 
-if [[ "${1:-}" == "--check" ]]; then
+# ---------- 工作树脏：仅权限位变化自动修掉 ----------
+status_path() {
+  local line="$1"
+  local p="${line:3}"
+  p="${p%% -> *}"
+  p="${p%\"}"; p="${p#\"}"
+  printf '%s' "$p"
+}
+
+heal_mode_only_or_die() {
+  local dirty="$1"
+  local line p nums
+  local mode_only=1
+  local paths=()
+
+  while IFS= read -r line; do
+    [[ -z "$line" ]] && continue
+    p="$(status_path "$line")"
+    paths+=("$p")
+    nums="$(git -C "$REPO" diff HEAD --numstat -- "$p" 2>/dev/null | awk '{print $1" "$2}')"
+    if [[ "$nums" != "0 0" ]]; then
+      mode_only=0
+    fi
+  done <<< "$dirty"
+
+  if [[ "$mode_only" == "1" ]]; then
+    warn "  本地改动全部只是权限位变化（多半来自 chmod +x），自动丢弃这部分改动"
+    git -C "$REPO" checkout HEAD -- "${paths[@]}"
+    return 0
+  fi
+
+  printf '\n' >&2
+  printf '以下文件有真实内容改动，为避免覆盖，本次不拉代码：\n' >&2
+  printf '%s\n' "$dirty" | sed 's/^/  /' >&2
+  cat >&2 <<EOF
+
+请选一种处理方式：
+  a) 只是被误删（行首 D）：  cd $REPO && git ls-files -d -z | xargs -0 -r git checkout --
+  b) 想保留改动先收起来：    cd $REPO && git stash push -m "server-local"
+  c) 只按当前代码重建：      SKIP_GIT=1 $ME
+EOF
+  exit 1
+}
+
+# ---------- 回滚 ----------
+do_rollback() {
+  docker image inspect "${IMAGE}:previous" >/dev/null 2>&1 \
+    || fail "没有 ${IMAGE}:previous 镜像，无法回滚（首次升级前不存在这个标签）"
+  info "把 ${IMAGE}:previous 重新打为 ${IMAGE}:latest"
+  docker tag "${IMAGE}:previous" "${IMAGE}:latest"
+  compose up -d --no-deps --force-recreate "$SERVICE"
+}
+
+# ==================================================================
+# 参数
+# ==================================================================
+MODE="upgrade"
+case "${1:-}" in
+  "")            MODE="upgrade" ;;
+  --check)       MODE="check" ;;
+  --rollback)    MODE="rollback" ;;
+  -h|--help)     awk 'NR>1 { if (/^#/) { sub(/^# ?/, ""); print } else exit }' "${BASH_SOURCE[0]}"; exit 0 ;;
+  *)             fail "未知参数：$1（可用：--check / --rollback / --help）" ;;
+esac
+
+if [[ "${SKIP_DB_BACKUP:-0}" == "1" ]]; then
+  info "注：本脚本已不再备份数据库，SKIP_DB_BACKUP 不需要了（已忽略）"
+fi
+
+if [[ "$MODE" == "check" ]]; then
   check_env
+  printf '\n体检结束，未改动任何东西。\n直接升级： %s\n' "$ME"
   exit 0
 fi
 
-[[ "${1:-}" == "" ]] || fail "未知参数：$1（可用：--check）"
+if [[ "$MODE" == "rollback" ]]; then
+  check_env
+  step "回滚到上一版镜像"
+  do_rollback
+  if probe; then
+    info "回滚完成，服务已恢复（HEAD 未变，仍是 $(git -C "$REPO" rev-parse --short HEAD)）"
+    info "如需连代码一起退回，看 $BACKUP_DIR 下的 commit.*.txt 里记录的旧 HEAD"
+  else
+    fail "回滚后仍探活失败，请人工检查： docker compose -f $COMPOSE_FILE logs --tail=100 $SERVICE"
+  fi
+  exit 0
+fi
 
+# ==================================================================
+# 正式升级
+# ==================================================================
 check_env
 
-# ---------- 1. 检查工作树，脏就不拉码 ----------
-if [[ "$SKIP_GIT" != "1" ]]; then
-  if [[ -n "$(git -C "$REPO" status --porcelain 2>/dev/null || true)" ]]; then
-    fail "工作树不干净，拒绝 git pull
-       → 先看清楚改了什么： cd $REPO && git status --short
-       → 如果是文件被误删（行首 D）： git ls-files -d -z | xargs -0 -r git checkout --
-       → 如果确实是我不想要这些改动了：先 git stash 收起来（可随时 git stash pop 找回）
-       → 或者 SKIP_GIT=1 $0 跳过拉码，只用当前代码重建"
-  fi
-fi
+# 硬闸 1：数据目录必须存在（否则重建会顶上一个空目录）
+[[ -d "$DATA_DIR" ]] || fail "数据目录不存在：$DATA_DIR
+       → 它是容器 /data 的挂载源，缺了会挂上一个空目录
+       → 请先确认它是不是被移动或删除了，别急着重建容器"
 
-# ---------- 2. 备份 .env ----------
-info "步骤 1/5 备份 deploy/.env"
+# 硬闸 2：stamp 目录可写
 mkdir -p "$BACKUP_DIR"
-cp -a "$ENV_FILE" "$BACKUP_DIR/env.$STAMP"
-chmod 600 "$BACKUP_DIR/env.$STAMP"
-info "  -> $BACKUP_DIR/env.$STAMP"
+[[ -w "$BACKUP_DIR" ]] || fail "备份目录不可写：$BACKUP_DIR"
 
-# ---------- 3. 备份数据库（pg_dump） ----------
-info "步骤 2/5 备份 PostgreSQL"
-if [[ "$SKIP_DB_BACKUP" == "1" ]]; then
-  warn "  SKIP_DB_BACKUP=1，跳过"
-elif ! docker compose -f "$COMPOSE_FILE" ps "$PG_SERVICE" 2>/dev/null | grep -q "Up"; then
-  warn "  $PG_SERVICE 容器没在运行，跳过 pg_dump（确认你有其它备份策略）"
-else
-  DUMP="$BACKUP_DIR/pg-$STAMP.sql"
-  # 2>&1 >file：stderr 进变量（失败时打印），stdout 进 dump 文件
-  if ERR="$(docker compose -f "$COMPOSE_FILE" exec -T "$PG_SERVICE" \
-              pg_dump -U root -d new-api 2>&1 >"$DUMP")"; then
-    info "  -> $DUMP ($(du -h "$DUMP" | cut -f1))"
-  else
-    warn "  pg_dump 失败：${ERR:-无输出}"
-    warn "  数据库没备份成功。要继续请显式： SKIP_DB_BACKUP=1 $0"
-    exit 1
-  fi
-fi
+PRE_HEAD="$(git -C "$REPO" rev-parse HEAD)"
 
-# ---------- 4. 记录回滚点 + 拉代码 ----------
-info "步骤 3/5 记录回滚点"
+# ---------- 1. 回滚点 ----------
+step "1/6 记录回滚点"
 if docker image inspect "${IMAGE}:latest" >/dev/null 2>&1; then
   docker tag "${IMAGE}:latest" "${IMAGE}:previous"
-  info "  当前镜像已标记为 ${IMAGE}:previous"
+  info "  当前镜像已标记为 ${IMAGE}:previous（回滚用）"
 else
-  warn "  没有 ${IMAGE}:latest，本次无法自动回滚"
+  warn "  没有 ${IMAGE}:latest，本次构建失败将无法自动回滚"
 fi
 
-info "步骤 4/5 更新代码"
-if [[ "$SKIP_GIT" == "1" ]]; then
-  info "  SKIP_GIT=1，跳过 git pull"
+# ---------- 2. 备份配置 ----------
+step "2/6 备份配置"
+cp -a "$ENV_FILE" "$BACKUP_DIR/env.$STAMP"
+chmod 600 "$BACKUP_DIR/env.$STAMP"
+printf '%s\n' "$PRE_HEAD" > "$BACKUP_DIR/commit.$STAMP.txt"
+info "  deploy/.env        -> $BACKUP_DIR/env.$STAMP"
+info "  升级前 HEAD        -> $BACKUP_DIR/commit.$STAMP.txt（$PRE_HEAD）"
+
+# ---------- 3. 数据库备份（可选，交给你） ----------
+step "3/6 数据库备份"
+if [[ -n "${DB_BACKUP_CMD:-}" ]]; then
+  info "  执行 DB_BACKUP_CMD：$DB_BACKUP_CMD"
+  bash -c "$DB_BACKUP_CMD" || fail "DB_BACKUP_CMD 失败，已中止（不动线上）"
+  info "  备份命令执行成功"
 else
-  git -C "$REPO" pull --ff-only origin "$BRANCH" || fail "git pull 失败，请手动处理： cd $REPO && git status"
-  info "  HEAD -> $(git -C "$REPO" rev-parse --short HEAD)"
+  info "  跳过（$PG_KIND）"
+  info "  重建应用容器不会触碰数据库，数据本身没有风险"
+  info "  想在升级前自动备份，下次这样跑："
+  info "    DB_BACKUP_CMD='pg_dump -h <host> -U <user> -d new-api > /root/db-\$(date +%F).sql' $ME"
 fi
 
-# ---------- 5. 重建并启动 ----------
-info "步骤 5/5 重建镜像并启动（这一步最慢，前端要重新打包）"
-if ! docker compose -f "$COMPOSE_FILE" up -d --build; then
-  warn "构建或启动失败，线上仍是旧容器（compose 失败时不会替换）"
-  docker compose -f "$COMPOSE_FILE" logs --tail=30 "$SERVICE" 2>/dev/null || true
-  exit 1
-fi
-
-info "探活 http://127.0.0.1:${APP_PORT}/api/status ..."
-if probe; then
-  NEW_IP="$(docker inspect "$IMAGE" --format '{{range .NetworkSettings.Networks}}{{.IPAddress}} {{end}}' 2>/dev/null | awk '{print $1}' || true)"
-  echo
-  info "升级完成，HEAD=$(git -C "$REPO" rev-parse --short HEAD)"
-  info "容器 IP：${NEW_IP:-未知}"
-  [[ -n "${NEW_IP:-}" ]] && info "若 1Panel 反代写的是容器 IP，请确认就是上面这个；不一致就改反代地址"
-  info "回滚命令（如需）： docker tag ${IMAGE}:previous ${IMAGE}:latest && docker compose -f $COMPOSE_FILE up -d --force-recreate $SERVICE"
+# ---------- 4. 更新代码 ----------
+step "4/6 更新代码"
+if [[ "${SKIP_GIT:-0}" == "1" ]]; then
+  info "  SKIP_GIT=1，跳过 git pull（HEAD=$PRE_HEAD）"
 else
-  warn "探活 80 秒内未通过，自动回滚到上一版"
-  docker compose -f "$COMPOSE_FILE" logs --tail=40 "$SERVICE" 2>/dev/null || true
-  if docker image inspect "${IMAGE}:previous" >/dev/null 2>&1; then
-    docker tag "${IMAGE}:previous" "${IMAGE}:latest"
-    docker compose -f "$COMPOSE_FILE" up -d --force-recreate "$SERVICE"
-    if probe; then
-      warn "已回滚，服务恢复正常。请把上面的日志发出来排查新版本问题"
-    else
-      fail "回滚后仍然探活失败，请人工介入： docker compose -f $COMPOSE_FILE logs --tail=100 $SERVICE"
-    fi
+  git -C "$REPO" fetch --prune -q origin "$BRANCH" || fail "git fetch 失败（网络？）"
+  BEHIND="$(git -C "$REPO" rev-list --count "HEAD..origin/$BRANCH" 2>/dev/null || echo 0)"
+  if [[ "$BEHIND" == "0" ]]; then
+    info "  已是最新（$PRE_HEAD），无需 pull；按当前代码重建"
   else
-    fail "没有可用的回滚镜像，请人工介入"
+    info "  远端领先 $BEHIND 个提交"
+    DIRTY="$(git -C "$REPO" status --porcelain --untracked-files=no 2>/dev/null || true)"
+    if [[ -n "$DIRTY" ]]; then
+      heal_mode_only_or_die "$DIRTY"
+    fi
+    git -C "$REPO" pull --ff-only origin "$BRANCH" || fail "git pull 失败（可能有分叉）
+       → 看： cd $REPO && git status
+       → 或： SKIP_GIT=1 $ME 用当前代码重建"
+    info "  HEAD $PRE_HEAD -> $(git -C "$REPO" rev-parse --short HEAD)"
   fi
+fi
+
+# ---------- 5. 构建（旧容器仍在服务） ----------
+step "5/6 构建镜像（旧容器继续对外服务，这一步最慢）"
+if ! compose build "$SERVICE"; then
+  warn "构建失败，线上仍是旧容器，服务未受影响"
+  [[ "$(git -C "$REPO" rev-parse HEAD)" != "$PRE_HEAD" ]] \
+    && warn "注意：代码已更新到 $(git -C "$REPO" rev-parse --short HEAD)，但镜像是旧的；修好后重跑本脚本即可（幂等）"
   exit 1
+fi
+info "  构建完成：$(docker image inspect --format '{{.Created}}' "${IMAGE}:latest" 2>/dev/null || echo '?')"
+
+# ---------- 6. 启动 ----------
+step "6/6 启动新容器并探活"
+if ! compose up -d --no-deps "$SERVICE"; then
+  warn "启动失败，尝试回滚"
+  do_rollback
+  probe && warn "已回滚，服务正常" || fail "回滚后仍不可用，请人工介入"
+  exit 1
+fi
+
+info "  探活 http://127.0.0.1:${APP_PORT}/api/status（最多 ${PROBE_TIMEOUT} 秒）…"
+if probe; then
+  NEW_IP="$(container_ip)"
+  printf '\n'
+  info "升级完成"
+  info "  代码版本：$(git -C "$REPO" rev-parse --short HEAD)"
+  info "  镜像时间：$(docker image inspect --format '{{.Created}}' "${IMAGE}:latest" 2>/dev/null || echo '?')"
+  info "  容器 IP ：${NEW_IP:-未知}"
+  if [[ -n "$NEW_IP" ]]; then
+    info "  → 1Panel 反代若写的是容器 IP，请确认就是 $NEW_IP；不一致就改反代（也可改成 127.0.0.1:${APP_PORT}，端口已发布，以后不再受 IP 漂移影响）"
+  fi
+  info "  挂载检查："
+  container_mounts | sed 's/^/        /'
+  if ! container_mounts | grep -qF "$DATA_DIR -> /data"; then
+    warn "  ！容器 /data 的挂载源不是 $DATA_DIR，请立刻核对（可能是空站）"
+  fi
+  info "  备份留在：$BACKUP_DIR（env.$STAMP / commit.$STAMP.txt）"
+  info "  需要回滚：$ME --rollback"
+else
+  warn "${PROBE_TIMEOUT} 秒内探活未通过，自动回滚到上一版"
+  compose logs --tail=40 "$SERVICE" 2>/dev/null || true
+  do_rollback
+  if probe; then
+    fail "已回滚，服务恢复正常。请把上面的日志发出来排查新版本"
+  else
+    fail "回滚后仍探活失败，请人工介入： docker compose -f $COMPOSE_FILE logs --tail=100 $SERVICE"
+  fi
 fi
