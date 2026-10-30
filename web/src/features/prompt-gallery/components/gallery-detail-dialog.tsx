@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import {
   Check,
   Copy,
+  ExternalLink,
   Eye,
   Heart,
   Play,
@@ -19,6 +20,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { Skeleton } from '@/components/ui/skeleton'
+import { runningHubInviteUrl } from '@/features/canvas/runninghub'
 import { requireServerSuccess } from '@/lib/server-error-message'
 import { cn } from '@/lib/utils'
 import { resolveImageUrl } from '@/lib/storage'
@@ -129,6 +131,19 @@ function PromptBlock({ item }: { item: PromptGalleryItem }) {
       <p className='max-h-64 overflow-y-auto text-sm leading-relaxed whitespace-pre-wrap text-foreground/90'>
         {text}
       </p>
+      {/* 外链走 runningHubUrl 单一真源，始终带推广码；勿手拼 URL */}
+      <div className='mt-3 flex items-center justify-end'>
+        <a
+          href={runningHubInviteUrl()}
+          target='_blank'
+          rel='noopener noreferrer'
+          title={t('Opens RunningHub in a new tab with your invite code')}
+          className='inline-flex items-center gap-1 text-xs font-medium text-primary transition-colors hover:text-primary/80'
+        >
+          <ExternalLink className='size-3.5' />
+          {t('Try on RunningHub')}
+        </a>
+      </div>
     </div>
   )
 }
