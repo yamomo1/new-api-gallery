@@ -138,6 +138,10 @@ function PromptBlock({ item }: { item: PromptGalleryItem }) {
           target='_blank'
           rel='noopener noreferrer'
           title={t('Opens RunningHub in a new tab with your invite code')}
+          onClick={() => {
+            // 顺手把当前语种的提示词塞进剪贴板，新窗口里直接粘贴，少一步复制
+            void copyText(text)
+          }}
           className='inline-flex items-center gap-1 text-xs font-medium text-primary transition-colors hover:text-primary/80'
         >
           <ExternalLink className='size-3.5' />
