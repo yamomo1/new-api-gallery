@@ -82,6 +82,7 @@ import { Route as AuthenticatedSystemSettingsSecuritySectionRouteImport } from '
 import { Route as AuthenticatedSystemSettingsSiteIndexRouteImport } from './routes/_authenticated/system-settings/site/index'
 import { Route as AuthenticatedSystemSettingsSiteSectionRouteImport } from './routes/_authenticated/system-settings/site/$section'
 import { Route as AuthenticatedSystemSettingsStorageIndexRouteImport } from './routes/_authenticated/system-settings/storage/index'
+import { Route as AuthenticatedSystemSettingsWatermarkIndexRouteImport } from './routes/_authenticated/system-settings/watermark/index'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -487,6 +488,12 @@ const AuthenticatedSystemSettingsStorageIndexRoute =
     path: '/storage/',
     getParentRoute: () => AuthenticatedSystemSettingsRouteRoute,
   } as any)
+const AuthenticatedSystemSettingsWatermarkIndexRoute =
+  AuthenticatedSystemSettingsWatermarkIndexRouteImport.update({
+    id: '/watermark/',
+    path: '/watermark/',
+    getParentRoute: () => AuthenticatedSystemSettingsRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -560,6 +567,7 @@ export interface FileRoutesByFullPath {
   '/system-settings/security/': typeof AuthenticatedSystemSettingsSecurityIndexRoute
   '/system-settings/site/': typeof AuthenticatedSystemSettingsSiteIndexRoute
   '/system-settings/storage/': typeof AuthenticatedSystemSettingsStorageIndexRoute
+  '/system-settings/watermark/': typeof AuthenticatedSystemSettingsWatermarkIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -632,6 +640,7 @@ export interface FileRoutesByTo {
   '/system-settings/security': typeof AuthenticatedSystemSettingsSecurityIndexRoute
   '/system-settings/site': typeof AuthenticatedSystemSettingsSiteIndexRoute
   '/system-settings/storage': typeof AuthenticatedSystemSettingsStorageIndexRoute
+  '/system-settings/watermark': typeof AuthenticatedSystemSettingsWatermarkIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -708,6 +717,7 @@ export interface FileRoutesById {
   '/_authenticated/system-settings/security/': typeof AuthenticatedSystemSettingsSecurityIndexRoute
   '/_authenticated/system-settings/site/': typeof AuthenticatedSystemSettingsSiteIndexRoute
   '/_authenticated/system-settings/storage/': typeof AuthenticatedSystemSettingsStorageIndexRoute
+  '/_authenticated/system-settings/watermark/': typeof AuthenticatedSystemSettingsWatermarkIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -783,6 +793,7 @@ export interface FileRouteTypes {
     | '/system-settings/security/'
     | '/system-settings/site/'
     | '/system-settings/storage/'
+    | '/system-settings/watermark/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -855,6 +866,7 @@ export interface FileRouteTypes {
     | '/system-settings/security'
     | '/system-settings/site'
     | '/system-settings/storage'
+    | '/system-settings/watermark'
   id:
     | '__root__'
     | '/'
@@ -930,6 +942,7 @@ export interface FileRouteTypes {
     | '/_authenticated/system-settings/security/'
     | '/_authenticated/system-settings/site/'
     | '/_authenticated/system-settings/storage/'
+    | '/_authenticated/system-settings/watermark/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -1466,6 +1479,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSystemSettingsStorageIndexRouteImport
       parentRoute: typeof AuthenticatedSystemSettingsRouteRoute
     }
+    '/_authenticated/system-settings/watermark/': {
+      id: '/_authenticated/system-settings/watermark/'
+      path: '/watermark'
+      fullPath: '/system-settings/watermark/'
+      preLoaderRoute: typeof AuthenticatedSystemSettingsWatermarkIndexRouteImport
+      parentRoute: typeof AuthenticatedSystemSettingsRouteRoute
+    }
   }
 }
 
@@ -1514,6 +1534,7 @@ interface AuthenticatedSystemSettingsRouteRouteChildren {
   AuthenticatedSystemSettingsSecurityIndexRoute: typeof AuthenticatedSystemSettingsSecurityIndexRoute
   AuthenticatedSystemSettingsSiteIndexRoute: typeof AuthenticatedSystemSettingsSiteIndexRoute
   AuthenticatedSystemSettingsStorageIndexRoute: typeof AuthenticatedSystemSettingsStorageIndexRoute
+  AuthenticatedSystemSettingsWatermarkIndexRoute: typeof AuthenticatedSystemSettingsWatermarkIndexRoute
 }
 
 const AuthenticatedSystemSettingsRouteRouteChildren: AuthenticatedSystemSettingsRouteRouteChildren =
@@ -1554,6 +1575,8 @@ const AuthenticatedSystemSettingsRouteRouteChildren: AuthenticatedSystemSettings
       AuthenticatedSystemSettingsSiteIndexRoute,
     AuthenticatedSystemSettingsStorageIndexRoute:
       AuthenticatedSystemSettingsStorageIndexRoute,
+    AuthenticatedSystemSettingsWatermarkIndexRoute:
+      AuthenticatedSystemSettingsWatermarkIndexRoute,
   }
 
 const AuthenticatedSystemSettingsRouteRouteWithChildren =

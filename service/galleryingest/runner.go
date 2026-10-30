@@ -16,6 +16,7 @@ import (
 	"github.com/QuantumNous/new-api/logger"
 	"github.com/QuantumNous/new-api/model"
 	"github.com/QuantumNous/new-api/service/storage"
+	"github.com/QuantumNous/new-api/service/watermark"
 
 	"github.com/bytedance/gopkg/util/gopool"
 	"github.com/google/uuid"
@@ -278,11 +279,23 @@ func persistArtifact(ctx context.Context, art Artifact) (string, error) {
 		}
 	}
 
+	ext := extOf(contentType, art.Type)
+
 	provider, err := storage.Get()
 	if err != nil {
 		return "", fmt.Errorf("对象存储未就绪: %w", err)
 	}
-	key := fmt.Sprintf("gallery/%s/%s%s", time.Now().Format("20060102"), uuid.NewString(), extOf(contentType, art.Type))
+
+	// 采集产物的生成内容标识：在转存前施加，保证落进我们自己存储的每一份
+	// 文件都自带显式角标与隐式元数据——对外分发的永远是已标识的副本。
+	wm := watermark.ProcessAndLog(data, contentType, "gallery-ingest")
+	data = wm.Data
+	contentType = wm.ContentType
+	if wm.Ext != "" {
+		ext = wm.Ext
+	}
+
+	key := fmt.Sprintf("gallery/%s/%s%s", time.Now().Format("20060102"), uuid.NewString(), ext)
 	url, err := provider.Upload(key, contentType, data)
 	if err != nil {
 		return "", fmt.Errorf("上传到对象存储失败: %w", err)

@@ -100,8 +100,11 @@ RUN set -eux; \
         > /etc/apt/sources.list; \
     apt-get update \
     && apt-get install -y --no-install-recommends ca-certificates tzdata libasan8 wget \
+        ffmpeg fonts-wqy-microhei \
     && rm -rf /var/lib/apt/lists/* \
-    && update-ca-certificates
+    && update-ca-certificates \
+    && ffmpeg -version >/dev/null \
+    && test -f /usr/share/fonts/truetype/wqy/wqy-microhei.ttc
 COPY --from=builder2 /build/new-api /
 COPY LICENSE NOTICE THIRD-PARTY-LICENSES.md /licenses/
 EXPOSE 3000

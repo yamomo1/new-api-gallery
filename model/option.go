@@ -252,6 +252,25 @@ func InitOptionMap() {
 	common.OptionMap["StorageOverseasS3Secret"] = ""
 	common.OptionMap["StorageOverseasS3Domain"] = ""
 
+	// ===== 内容标识 / 水印（二开新增）=====
+	// 依据《人工智能生成合成内容标识办法》（2025-09-01 施行）：
+	// 显式标识 = 画面可读角标；隐式标识 = 文件元数据中的生成属性、服务提供者、内容编号。
+	common.OptionMap["WatermarkEnabled"] = "true"
+	common.OptionMap["WatermarkExplicit"] = "true"
+	common.OptionMap["WatermarkImplicit"] = "true"
+	common.OptionMap["WatermarkText"] = "AI 生成"
+	common.OptionMap["WatermarkPosition"] = "bottom-right"
+	common.OptionMap["WatermarkOpacity"] = "78"
+	common.OptionMap["WatermarkFontScale"] = "26" // 字号 = 图片最短边 / 该值
+	common.OptionMap["WatermarkColor"] = "#FFFFFF"
+	common.OptionMap["WatermarkBgEnabled"] = "true"
+	common.OptionMap["WatermarkFontPath"] = ""     // 空则自动探测系统字体，最后回退内嵌拉丁字体
+	common.OptionMap["WatermarkProviderName"] = "" // 空则取 SystemName
+	common.OptionMap["WatermarkDeclareText"] = "本内容由人工智能生成合成"
+	common.OptionMap["WatermarkFFmpegPath"] = ""        // 空则自动探测 PATH
+	common.OptionMap["WatermarkVideoMaxSeconds"] = "60" // 超过该时长只写元数据、不烧角标
+	common.OptionMap["WatermarkVideoMaxMB"] = "50"
+
 	common.OptionMap["UpstreamCostRatio"] = "{}" // 上游进货价表：{"模型名":{"in":0.5,"out":1.5}}（USD/1M tokens），毛利看板用它算成本
 	modelConfigs := config.GlobalConfig.ExportAllConfigs()
 	maps.Copy(common.OptionMap, modelConfigs)

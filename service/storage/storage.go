@@ -184,3 +184,64 @@ func publicBase(kind, prefix string) string {
 		return opt("Storage"+prefix+"LocalBaseURL", "/storage/static")
 	}
 }
+
+// ParseKeyFromURL 从公开访问 URL 反解出存储中的相对 key。
+// 用于「存量文件补打水印」这类需要回读原文件的场景：只有指向我们自己
+// 存储的文件才认领，外链一律返回 false，避免误抓他人资源。
+func ParseKeyFromURL(raw string) (string, bool) {
+	u := strings.TrimSpace(raw)
+	if u == "" {
+		return "", false
+	}
+	// 历史数据里可能残留 Windows 反斜杠路径（旧版本地存储拼接 bug 的产物），
+	// 先归一化成 URL 分隔符，否则这些文件永远补不上水印。
+	u = strings.ReplaceAll(u, `\`, "/")
+	cfg := GetPublicConfig()
+	bases := []string{cfg.CNBase}
+	if cfg.OverseasEnabled && cfg.OverseasBase != "" {
+		bases = append(bases, cfg.OverseasBase)
+	}
+	for _, b := range bases {
+		b = strings.TrimRight(b, "/")
+		if b == "" {
+			continue
+		}
+		if strings.HasPrefix(u, b+"/") {
+			key := strings.TrimPrefix(u, b+"/")
+			key = strings.TrimPrefix(key, "/")
+			// 连续斜杠（/storage/static//gallery/...）也一并收敛
+			for strings.Contains(key, "//") {
+				key = strings.ReplaceAll(key, "//", "/")
+			}
+			if key != "" {
+				return key, true
+			}
+		}
+	}
+	return "", false
+}
+
+// CurrentKind 返回当前国内主存储类型（local / alioss / qiniu / s3）。
+func CurrentKind() string {
+	kind := strings.TrimSpace(common.OptionMap["StorageProvider"])
+	if kind == "" {
+		return ProviderLocal
+	}
+	return kind
+}
+
+// LocalRoot 返回本地存储的根目录，仅在 CurrentKind() == "local" 时有意义。
+// 存量补打水印时直接读盘，比绕一圈 HTTP 回源快得多。
+func LocalRoot() string {
+	root := strings.TrimSpace(common.OptionMap["StorageLocalDir"])
+	if root == "" {
+		root = "/data/uploads"
+	}
+	return root
+}
+
+// PublicURL 把相对 key 还原成可公开访问的完整地址。
+func PublicURL(key string) string {
+	base := strings.TrimRight(publicBase(CurrentKind(), PrefixDomestic), "/")
+	return base + "/" + strings.TrimPrefix(key, "/")
+}

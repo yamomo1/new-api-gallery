@@ -109,6 +109,10 @@ function getSystemSettingsNavGroups(t: TFunction): NavGroup[] {
           icon: Images,
           items: [
             {
+              title: t('Watermark', { defaultValue: '内容标识' }),
+              url: '/system-settings/watermark',
+            },
+            {
               title: t('Home settings'),
               url: '/admin/home-settings',
             },

@@ -98,6 +98,14 @@ func SetApiRouter(router *gin.Engine) {
 			galleryIngestRoute.DELETE("/jobs/:id", controller.DeleteGalleryIngestJob)
 			galleryIngestRoute.POST("/run", controller.RunGalleryIngestOnce)
 		}
+		// 内容标识（水印）状态与存量补打，仅超管
+		watermarkRoute := apiRouter.Group("/watermark")
+		watermarkRoute.Use(middleware.RootAuth())
+		{
+			watermarkRoute.GET("/status", controller.GetWatermarkStatus)
+			watermarkRoute.POST("/backfill", controller.StartWatermarkBackfill)
+			watermarkRoute.GET("/backfill/status", controller.GetWatermarkBackfillStatus)
+		}
 		// Canvas 无限画布文档（二开新增：/canvas/:id 编辑器的服务端存储）
 		canvasRoute := apiRouter.Group("/canvas/v1")
 		{
