@@ -146,9 +146,22 @@ export function GalleryCard({
       <div className='absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/45 to-transparent p-3 pt-8'>
         <div className='flex items-end justify-between gap-2'>
           <div className='min-w-0'>
-            <p className='truncate text-sm font-semibold text-white'>
+            {/*
+              真 <a href>：卡片整体是 SPA onClick，对不执行 JS 的爬虫等于不存在；
+              标题这一条链接是卡片里唯一可被顺着抓的内链（配合 sitemap 双保险）。
+            */}
+            <a
+              href={`/prompt-gallery/${item.id}`}
+              title={item.title}
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                onOpen?.(item)
+              }}
+              className='block truncate text-sm font-semibold text-white hover:underline'
+            >
               {item.title}
-            </p>
+            </a>
             {item.model && (
               <p className='mt-0.5 truncate text-[11px] text-white/65'>
                 {item.model}

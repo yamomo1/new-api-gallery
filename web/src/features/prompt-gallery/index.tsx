@@ -11,7 +11,6 @@ import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/stores/auth-store'
 
 import { GalleryCard, GalleryCardSkeleton, GalleryFilterPanel } from './components'
-import { GalleryDetailDialog } from './components/gallery-detail-dialog'
 import {
   useLikePromptGallery,
   useMyPromptGalleryFavorites,
@@ -37,13 +36,11 @@ export function PromptGallery() {
   const [query, setQuery] = useState('')
   const [debouncedQuery, setDebouncedQuery] = useState('')
   const [model, setModel] = useState('')
-  const [tag, setTag] = useState('')
+  const [tag, setTag] = useState<string>(
+    (search as { tag?: string }).tag || ''
+  )
   const [sort, setSort] = useState<PromptGallerySort>('related')
   const [offset, setOffset] = useState(0)
-  const [detail, setDetail] = useState<{
-    id: number
-    item: PromptGalleryItem | null
-  } | null>(null)
   const [favoritesOnly, setFavoritesOnly] = useState(false)
   const [favorites, setFavorites] = useState<Set<number>>(() => readFavorites())
   const [likedIds, setLikedIds] = useState<Set<number>>(() => readLiked())
@@ -162,7 +159,7 @@ export function PromptGallery() {
   // 单个作品分享：移动端走系统分享面板，桌面端复制直达链接
   const handleShareItem = useCallback(
     async (item: PromptGalleryItem) => {
-      const url = `${window.location.origin}/prompt-gallery?prompt=${item.id}`
+      const url = `${window.location.origin}/prompt-gallery/${item.id}`
       try {
         const coarse = window.matchMedia?.('(pointer: coarse)').matches
         if (coarse && navigator.share) {
@@ -183,24 +180,29 @@ export function PromptGallery() {
     [t]
   )
 
-  // 深链：/prompt-gallery?prompt=123 直接打开作品详情
+  // 旧版深链兼容：/prompt-gallery?prompt=123 → /prompt-gallery/123
+  // 详情已改成真路由（独立 URL 才能被搜索引擎收录），老分享链接不能断。
   const promptParam = (search as { prompt?: number }).prompt
   useEffect(() => {
     if (typeof promptParam === 'number' && Number.isFinite(promptParam) && promptParam > 0) {
-      setDetail({ id: promptParam, item: null })
-    }
-  }, [promptParam])
-
-  const closeDetail = useCallback(() => {
-    setDetail(null)
-    if (typeof promptParam === 'number') {
       navigate({
-        to: '/prompt-gallery',
-        search: (prev) => ({ ...prev, prompt: undefined }),
+        to: '/prompt-gallery/$id',
+        params: { id: String(promptParam) },
         replace: true,
       })
     }
-  }, [navigate, promptParam])
+  }, [promptParam, navigate])
+
+  // 打开作品详情：走路由跳转，而不是弹窗
+  const openDetail = useCallback(
+    (item: PromptGalleryItem) => {
+      void navigate({
+        to: '/prompt-gallery/$id',
+        params: { id: String(item.id) },
+      })
+    },
+    [navigate]
+  )
 
   const isLoading = listQuery.isLoading && allItems.length === 0
 
@@ -274,7 +276,7 @@ export function PromptGallery() {
                     key={item.id}
                     item={item}
                     index={i}
-                    onOpen={(it) => setDetail({ id: it.id, item: it })}
+                    onOpen={openDetail}
                     liked={likedIds.has(item.id)}
                     likeCount={likeCounts[item.id]}
                     onLike={handleLike}
@@ -307,28 +309,6 @@ export function PromptGallery() {
             </div>
           )}
         </div>
-
-        {/* 详情弹窗（全屏：左媒体+推荐，右双语提示词） */}
-        <GalleryDetailDialog
-          id={detail?.id ?? null}
-          fallback={detail?.item ?? null}
-          onClose={closeDetail}
-          liked={detail ? likedIds.has(detail.id) : false}
-          likeCount={detail ? likeCounts[detail.id] : undefined}
-          onLike={handleLike}
-          favorite={detail ? favorites.has(detail.id) : false}
-          onToggleFavorite={toggleFavorite}
-          onShare={handleShareItem}
-          onSelect={(id) => {
-            // 优先用列表缓存做 fallback，避免切换推荐时闪 skeleton
-            const found = allItems.find((it) => it.id === id)
-            setDetail({ id, item: found ?? null })
-          }}
-          onTagSelect={(tag) => {
-            setTag(tag)
-            closeDetail()
-          }}
-        />
       </PageTransition>
     </PublicLayout>
   )

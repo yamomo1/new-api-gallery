@@ -120,6 +120,32 @@ func GetPromptGalleryById(id int64) (*PromptGallery, error) {
 	return &item, nil
 }
 
+// PromptGallerySitemapItem 是生成 sitemap 用的最小字段集。
+// 只取 id 与更新时间，避免把 prompt/media 这些大字段读进内存。
+type PromptGallerySitemapItem struct {
+	Id        int64 `gorm:"column:id"`
+	UpdatedAt int64 `gorm:"column:updated_at"`
+}
+
+// ListPromptGallerySitemap 取已发布条目的 id 与更新时间（新→旧），供 sitemap 收录。
+// limit <= 0 时用默认上限（sitemap 协议单文件 5 万条上限，这里留足余量）。
+func ListPromptGallerySitemap(limit int) ([]PromptGallerySitemapItem, error) {
+	if DB == nil {
+		return nil, nil
+	}
+	if limit <= 0 {
+		limit = 5000
+	}
+	var items []PromptGallerySitemapItem
+	err := DB.Model(&PromptGallery{}).
+		Select("id", "updated_at").
+		Where("status = ?", PromptGalleryStatusPublished).
+		Order("id DESC").
+		Limit(limit).
+		Scan(&items).Error
+	return items, err
+}
+
 // GetPromptGalleryFacets 聚合分类/模型/类型/标签（仅统计已发布）
 func GetPromptGalleryFacets() (*PromptGalleryFacet, error) {
 	facet := &PromptGalleryFacet{Categories: []string{}, Models: []string{}, Types: []string{}, Tags: []string{}}

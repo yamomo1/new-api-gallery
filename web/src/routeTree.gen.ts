@@ -35,6 +35,7 @@ import { Route as AboutIndexRouteImport } from './routes/about/index'
 import { Route as OauthProviderRouteImport } from './routes/oauth/$provider'
 import { Route as PricingIndexRouteImport } from './routes/pricing/index'
 import { Route as PromptGalleryIndexRouteImport } from './routes/prompt-gallery/index'
+import { Route as PromptGalleryIdRouteImport } from './routes/prompt-gallery/$id'
 import { Route as RankingsIndexRouteImport } from './routes/rankings/index'
 import { Route as SetupIndexRouteImport } from './routes/setup/index'
 import { Route as authUserResetRouteImport } from './routes/(auth)/user/reset'
@@ -212,6 +213,11 @@ const PricingIndexRoute = PricingIndexRouteImport.update({
 const PromptGalleryIndexRoute = PromptGalleryIndexRouteImport.update({
   id: '/prompt-gallery/',
   path: '/prompt-gallery/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PromptGalleryIdRoute = PromptGalleryIdRouteImport.update({
+  id: '/prompt-gallery/$id',
+  path: '/prompt-gallery/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RankingsIndexRoute = RankingsIndexRouteImport.update({
@@ -524,6 +530,7 @@ export interface FileRoutesByFullPath {
   '/my-canvases': typeof AuthenticatedMyCanvasesRoute
   '/workspace': typeof AuthenticatedWorkspaceRoute
   '/oauth/$provider': typeof OauthProviderRoute
+  '/prompt-gallery/$id': typeof PromptGalleryIdRoute
   '/about/': typeof AboutIndexRoute
   '/pricing/': typeof PricingIndexRoute
   '/prompt-gallery/': typeof PromptGalleryIndexRoute
@@ -598,6 +605,7 @@ export interface FileRoutesByTo {
   '/my-canvases': typeof AuthenticatedMyCanvasesRoute
   '/workspace': typeof AuthenticatedWorkspaceRoute
   '/oauth/$provider': typeof OauthProviderRoute
+  '/prompt-gallery/$id': typeof PromptGalleryIdRoute
   '/about': typeof AboutIndexRoute
   '/pricing': typeof PricingIndexRoute
   '/prompt-gallery': typeof PromptGalleryIndexRoute
@@ -676,6 +684,7 @@ export interface FileRoutesById {
   '/_authenticated/my-canvases': typeof AuthenticatedMyCanvasesRoute
   '/_authenticated/workspace': typeof AuthenticatedWorkspaceRoute
   '/oauth/$provider': typeof OauthProviderRoute
+  '/prompt-gallery/$id': typeof PromptGalleryIdRoute
   '/about/': typeof AboutIndexRoute
   '/pricing/': typeof PricingIndexRoute
   '/prompt-gallery/': typeof PromptGalleryIndexRoute
@@ -753,6 +762,7 @@ export interface FileRouteTypes {
     | '/my-canvases'
     | '/workspace'
     | '/oauth/$provider'
+    | '/prompt-gallery/$id'
     | '/about/'
     | '/pricing/'
     | '/prompt-gallery/'
@@ -827,6 +837,7 @@ export interface FileRouteTypes {
     | '/my-canvases'
     | '/workspace'
     | '/oauth/$provider'
+    | '/prompt-gallery/$id'
     | '/about'
     | '/pricing'
     | '/prompt-gallery'
@@ -904,6 +915,7 @@ export interface FileRouteTypes {
     | '/_authenticated/my-canvases'
     | '/_authenticated/workspace'
     | '/oauth/$provider'
+    | '/prompt-gallery/$id'
     | '/about/'
     | '/pricing/'
     | '/prompt-gallery/'
@@ -971,6 +983,7 @@ export interface RootRouteChildren {
   errors500Route: typeof errors500Route
   errors503Route: typeof errors503Route
   OauthProviderRoute: typeof OauthProviderRoute
+  PromptGalleryIdRoute: typeof PromptGalleryIdRoute
   AboutIndexRoute: typeof AboutIndexRoute
   PricingIndexRoute: typeof PricingIndexRoute
   PromptGalleryIndexRoute: typeof PromptGalleryIndexRoute
@@ -1161,6 +1174,13 @@ declare module '@tanstack/react-router' {
       path: '/prompt-gallery'
       fullPath: '/prompt-gallery/'
       preLoaderRoute: typeof PromptGalleryIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/prompt-gallery/$id': {
+      id: '/prompt-gallery/$id'
+      path: '/prompt-gallery/$id'
+      fullPath: '/prompt-gallery/$id'
+      preLoaderRoute: typeof PromptGalleryIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/rankings/': {
@@ -1691,6 +1711,7 @@ const rootRouteChildren: RootRouteChildren = {
   errors500Route: errors500Route,
   errors503Route: errors503Route,
   OauthProviderRoute: OauthProviderRoute,
+  PromptGalleryIdRoute: PromptGalleryIdRoute,
   AboutIndexRoute: AboutIndexRoute,
   PricingIndexRoute: PricingIndexRoute,
   PromptGalleryIndexRoute: PromptGalleryIndexRoute,

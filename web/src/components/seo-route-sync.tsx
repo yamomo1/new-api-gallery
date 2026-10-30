@@ -19,12 +19,15 @@ For commercial licensing, please contact support@quantumnous.com
 import { useRouterState } from '@tanstack/react-router'
 import { useEffect } from 'react'
 
-import { applySeo, loadSeoConfig } from '@/lib/seo'
+import { applySeoForPath, loadSeoConfig } from '@/lib/seo'
 
 /**
  * 路由变化时把 head 里的 title/description/canonical 同步成当前页面的。
  * 挂在根组件上，全站只需一处；具体文案全部来自后台 SEO 配置，
  * 前端不重复维护一套文案。
+ *
+ * 详情页会在拿到数据后用 setSeoOverride 登记自己的标题，这里通过
+ * applySeoForPath 统一走「覆盖优先」，避免两边互相盖回去。
  */
 export function SeoRouteSync() {
   const pathname = useRouterState({ select: (s) => s.location.pathname })
@@ -33,7 +36,7 @@ export function SeoRouteSync() {
     let cancelled = false
     void loadSeoConfig().then((cfg) => {
       if (cancelled || !cfg) return
-      applySeo(cfg, pathname)
+      applySeoForPath(cfg, pathname)
     })
     return () => {
       cancelled = true

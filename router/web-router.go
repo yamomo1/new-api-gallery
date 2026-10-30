@@ -2,7 +2,6 @@ package router
 
 import (
 	"embed"
-	"net/http"
 	"strings"
 
 	"github.com/QuantumNous/new-api/common"
@@ -50,7 +49,10 @@ func SetWebRouter(router *gin.Engine, assets WebAssets, pluginDispatcher gin.Han
 			c.Header("Cache-Control", "no-cache")
 			// 服务端按路径注入 title / description / canonical / OG / JSON-LD：
 			// 大模型爬虫不执行 JS，只能看到这里吐出去的 HTML。
-			c.Data(http.StatusOK, "text/html; charset=utf-8", seo.InjectIndex(assets.IndexPage, c.Request.URL.Path))
+			// 详情页（/prompt-gallery/:id）会额外查库拿该条的标题、封面与提示词正文；
+			// 记录不存在时返回 404，让搜索引擎正确下架而不是索引一张空壳页。
+			injection := seo.InjectIndex(assets.IndexPage, c.Request.URL.Path)
+			c.Data(injection.Status, "text/html; charset=utf-8", injection.HTML)
 		},
 	)
 }

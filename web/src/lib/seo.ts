@@ -148,35 +148,68 @@ export type ResolvedSeo = {
   keywords: string
   robots: string
   canonical: string
+  image: string
+  ogType: string
 }
 
-export function resolveSeo(cfg: SeoConfig, path: string): ResolvedSeo {
+/**
+ * 单页运行时覆盖：详情页（/prompt-gallery/:id）的标题/描述来自数据库记录，
+ * 不可能写进后台的静态页面配置里，所以由页面在拿到数据后自己登记。
+ */
+export type SeoOverride = {
+  title?: string
+  description?: string
+  keywords?: string
+  robots?: string
+  image?: string
+  ogType?: string
+}
+
+const overrides = new Map<string, SeoOverride>()
+
+/** 登记/清除某条路径的运行时覆盖（path 传 null 表示清除）。 */
+export function setSeoOverride(path: string, meta: SeoOverride | null) {
+  const p = normalizePath(path)
+  if (meta) overrides.set(p, meta)
+  else overrides.delete(p)
+}
+
+export function resolveSeo(
+  cfg: SeoConfig,
+  path: string,
+  override?: SeoOverride
+): ResolvedSeo {
   const p = normalizePath(path)
   const page = pageMetaFor(cfg, p)
+  const title0 = override?.title ?? page.title
   let title = cfg.defaultTitle
-  if (page.title) {
+  if (title0) {
     title =
-      page.title.includes(cfg.siteName) || page.title.includes(cfg.brand)
-        ? page.title
+      title0.includes(cfg.siteName) || title0.includes(cfg.brand)
+        ? title0
         : (cfg.titleTemplate || '{page}')
-            .replace('{page}', page.title)
+            .replace('{page}', title0)
             .replace('{site}', cfg.siteName)
   }
   const isPrivate = isPrivatePath(p)
   // 后台页面没配 title 时用「分区名 · 站名」，别让所有后台页都叫同一个默认标题
-  if (!page.title && isPrivate) {
+  if (!title0 && isPrivate) {
     const label = privateLabel(p)
     if (label) title = `${label} · ${cfg.siteName}`
   }
   const robots =
-    page.robots || (isPrivate ? 'noindex,follow' : cfg.robots || 'index,follow')
+    override?.robots ||
+    page.robots ||
+    (isPrivate ? 'noindex,follow' : cfg.robots || 'index,follow')
   const base = (cfg.baseUrl || window.location.origin).replace(/\/+$/, '')
   return {
     title,
-    description: page.description || cfg.description,
-    keywords: page.keywords || cfg.keywords,
+    description: override?.description ?? page.description ?? cfg.description,
+    keywords: override?.keywords ?? page.keywords ?? cfg.keywords,
     robots,
     canonical: p === '/' ? base + '/' : base + p,
+    image: override?.image || cfg.ogImage,
+    ogType: override?.ogType || 'website',
   }
 }
 
@@ -204,22 +237,31 @@ function upsertCanonical(href: string) {
 }
 
 /** 把某一页的 SEO 写进当前文档头。 */
-export function applySeo(cfg: SeoConfig, path: string) {
-  const meta = resolveSeo(cfg, path)
+export function applySeo(cfg: SeoConfig, path: string, override?: SeoOverride) {
+  const meta = resolveSeo(cfg, path, override)
   document.title = meta.title
   // 与 index.html 里的 <meta name="title"> 保持一致，部分老爬虫仍读它
   upsertMeta('name', 'title', meta.title)
   upsertMeta('name', 'description', meta.description)
   upsertMeta('name', 'keywords', meta.keywords)
   upsertMeta('name', 'robots', meta.robots)
+  upsertMeta('property', 'og:type', meta.ogType)
   upsertMeta('property', 'og:title', meta.title)
   upsertMeta('property', 'og:description', meta.description)
   upsertMeta('property', 'og:url', meta.canonical)
   upsertMeta('property', 'og:site_name', cfg.siteName)
-  if (cfg.ogImage) upsertMeta('property', 'og:image', cfg.ogImage)
+  upsertMeta('property', 'og:image', meta.image)
   upsertMeta('name', 'twitter:card', 'summary_large_image')
   upsertMeta('name', 'twitter:title', meta.title)
   upsertMeta('name', 'twitter:description', meta.description)
-  if (cfg.ogImage) upsertMeta('name', 'twitter:image', cfg.ogImage)
+  upsertMeta('name', 'twitter:image', meta.image)
   upsertCanonical(meta.canonical)
+}
+
+/**
+ * 按路径 + 已登记的运行时覆盖写 head。
+ * 路由同步（SeoRouteSync）与详情页共用这一个入口，避免两边互相覆盖。
+ */
+export function applySeoForPath(cfg: SeoConfig, path: string) {
+  applySeo(cfg, path, overrides.get(normalizePath(path)))
 }
