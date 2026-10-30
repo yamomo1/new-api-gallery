@@ -48,16 +48,31 @@ type ChatCompletionResponse = {
 const MAX_PROMPT_CHARS = 4000
 
 const SYSTEM_PROMPT = [
-  'You are a translation engine for AI image prompts.',
-  'Translate the user-provided prompt into English.',
-  'Rules:',
-  '1. Output ONLY the translated prompt, with no explanation, quotes, or prefixes.',
-  '2. Preserve the original structure: commas, line breaks, weights like (word:1.2),',
-  '   LoRA tags like <lora:name:0.8>, and special tokens.',
-  '3. Do not add, remove, or "improve" any description. Translate faithfully.',
-  '4. If the input is already English, return it unchanged.',
-  '5. Keep model trigger words, artist names, and brand names untranslated.',
+  'You are a translation engine. You are NOT a chatbot and you must never speak as one.',
+  'Your ONLY job: return the English translation of the text inside the <translate> tag.',
+  'HARD RULES (violating any of these is a critical failure):',
+  '1. Output ONLY the translated text. No explanations, no quotes, no prefixes, no notes.',
+  '2. NEVER introduce yourself, never say who you are, never greet the user,',
+  '   never ask questions, never add any sentence that is not the translation itself.',
+  '   Forbidden examples: "I am ...", "我是...", "Here is the translation", "Hello!".',
+  '3. If the input is a greeting or short phrase (e.g. 你好), just output its translation',
+  '   (e.g. Hello). It is NOT a conversation opener — do not reply to it.',
+  '4. Preserve the original structure: commas, line breaks, weights like (word:1.2),',
+  '   LoRA tags like <lora:name:0.8>, and special tokens. Do not add, remove or "improve" content.',
+  '5. If the input is already English, return it unchanged.',
+  '6. Keep model trigger words, artist names, and brand names untranslated.',
 ].join('\n')
+
+/** 把原文包进指令信封，避免短句（如「你好」）被模型当成聊天开场白 */
+function wrapUserMessage(text: string): string {
+  return [
+    'Translate the text inside the <translate> tag to English.',
+    'Reply with the translation ONLY — nothing else.',
+    '<translate>',
+    text,
+    '</translate>',
+  ].join('\n')
+}
 
 /**
  * @param prompt 待翻译的提示词
@@ -77,7 +92,7 @@ export async function translatePromptToEnglish(
 
   const messages: ChatMessage[] = [
     { role: 'system', content: SYSTEM_PROMPT },
-    { role: 'user', content: text.slice(0, MAX_PROMPT_CHARS) },
+    { role: 'user', content: wrapUserMessage(text.slice(0, MAX_PROMPT_CHARS)) },
   ]
 
   try {
@@ -94,8 +109,41 @@ export async function translatePromptToEnglish(
       { signal }
     )
     const content = res.data?.choices?.[0]?.message?.content?.trim()
-    return content || null
+    return sanitizeTranslation(content)
   } catch {
     return null
   }
+}
+
+/**
+ * 兜底清洗：个别模型无视 system 指令仍会"说话"
+ * （自我介绍 / "Here is the translation" 等对话文本），
+ * 这类输出绝不能落进英文提示词字段，直接判翻译失败。
+ * 同时剥掉包裹性的引号与 <translate> 标签残留。
+ */
+const CHAT_REPLY_PATTERNS = [
+  /^I am\b/i,
+  /^I'm\b/i,
+  /^(Sure|Of course|Certainly|Okay|OK)[,!]/i,
+  /^Here (is|'s)\b/i,
+  /^(This is|That is) the translation/i,
+  /^我是/,
+  /^(你好|您好)[!！。,，]/,
+  /^以下是|^翻译如下|^译文[:：]/,
+  /<translate>|<\/translate>/i,
+]
+
+function sanitizeTranslation(content: string | undefined): string | null {
+  if (!content) return null
+  let text = content.trim()
+  // 剥一层包裹引号（模型爱给翻译加引号）
+  if (
+    (text.startsWith('"') && text.endsWith('"')) ||
+    (text.startsWith('“') && text.endsWith('”'))
+  ) {
+    text = text.slice(1, -1).trim()
+  }
+  if (!text) return null
+  if (CHAT_REPLY_PATTERNS.some((re) => re.test(text))) return null
+  return text
 }
