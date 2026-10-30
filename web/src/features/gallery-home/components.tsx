@@ -8,6 +8,13 @@ import type { HeroCardConfig } from './data'
 import type { MotionContent } from './types'
 
 /* ---------------- HeroVideoStage：首屏视频背景（多段顺序播放） ---------------- */
+
+/**
+ * 首屏视频的占位图：视频下载/解码完成前先铺一张同色系静帧，
+ * 避免黑屏，也让 LCP 有个稳定的候选元素（比等视频首帧快得多）。
+ */
+const HERO_POSTER = '/images/home/hero-world-v3.webp'
+
 export function HeroVideoStage({ videos }: { videos: string[] }) {
   const [i, setI] = useState(0)
   /** 系统开启「减少动效」时不自动播放，只解码首帧，省流量也省电 */
@@ -35,7 +42,10 @@ export function HeroVideoStage({ videos }: { videos: string[] }) {
       autoPlay={!reduced}
       muted
       playsInline
-      preload={reduced ? 'metadata' : 'auto'}
+      poster={HERO_POSTER}
+      /* preload 以前是 auto：首屏要和 JS/CSS 抢带宽下整段视频（600KB+）。
+         metadata 只取头部，真正播放时才边下边播。 */
+      preload='metadata'
       disablePictureInPicture
       onEnded={() => setI((prev) => (prev + 1) % list.length)}
     />

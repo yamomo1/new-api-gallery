@@ -20,6 +20,8 @@ import { useNavigate } from '@tanstack/react-router'
 import i18n from 'i18next'
 import { useCallback, useEffect, useRef } from 'react'
 
+import { changeLanguageWithBundle } from '@/i18n/config'
+
 import {
   getSavedLanguage,
   sanitizeAuthRedirect,
@@ -60,7 +62,7 @@ export function useAuthRedirect() {
       applyAuthBundle(bundle)
       const savedLang = getSavedLanguage(bundle.user)
       if (savedLang && savedLang !== i18n.language) {
-        await i18n.changeLanguage(savedLang)
+        await changeLanguageWithBundle(savedLang)
       }
 
       const targetPath =
