@@ -3,6 +3,7 @@ package storage
 import (
 	"fmt"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 )
@@ -37,5 +38,7 @@ func (p *LocalProvider) Upload(key, contentType string, data []byte) (string, er
 	if err := os.WriteFile(full, data, 0o644); err != nil {
 		return "", err
 	}
-	return p.BaseURL + "/" + strings.TrimPrefix(clean, "/"), nil
+	// 对外 URL 必须用 POSIX 分隔符：Windows 下 filepath 会给出反斜杠，
+	// 直接拼进 URL 会让前端拿到 "/storage/static/\gallery\..." 这种坏地址。
+	return p.BaseURL + path.Clean("/"+key), nil
 }

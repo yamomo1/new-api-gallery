@@ -191,6 +191,25 @@ func InitOptionMap() {
 	common.OptionMap["AutomaticRetryStatusCodes"] = operation_setting.AutomaticRetryStatusCodesToString()
 	common.OptionMap["ExposeRatioEnabled"] = strconv.FormatBool(ratio_setting.IsExposeRatioEnabled())
 
+	// ===== 画廊自动采集（二开新增：提示词种子 → 上游生成 → 转存 → 画廊草稿）=====
+	common.OptionMap["GalleryIngestAutoEnabled"] = "false"
+	common.OptionMap["GalleryIngestProvider"] = "runninghub"
+	common.OptionMap["GalleryIngestAuthor"] = "cdymm studio"
+	// RunningHub 云端 ComfyUI（按 RH 币/秒计费，可出图也可出视频）
+	common.OptionMap["GalleryIngestRunningHubApiKey"] = ""
+	common.OptionMap["GalleryIngestRunningHubWorkflowId"] = ""
+	common.OptionMap["GalleryIngestRunningHubInstanceType"] = ""
+	// OpenAI 兼容生图（硅基流动 / 302.AI / 自建 SD 转发均可）
+	common.OptionMap["GalleryIngestOpenAIBaseURL"] = "https://api.siliconflow.cn"
+	common.OptionMap["GalleryIngestOpenAIApiKey"] = ""
+	common.OptionMap["GalleryIngestOpenAIModel"] = "Kwai-Kolors/Kolors"
+	common.OptionMap["GalleryIngestOpenAISize"] = "1024x1024"
+	// LiblibAI 星流开放平台（HMAC-SHA1 签名）
+	common.OptionMap["GalleryIngestLiblibAccessKey"] = ""
+	common.OptionMap["GalleryIngestLiblibSecretKey"] = ""
+	common.OptionMap["GalleryIngestLiblibTemplateUUID"] = ""
+	common.OptionMap["GalleryIngestLiblibSize"] = "1024x1024"
+
 	// ===== 存储设置（二开新增：全站图片上传，本地/阿里云OSS/七牛/S3 兼容）=====
 	common.OptionMap["StorageProvider"] = "local"
 	common.OptionMap["StorageLocalDir"] = "/data/uploads" // 与 deploy 的 bind mount 对齐

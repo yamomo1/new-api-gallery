@@ -87,6 +87,17 @@ func SetApiRouter(router *gin.Engine) {
 			promptGalleryRoute.DELETE("/admin/prompts/:id", middleware.AdminAuth(), controller.AdminDeletePromptGallery)
 			promptGalleryRoute.POST("/admin/prompts/:id/home", middleware.AdminAuth(), controller.AdminSetPromptGalleryHome)
 		}
+		// 画廊自动采集（二开新增，仅超管）：提示词种子 → 上游生成 → 转存 → 画廊草稿
+		galleryIngestRoute := apiRouter.Group("/gallery-ingest")
+		galleryIngestRoute.Use(middleware.RootAuth())
+		{
+			galleryIngestRoute.GET("/stats", controller.GalleryIngestStats)
+			galleryIngestRoute.GET("/jobs", controller.ListGalleryIngestJobs)
+			galleryIngestRoute.POST("/jobs", controller.CreateGalleryIngestSeeds)
+			galleryIngestRoute.POST("/jobs/:id/retry", controller.RetryGalleryIngestJob)
+			galleryIngestRoute.DELETE("/jobs/:id", controller.DeleteGalleryIngestJob)
+			galleryIngestRoute.POST("/run", controller.RunGalleryIngestOnce)
+		}
 		// Canvas 无限画布文档（二开新增：/canvas/:id 编辑器的服务端存储）
 		canvasRoute := apiRouter.Group("/canvas/v1")
 		{

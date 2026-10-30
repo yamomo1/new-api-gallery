@@ -378,6 +378,7 @@ func migrateDB() error {
 		&UserAccessToken{},
 		&PromptGallery{},
 		&PromptGalleryFavorite{},
+		&GalleryIngestJob{},
 		&GalleryProject{},
 		&CanvasDocument{},
 	)
