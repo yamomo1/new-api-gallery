@@ -46,6 +46,7 @@ import {
 const EMPTY_FORM: PromptGallerySubmit = {
   title: '',
   prompt: '',
+  prompt_en: '',
   model: '',
   type: 'image',
   cover: '',
@@ -97,6 +98,7 @@ export function MyWorks() {
     setForm({
       title: item.title,
       prompt: item.prompt,
+      prompt_en: item.prompt_en ?? '',
       model: item.model,
       type: item.type,
       cover: item.cover,
@@ -250,6 +252,22 @@ export function MyWorks() {
                 onChange={(e) => set('prompt', e.target.value)}
                 placeholder={t('The prompt that produced this work')}
                 rows={4}
+              />
+            </div>
+
+            <div className='space-y-1.5'>
+              <Label htmlFor='prompt-en'>
+                {t('English prompt')}
+                <span className='ml-1 text-xs font-normal text-muted-foreground'>
+                  ({t('optional')})
+                </span>
+              </Label>
+              <Textarea
+                id='prompt-en'
+                value={form.prompt_en ?? ''}
+                onChange={(e) => set('prompt_en', e.target.value)}
+                placeholder={t('English version of the prompt for bilingual display')}
+                rows={3}
               />
             </div>
 

@@ -269,10 +269,11 @@ export function PromptGallery() {
           <div className='columns-2 gap-6 md:columns-3 xl:columns-4'>
             {isLoading
               ? Array.from({ length: 8 }).map((_, i) => <GalleryCardSkeleton key={i} />)
-              : items.map((item) => (
+              : items.map((item, i) => (
                   <GalleryCard
                     key={item.id}
                     item={item}
+                    index={i}
                     onOpen={(it) => setDetail({ id: it.id, item: it })}
                     liked={likedIds.has(item.id)}
                     likeCount={likeCounts[item.id]}
@@ -307,7 +308,7 @@ export function PromptGallery() {
           )}
         </div>
 
-        {/* 详情弹窗 */}
+        {/* 详情弹窗（全屏：左媒体+推荐，右双语提示词） */}
         <GalleryDetailDialog
           id={detail?.id ?? null}
           fallback={detail?.item ?? null}
@@ -318,6 +319,15 @@ export function PromptGallery() {
           favorite={detail ? favorites.has(detail.id) : false}
           onToggleFavorite={toggleFavorite}
           onShare={handleShareItem}
+          onSelect={(id) => {
+            // 优先用列表缓存做 fallback，避免切换推荐时闪 skeleton
+            const found = allItems.find((it) => it.id === id)
+            setDetail({ id, item: found ?? null })
+          }}
+          onTagSelect={(tag) => {
+            setTag(tag)
+            closeDetail()
+          }}
         />
       </PageTransition>
     </PublicLayout>

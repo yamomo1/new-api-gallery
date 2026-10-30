@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { Copy, Eye, Heart, Play, Share2, Star, Video } from 'lucide-react'
+import { motion } from 'motion/react'
 
 import { cn } from '@/lib/utils'
 import { resolveImageUrl } from '@/lib/storage'
@@ -9,6 +10,8 @@ import { isVideoUrl, parseGalleryMedia } from '../utils'
 
 type GalleryCardProps = {
   item: PromptGalleryItem
+  /** 在列表中的序号，用于入场 stagger 延迟 */
+  index?: number
   onOpen?: (item: PromptGalleryItem) => void
   liked?: boolean
   likeCount?: number
@@ -23,6 +26,7 @@ type GalleryCardProps = {
 /** 单张画廊卡片（对标参考站）：封面 + 视频播放键 + 浏览量 + 底部浮层（标题/复制/点赞/收藏） */
 export function GalleryCard({
   item,
+  index = 0,
   onOpen,
   liked,
   likeCount,
@@ -65,13 +69,22 @@ export function GalleryCard({
   }
 
   return (
-    <figure
+    <motion.figure
       role='button'
       tabIndex={0}
       onClick={() => onOpen?.(item)}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') onOpen?.(item)
       }}
+      initial={{ opacity: 0, y: 18 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: '0px 0px -40px 0px' }}
+      transition={{
+        duration: 0.4,
+        ease: 'easeOut',
+        delay: (index % 12) * 0.045,
+      }}
+      whileHover={{ y: -4 }}
       className='group relative mb-6 cursor-pointer break-inside-avoid overflow-hidden rounded-2xl border border-border bg-card outline-none transition-shadow hover:shadow-xl focus-visible:ring-2 focus-visible:ring-ring'
     >
       <div className='relative w-full overflow-hidden bg-muted'>
@@ -186,7 +199,7 @@ export function GalleryCard({
           {item.prompt}
         </p>
       </div>
-    </figure>
+    </motion.figure>
   )
 }
 

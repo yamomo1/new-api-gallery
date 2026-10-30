@@ -18,6 +18,8 @@ export type PromptGalleryItem = {
   id: number
   title: string
   prompt: string
+  /** 英文版提示词（可选）：详情弹窗「英文/中文」双语 Tab 数据源 */
+  prompt_en?: string
   model: string
   type: PromptGalleryType
   cover: string

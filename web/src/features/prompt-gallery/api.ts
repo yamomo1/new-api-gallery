@@ -72,6 +72,8 @@ export async function getMyPromptGalleries(
 export type PromptGallerySubmit = {
   title: string
   prompt: string
+  /** 英文版提示词（可选） */
+  prompt_en?: string
   model: string
   type: string
   cover: string

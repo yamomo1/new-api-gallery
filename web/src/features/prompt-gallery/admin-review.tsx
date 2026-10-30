@@ -203,6 +203,7 @@ export function AdminPromptGalleryReview() {
         payload: {
           title: editing.title,
           prompt: editing.prompt,
+          prompt_en: editing.prompt_en ?? '',
           model: editing.model,
           type: editing.type,
           cover: editing.cover,
@@ -596,6 +597,21 @@ export function AdminPromptGalleryReview() {
                   value={editing.prompt}
                   onChange={(e) =>
                     setEditing({ ...editing, prompt: e.target.value })
+                  }
+                />
+              </div>
+              <div className='space-y-1.5'>
+                <Label>
+                  {t('English prompt')}
+                  <span className='ml-1 text-xs font-normal text-muted-foreground'>
+                    ({t('optional')})
+                  </span>
+                </Label>
+                <Textarea
+                  rows={4}
+                  value={editing.prompt_en ?? ''}
+                  onChange={(e) =>
+                    setEditing({ ...editing, prompt_en: e.target.value })
                   }
                 />
               </div>

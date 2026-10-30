@@ -15,6 +15,8 @@ type PromptGallery struct {
 	Id        int64  `json:"id" gorm:"primaryKey;autoIncrement"`
 	Title     string `json:"title" gorm:"type:text;not null"`
 	Prompt    string `json:"prompt" gorm:"type:text;not null"`
+	// PromptEn 英文版提示词（可选）：详情弹窗「英文/中文」双语 Tab 数据源
+	PromptEn  string `json:"prompt_en" gorm:"type:text"`
 	Model     string `json:"model" gorm:"type:varchar(191);index"`
 	Type      string `json:"type" gorm:"type:varchar(32);index;default:image"` // image / video
 	Cover     string `json:"cover" gorm:"type:text"`
@@ -233,6 +235,7 @@ func UpdatePromptGallery(userId int, id int64, update *PromptGallery) error {
 		Updates(map[string]any{
 			"title":      update.Title,
 			"prompt":     update.Prompt,
+			"prompt_en":  update.PromptEn,
 			"model":      update.Model,
 			"type":       update.Type,
 			"cover":      update.Cover,
@@ -393,6 +396,7 @@ func AdminUpdatePromptGallery(id int64, update *PromptGallery) error {
 	res := DB.Model(&PromptGallery{}).Where("id = ?", id).Updates(map[string]any{
 		"title":      update.Title,
 		"prompt":     update.Prompt,
+		"prompt_en":  update.PromptEn,
 		"model":      update.Model,
 		"type":       update.Type,
 		"cover":      update.Cover,

@@ -156,6 +156,7 @@ func CreateMyPromptGallery(c *gin.Context) {
 	var req struct {
 		Title    string `json:"title"`
 		Prompt   string `json:"prompt"`
+		PromptEn string `json:"prompt_en"`
 		Model    string `json:"model"`
 		Type     string `json:"type"`
 		Cover    string `json:"cover"`
@@ -174,6 +175,7 @@ func CreateMyPromptGallery(c *gin.Context) {
 	item := &model.PromptGallery{
 		Title:    req.Title,
 		Prompt:   req.Prompt,
+		PromptEn: req.PromptEn,
 		Model:    req.Model,
 		Type:     req.Type,
 		Cover:    req.Cover,
@@ -205,6 +207,7 @@ func UpdateMyPromptGallery(c *gin.Context) {
 	var req struct {
 		Title    string `json:"title"`
 		Prompt   string `json:"prompt"`
+		PromptEn string `json:"prompt_en"`
 		Model    string `json:"model"`
 		Type     string `json:"type"`
 		Cover    string `json:"cover"`
@@ -219,6 +222,7 @@ func UpdateMyPromptGallery(c *gin.Context) {
 	update := &model.PromptGallery{
 		Title:    req.Title,
 		Prompt:   req.Prompt,
+		PromptEn: req.PromptEn,
 		Model:    req.Model,
 		Type:     req.Type,
 		Cover:    req.Cover,
@@ -319,6 +323,7 @@ func AdminUpdatePromptGallery(c *gin.Context) {
 	var req struct {
 		Title    string `json:"title"`
 		Prompt   string `json:"prompt"`
+		PromptEn string `json:"prompt_en"`
 		Model    string `json:"model"`
 		Type     string `json:"type"`
 		Cover    string `json:"cover"`
@@ -336,6 +341,7 @@ func AdminUpdatePromptGallery(c *gin.Context) {
 	update := &model.PromptGallery{
 		Title:    req.Title,
 		Prompt:   req.Prompt,
+		PromptEn: req.PromptEn,
 		Model:    req.Model,
 		Type:     req.Type,
 		Cover:    req.Cover,
