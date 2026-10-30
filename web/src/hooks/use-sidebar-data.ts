@@ -143,7 +143,7 @@ export function useSidebarData(): SidebarData {
             icon: ShieldCheck,
           },
           {
-            title: t('Workspace'),
+            title: t('Infinite canvas'),
             url: '/workspace',
             icon: LayoutGrid,
           },

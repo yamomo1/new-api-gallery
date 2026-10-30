@@ -37,6 +37,7 @@ import {
   extractGenerationMeta,
   normalizePromptText,
 } from '@/lib/comfy-metadata'
+import { getUserModels } from '@/lib/api'
 import { translatePromptToEnglish } from '@/lib/prompt-translate'
 import { useResolvedImageUrl } from '@/lib/storage'
 import { toast } from 'sonner'
@@ -89,6 +90,7 @@ export function MyWorks() {
   const { data: facets } = usePromptGalleryFacets()
   const modelOptions = facets?.models ?? []
   const tagOptions = facets?.tags ?? []
+  const categoryOptions = facets?.categories ?? []
   // 投稿表单字段显隐：后台「Fork settings → 画廊预设」的 GalleryFormFields 控制
   const { visible: fieldVisible } = useGalleryFormFields()
   const createMutation = useCreatePromptGallery()
@@ -105,7 +107,27 @@ export function MyWorks() {
    * 为什么值得做：中文提示词对海外用户和英文搜索都是死水，
    * 而 prompt_en 会进详情页正文与 sitemap。让用户手打一遍英文不现实，
    * 一次点击的成本才是可接受的。
+   *
+   * 模型选择：翻译走 /pg/chat/completions，Distribute 按模型名路由到渠道。
+   * 不传 model 时后端拿不到路由目标直接报错 —— 所以必须先从
+   * 用户可用模型里挑一个（优先选像是对话模型的），一个都没有时
+   * 给出「请先配置渠道」的明确指引，而不是笼统的翻译失败。
    */
+  const pickChatModel = async (): Promise<string | null> => {
+    try {
+      const res = await getUserModels()
+      const names = res.data ?? []
+      if (!names.length) return null
+      // 优先挑名字里带对话模型特征的；否则用第一个
+      const chatLike = names.find((n) =>
+        /chat|gpt|claude|gemini|glm|qwen|deepseek|mistral|kimi|doubao/i.test(n)
+      )
+      return chatLike || names[0]
+    } catch {
+      return null
+    }
+  }
+
   const handleTranslate = async () => {
     const source = form.prompt.trim()
     if (!source) {
@@ -114,7 +136,12 @@ export function MyWorks() {
     }
     setTranslating(true)
     try {
-      const translated = await translatePromptToEnglish(source)
+      const model = await pickChatModel()
+      if (!model) {
+        toast.error(t('No available model. Ask the admin to enable a channel first.'))
+        return
+      }
+      const translated = await translatePromptToEnglish(source, model)
       if (!translated) {
         toast.error(t('Translation failed, please try again later'))
         return
@@ -442,10 +469,12 @@ export function MyWorks() {
               {fieldVisible('category') && (
               <div className='space-y-1.5'>
                 <Label htmlFor='category'>{t('Category')}</Label>
-                <Input
-                  id='category'
+                {/* 下拉预设 + 手输兜底：预设来自后台维护的 facets（与画廊筛选项同源） */}
+                <ComboInput
                   value={form.category}
-                  onChange={(e) => set('category', e.target.value)}
+                  onChange={(v) => set('category', v)}
+                  options={categoryOptions}
+                  placeholder={t('Pick or type a category')}
                 />
               </div>
               )}

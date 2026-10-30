@@ -7854,7 +7854,7 @@
     "Visibility": "Visibility",
     "Visibility updated": "Visibility updated",
     "Published to the gallery": "Published to the gallery",
-    "Opening the canvas studio…": "Opening the canvas studio…",
+    "Opening the canvas studio…": "Đang mở canvas vô hạn…",
     "Open manually": "Open manually",
     "The canvas studio URL is not configured yet.": "The canvas studio URL is not configured yet.",
     "Set VITE_CANVAS_STUDIO_URL or edit features/canvas/studio.ts.": "Set VITE_CANVAS_STUDIO_URL or edit features/canvas/studio.ts.",
@@ -7899,6 +7899,7 @@
     "Fill in the prompt first": "请先填写提示词",
     "Gallery presets": "画廊预设",
     "Nothing changed": "没有改动",
-    "Generate alike": "Tạo ảnh tương tự"
+    "Generate alike": "Tạo ảnh tương tự",
+    "Infinite canvas": "Canvas vô hạn"
   }
 }
