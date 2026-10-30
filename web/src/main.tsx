@@ -31,7 +31,7 @@ import { readCachedStatus, statusQueryOptions } from '@/lib/status-query'
 import { DirectionProvider } from './context/direction-provider'
 import { FontProvider } from './context/font-provider'
 import { ThemeProvider } from './context/theme-provider'
-import './i18n/config'
+import { bootstrapI18n } from './i18n/config'
 // Generated Routes
 import { routeTree } from './routeTree.gen'
 
@@ -67,11 +67,19 @@ const rootElement = document.querySelector<HTMLElement>('#root')
 if (!rootElement) {
   throw new Error('Root element not found')
 }
+// 提到具名常量：renderApp 是延迟执行的闭包，闭包内 TS 不保留上面的 null 收窄
+const mountPoint: HTMLElement = rootElement
 // Set document.title and favicon from cached status, then refresh from network
 ;(function initSystemBranding() {
   try {
     if (typeof window === 'undefined' || typeof document === 'undefined') return
+    // 服务端已按路径注入 SEO 标题（service/seo）时不能再被站名覆盖，
+    // 否则每页 title 都会退化成「一幕AI」，SEO 白做。
+    const seoInjected = Boolean(
+      document.querySelector('meta[name="x-seo-title"]')
+    )
     const apply = (name: string) => {
+      if (seoInjected) return
       document.title = name
       const metaTitle = document.querySelector(
         'meta[name="title"]'
@@ -100,8 +108,9 @@ if (!rootElement) {
     /* empty */
   }
 })()
-if (!rootElement.innerHTML) {
-  const root = ReactDOM.createRoot(rootElement)
+function renderApp() {
+  if (mountPoint.innerHTML) return
+  const root = ReactDOM.createRoot(mountPoint)
   root.render(
     <StrictMode>
       <QueryClientProvider client={queryClient}>
@@ -116,3 +125,7 @@ if (!rootElement.innerHTML) {
     </StrictMode>
   )
 }
+
+// 等当前语言的词条到位再渲染：语言包是按需 import 的（见 i18n/config.ts），
+// 提前渲染会先闪一眼英文。失败也要渲染，不能因为语言包卡住整站。
+void bootstrapI18n().finally(renderApp)

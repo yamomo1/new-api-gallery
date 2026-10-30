@@ -53,6 +53,8 @@ func SetApiRouter(router *gin.Engine) {
 		//apiRouter.GET("/midjourney", controller.GetMidjourney)
 		apiRouter.GET("/home_page_content", controller.GetHomePageContent)
 		apiRouter.GET("/home_config", controller.GetHomeConfig)
+		// 公开：SEO 配置（前端 SPA 内跳转时同步 title/description，与首屏注入同源）
+		apiRouter.GET("/seo/config", controller.GetSeoConfig)
 		apiRouter.GET("/pricing", middleware.HeaderNavModuleAuth("pricing"), controller.GetPricing)
 		perfMetricsRoute := apiRouter.Group("/perf-metrics")
 		perfMetricsRoute.Use(middleware.HeaderNavModulePublicOrUserAuth("pricing"))
@@ -105,6 +107,12 @@ func SetApiRouter(router *gin.Engine) {
 			watermarkRoute.GET("/status", controller.GetWatermarkStatus)
 			watermarkRoute.POST("/backfill", controller.StartWatermarkBackfill)
 			watermarkRoute.GET("/backfill/status", controller.GetWatermarkBackfillStatus)
+		}
+		// SEO 配置保存：仅超管（读取是公开的，见上方 /seo/config）
+		seoRoute := apiRouter.Group("/seo")
+		seoRoute.Use(middleware.RootAuth())
+		{
+			seoRoute.PUT("/config", controller.UpdateSeoConfig)
 		}
 		// Canvas 无限画布文档（二开新增：/canvas/:id 编辑器的服务端存储）
 		canvasRoute := apiRouter.Group("/canvas/v1")

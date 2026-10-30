@@ -27,6 +27,7 @@ import { useEffect } from 'react'
 
 import { SiteFooter } from '@/features/gallery-home/footer'
 import { NavigationProgress } from '@/components/navigation-progress'
+import { SeoRouteSync } from '@/components/seo-route-sync'
 import { Toaster } from '@/components/ui/sonner'
 import { ThemeCustomizationProvider } from '@/context/theme-customization-provider'
 import { saveAffiliateCode } from '@/features/auth/lib/storage'
@@ -93,6 +94,7 @@ function RootComponent() {
 
   return (
     <ThemeCustomizationProvider>
+      <SeoRouteSync />
       <NavigationProgress />
       <Outlet />
       {/* 二开：全站备案信息条（每个页面底部都显示，含电影感画廊首页） */}

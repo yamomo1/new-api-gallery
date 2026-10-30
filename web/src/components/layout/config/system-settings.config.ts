@@ -113,6 +113,10 @@ function getSystemSettingsNavGroups(t: TFunction): NavGroup[] {
               url: '/system-settings/watermark',
             },
             {
+              title: t('SEO', { defaultValue: 'SEO 管理' }),
+              url: '/system-settings/seo',
+            },
+            {
               title: t('Home settings'),
               url: '/admin/home-settings',
             },

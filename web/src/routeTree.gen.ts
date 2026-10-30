@@ -79,6 +79,7 @@ import { Route as AuthenticatedSystemSettingsRequestPoliciesIndexRouteImport } f
 import { Route as AuthenticatedSystemSettingsRequestPoliciesSectionRouteImport } from './routes/_authenticated/system-settings/request-policies/$section'
 import { Route as AuthenticatedSystemSettingsSecurityIndexRouteImport } from './routes/_authenticated/system-settings/security/index'
 import { Route as AuthenticatedSystemSettingsSecuritySectionRouteImport } from './routes/_authenticated/system-settings/security/$section'
+import { Route as AuthenticatedSystemSettingsSeoIndexRouteImport } from './routes/_authenticated/system-settings/seo/index'
 import { Route as AuthenticatedSystemSettingsSiteIndexRouteImport } from './routes/_authenticated/system-settings/site/index'
 import { Route as AuthenticatedSystemSettingsSiteSectionRouteImport } from './routes/_authenticated/system-settings/site/$section'
 import { Route as AuthenticatedSystemSettingsStorageIndexRouteImport } from './routes/_authenticated/system-settings/storage/index'
@@ -470,6 +471,12 @@ const AuthenticatedSystemSettingsSecuritySectionRoute =
     path: '/security/$section',
     getParentRoute: () => AuthenticatedSystemSettingsRouteRoute,
   } as any)
+const AuthenticatedSystemSettingsSeoIndexRoute =
+  AuthenticatedSystemSettingsSeoIndexRouteImport.update({
+    id: '/seo/',
+    path: '/seo/',
+    getParentRoute: () => AuthenticatedSystemSettingsRouteRoute,
+  } as any)
 const AuthenticatedSystemSettingsSiteIndexRoute =
   AuthenticatedSystemSettingsSiteIndexRouteImport.update({
     id: '/site/',
@@ -565,6 +572,7 @@ export interface FileRoutesByFullPath {
   '/system-settings/operations/': typeof AuthenticatedSystemSettingsOperationsIndexRoute
   '/system-settings/request-policies/': typeof AuthenticatedSystemSettingsRequestPoliciesIndexRoute
   '/system-settings/security/': typeof AuthenticatedSystemSettingsSecurityIndexRoute
+  '/system-settings/seo/': typeof AuthenticatedSystemSettingsSeoIndexRoute
   '/system-settings/site/': typeof AuthenticatedSystemSettingsSiteIndexRoute
   '/system-settings/storage/': typeof AuthenticatedSystemSettingsStorageIndexRoute
   '/system-settings/watermark/': typeof AuthenticatedSystemSettingsWatermarkIndexRoute
@@ -638,6 +646,7 @@ export interface FileRoutesByTo {
   '/system-settings/operations': typeof AuthenticatedSystemSettingsOperationsIndexRoute
   '/system-settings/request-policies': typeof AuthenticatedSystemSettingsRequestPoliciesIndexRoute
   '/system-settings/security': typeof AuthenticatedSystemSettingsSecurityIndexRoute
+  '/system-settings/seo': typeof AuthenticatedSystemSettingsSeoIndexRoute
   '/system-settings/site': typeof AuthenticatedSystemSettingsSiteIndexRoute
   '/system-settings/storage': typeof AuthenticatedSystemSettingsStorageIndexRoute
   '/system-settings/watermark': typeof AuthenticatedSystemSettingsWatermarkIndexRoute
@@ -715,6 +724,7 @@ export interface FileRoutesById {
   '/_authenticated/system-settings/operations/': typeof AuthenticatedSystemSettingsOperationsIndexRoute
   '/_authenticated/system-settings/request-policies/': typeof AuthenticatedSystemSettingsRequestPoliciesIndexRoute
   '/_authenticated/system-settings/security/': typeof AuthenticatedSystemSettingsSecurityIndexRoute
+  '/_authenticated/system-settings/seo/': typeof AuthenticatedSystemSettingsSeoIndexRoute
   '/_authenticated/system-settings/site/': typeof AuthenticatedSystemSettingsSiteIndexRoute
   '/_authenticated/system-settings/storage/': typeof AuthenticatedSystemSettingsStorageIndexRoute
   '/_authenticated/system-settings/watermark/': typeof AuthenticatedSystemSettingsWatermarkIndexRoute
@@ -791,6 +801,7 @@ export interface FileRouteTypes {
     | '/system-settings/operations/'
     | '/system-settings/request-policies/'
     | '/system-settings/security/'
+    | '/system-settings/seo/'
     | '/system-settings/site/'
     | '/system-settings/storage/'
     | '/system-settings/watermark/'
@@ -864,6 +875,7 @@ export interface FileRouteTypes {
     | '/system-settings/operations'
     | '/system-settings/request-policies'
     | '/system-settings/security'
+    | '/system-settings/seo'
     | '/system-settings/site'
     | '/system-settings/storage'
     | '/system-settings/watermark'
@@ -940,6 +952,7 @@ export interface FileRouteTypes {
     | '/_authenticated/system-settings/operations/'
     | '/_authenticated/system-settings/request-policies/'
     | '/_authenticated/system-settings/security/'
+    | '/_authenticated/system-settings/seo/'
     | '/_authenticated/system-settings/site/'
     | '/_authenticated/system-settings/storage/'
     | '/_authenticated/system-settings/watermark/'
@@ -1458,6 +1471,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSystemSettingsSecuritySectionRouteImport
       parentRoute: typeof AuthenticatedSystemSettingsRouteRoute
     }
+    '/_authenticated/system-settings/seo/': {
+      id: '/_authenticated/system-settings/seo/'
+      path: '/seo'
+      fullPath: '/system-settings/seo/'
+      preLoaderRoute: typeof AuthenticatedSystemSettingsSeoIndexRouteImport
+      parentRoute: typeof AuthenticatedSystemSettingsRouteRoute
+    }
     '/_authenticated/system-settings/site/': {
       id: '/_authenticated/system-settings/site/'
       path: '/site'
@@ -1532,6 +1552,7 @@ interface AuthenticatedSystemSettingsRouteRouteChildren {
   AuthenticatedSystemSettingsOperationsIndexRoute: typeof AuthenticatedSystemSettingsOperationsIndexRoute
   AuthenticatedSystemSettingsRequestPoliciesIndexRoute: typeof AuthenticatedSystemSettingsRequestPoliciesIndexRoute
   AuthenticatedSystemSettingsSecurityIndexRoute: typeof AuthenticatedSystemSettingsSecurityIndexRoute
+  AuthenticatedSystemSettingsSeoIndexRoute: typeof AuthenticatedSystemSettingsSeoIndexRoute
   AuthenticatedSystemSettingsSiteIndexRoute: typeof AuthenticatedSystemSettingsSiteIndexRoute
   AuthenticatedSystemSettingsStorageIndexRoute: typeof AuthenticatedSystemSettingsStorageIndexRoute
   AuthenticatedSystemSettingsWatermarkIndexRoute: typeof AuthenticatedSystemSettingsWatermarkIndexRoute
@@ -1571,6 +1592,8 @@ const AuthenticatedSystemSettingsRouteRouteChildren: AuthenticatedSystemSettings
       AuthenticatedSystemSettingsRequestPoliciesIndexRoute,
     AuthenticatedSystemSettingsSecurityIndexRoute:
       AuthenticatedSystemSettingsSecurityIndexRoute,
+    AuthenticatedSystemSettingsSeoIndexRoute:
+      AuthenticatedSystemSettingsSeoIndexRoute,
     AuthenticatedSystemSettingsSiteIndexRoute:
       AuthenticatedSystemSettingsSiteIndexRoute,
     AuthenticatedSystemSettingsStorageIndexRoute:
