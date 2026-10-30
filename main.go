@@ -32,6 +32,7 @@ import (
 	"github.com/QuantumNous/new-api/service"
 	"github.com/QuantumNous/new-api/service/authz"
 	"github.com/QuantumNous/new-api/service/galleryingest"
+	"github.com/QuantumNous/new-api/service/gallerytranslate"
 	_ "github.com/QuantumNous/new-api/setting/performance_setting"
 	"github.com/QuantumNous/new-api/setting/ratio_setting"
 
@@ -378,6 +379,9 @@ func InitResources() error {
 	}
 
 	service.StartAuthArtifactCleanup()
+
+	// 二开：提示词翻译的用量记录也按天清理，否则这表会一直涨
+	gallerytranslate.StartUsageCleanup()
 
 	return nil
 }

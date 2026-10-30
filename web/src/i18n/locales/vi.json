@@ -7902,6 +7902,24 @@
     "Generate alike": "Tạo ảnh tương tự",
     "Infinite canvas": "Canvas vô hạn",
     "Pick or type a category": "Chọn hoặc nhập danh mục",
-    "No available model. Ask the admin to enable a channel first.": "Không có mô hình khả dụng. Hãy nhờ quản trị viên bật kênh trước."
+    "No available model. Ask the admin to enable a channel first.": "Không có mô hình khả dụng. Hãy nhờ quản trị viên bật kênh trước.",
+    "English prompt filled in (charged from your quota)": "Đã điền prompt tiếng Anh (trừ vào hạn ngạch)",
+    "{{remaining}} of {{limit}} free translations left today": "Còn {{remaining}}/{{limit}} lượt dịch miễn phí hôm nay",
+    "Auto translate is charged at {{cost}} per use": "Tự động dịch tính phí {{cost}} mỗi lần",
+    "Daily free limit reached. Further translations cost {{cost}} per use": "Đã hết lượt miễn phí hôm nay. Các lần dịch tiếp theo: {{cost}}/lần",
+    "Daily free limit reached. Resets tomorrow.": "Đã hết lượt miễn phí hôm nay. Đặt lại vào ngày mai.",
+    "translate.limited": "Đã đạt giới hạn dịch hôm nay",
+    "translate.need_quota": "Không đủ hạn ngạch. Nạp tiền để tiếp tục dịch.",
+    "translate.disabled": "Chức năng dịch đã bị tắt",
+    "translate.no_model": "Không có mô hình dịch khả dụng. Hãy nhờ quản trị viên bật kênh.",
+    "translate.failed": "Dịch thất bại, vui lòng thử lại sau",
+    "translate.empty_input": "Hãy nhập prompt cần dịch trước",
+    "Settings saved": "Đã lưu cài đặt",
+    "Translate settings": "Dịch",
+    "Translation model": "Mô hình dịch",
+    "use": "lần",
+    "translate.invalid_input": "Yêu cầu không hợp lệ. Vui lòng thử lại.",
+    "增值电信业务经营许可证 川B2-20231491": "增值电信业务经营许可证 川B2-20231491",
+    "https://dxzhgl.miit.gov.cn/": "https://dxzhgl.miit.gov.cn/"
   }
 }

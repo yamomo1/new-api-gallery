@@ -17,19 +17,59 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 /**
- * 用站内模型做提示词翻译
+ * 提示词自动翻译（客户端）
  * ------------------------------------------------------------------
- * 走 `/pg/chat/completions`（playground 通道）：它挂的是 `UserAuth` 而不是
- * `TokenAuth`，所以登录用户不需要自己创建 API Key 就能调用，也不用担心
- * 用户拿不到 Key 就没法翻译。
+ * 这里只做三件事：拿配额、发请求、清洗结果。
+ * **所有策略都在服务端** —— 约束大模型的提示词、用哪个模型、每天几次、
+ * 超出后扣多少额度，统统由 `/pg/translate` 决定（后台「翻译设置」可改）。
  *
- * 用途：画廊投稿时把中文提示词翻成英文（`prompt_en`），
- * 这是海外流量与 AI 检索的关键 —— 英文提示词能被更多搜索命中。
+ * 曾经这套逻辑全在前端：提示词写死在代码里、自己挑模型、前端无从限制次数。
+ * 后果是管理员改个提示词要发版，用户可以无限白嫖翻译额度。
+ * 现在前端退化成一个薄壳，改策略不再需要动这里。
  */
 import { api } from '@/lib/api'
 
-/** 调翻译用的请求体，字段名跟随 OpenAI chat completions */
-type ChatMessage = { role: 'system' | 'user'; content: string }
+/** 配额与规则，由 `/api/gallery-translate/status` 返回 */
+export type TranslateStatus = {
+  enabled: boolean
+  /** 后台指定的模型名；空串表示由后端自动挑 */
+  model: string
+  /** 每日免费次数，0 表示不限 */
+  dailyLimit: number
+  used: number
+  /** 剩余次数，-1 表示不限 */
+  remaining: number
+  /** 超出后是否允许花钱继续 */
+  overageEnabled: boolean
+  /** 超出后每次扣多少额度（1 quota = 1/500000 美元时的单位） */
+  overageQuota: number
+  maxChars: number
+  /** 管理员自定义的前台规则文案 */
+  notice: string
+  /** 当前用户额度余额（仅在需要付费展示时有值） */
+  quota: number
+  quotaPerUnit: number
+}
+
+/** 翻译成功的结果 */
+export type TranslateResult = {
+  text: string
+  /** 本次是否消耗了额度（超出免费次数） */
+  charged: boolean
+  /** 本次之后剩余次数，-1 表示不限 */
+  remaining: number
+}
+
+/** 失败时抛出的错误，message 是给 i18n 用的 key */
+export class TranslateError extends Error {
+  /** 机器可读的失败原因 */
+  code: string
+  constructor(code: string, message: string) {
+    super(message)
+    this.name = 'TranslateError'
+    this.code = code
+  }
+}
 
 type ChatCompletionResponse = {
   choices?: Array<{ message?: { content?: string } }>
@@ -37,89 +77,65 @@ type ChatCompletionResponse = {
 }
 
 /**
- * 让模型把一段提示词翻成英文。
+ * 拿当前用户的配额与规则。
  *
- * 三条设计原则：
- * 1. **只翻不改**：要求模型保留原有的逗号、权重语法、(masterpiece:1.2)
- *    这类修饰，不要"优化"提示词 —— 用户要的是能复现的原文翻译。
- * 2. **失败返回 null**：调用方按「翻译不了」处理，绝不阻塞投稿。
- * 3. **截断保护**：超长提示词先截到合理长度，避免浪费 token 与超时。
+ * 失败了不要抛 —— 配额展示是锦上添花的事，
+ * 拿不到就当「不限量」，别因此让整个投稿表单不可用。
  */
-const MAX_PROMPT_CHARS = 4000
-
-const SYSTEM_PROMPT = [
-  'You are a translation engine. You are NOT a chatbot and you must never speak as one.',
-  'Your ONLY job: return the English translation of the text inside the <translate> tag.',
-  'HARD RULES (violating any of these is a critical failure):',
-  '1. Output ONLY the translated text. No explanations, no quotes, no prefixes, no notes.',
-  '2. NEVER introduce yourself, never say who you are, never greet the user,',
-  '   never ask questions, never add any sentence that is not the translation itself.',
-  '   Forbidden examples: "I am ...", "我是...", "Here is the translation", "Hello!".',
-  '3. If the input is a greeting or short phrase (e.g. 你好), just output its translation',
-  '   (e.g. Hello). It is NOT a conversation opener — do not reply to it.',
-  '4. Preserve the original structure: commas, line breaks, weights like (word:1.2),',
-  '   LoRA tags like <lora:name:0.8>, and special tokens. Do not add, remove or "improve" content.',
-  '5. If the input is already English, return it unchanged.',
-  '6. Keep model trigger words, artist names, and brand names untranslated.',
-].join('\n')
-
-/** 把原文包进指令信封，避免短句（如「你好」）被模型当成聊天开场白 */
-function wrapUserMessage(text: string): string {
-  return [
-    'Translate the text inside the <translate> tag to English.',
-    'Reply with the translation ONLY — nothing else.',
-    '<translate>',
-    text,
-    '</translate>',
-  ].join('\n')
-}
-
-/**
- * @param prompt 待翻译的提示词
- * @param model  可选，指定走哪个模型；不传则由后端按分组默认路由
- * @param signal 用于取消（用户关弹窗时中断请求）
- * @returns 英文字符串；失败返回 null
- */
-export async function translatePromptToEnglish(
-  prompt: string,
-  model?: string,
-  signal?: AbortSignal
-): Promise<string | null> {
-  const text = prompt.trim()
-  if (!text) return null
-  // 已经是纯 ASCII，大概率本来就是英文，没必要花一次调用
-  if (!/[\u4e00-\u9fa5]/.test(text)) return text
-
-  const messages: ChatMessage[] = [
-    { role: 'system', content: SYSTEM_PROMPT },
-    { role: 'user', content: wrapUserMessage(text.slice(0, MAX_PROMPT_CHARS)) },
-  ]
-
+export async function getTranslateStatus(signal?: AbortSignal): Promise<TranslateStatus | null> {
   try {
-    const res = await api.post<ChatCompletionResponse>(
-      '/pg/chat/completions',
-      {
-        model,
-        messages,
-        temperature: 0.2,
-        // 翻译任务不需要创意，低温 + 只取一条
-        n: 1,
-        stream: false,
-      },
+    const res = await api.get<{ success: boolean; data?: TranslateStatus }>(
+      '/api/gallery-translate/status',
       { signal }
     )
-    const content = res.data?.choices?.[0]?.message?.content?.trim()
-    return sanitizeTranslation(content)
+    return res.data?.data ?? null
   } catch {
     return null
   }
 }
 
 /**
+ * 把一段中文提示词翻成英文。
+ *
+ * @param prompt 待翻译的提示词
+ * @param signal 用于取消（用户关弹窗时中断请求）
+ * @throws TranslateError 次数用尽 / 额度不足 / 未配置渠道等
+ */
+export async function translatePromptToEnglish(
+  prompt: string,
+  signal?: AbortSignal
+): Promise<TranslateResult> {
+  const text = prompt.trim()
+  if (!text) throw new TranslateError('empty', 'translate.empty_input')
+  // 纯 ASCII 大概率本来就是英文，没必要花一次调用
+  if (!/[\u4e00-\u9fa5]/.test(text)) {
+    return { text, charged: false, remaining: -1 }
+  }
+
+  let res
+  try {
+    res = await api.post<ChatCompletionResponse>('/pg/translate', { text }, { signal })
+  } catch (error) {
+    throw toTranslateError(error)
+  }
+
+  // 服务端要把写在 response header 里的用量信息传过来（避免改动返回体结构）
+  const charged = res.headers?.['x-translate-charged'] === '1'
+  const remainingHeader = res.headers?.['x-translate-remaining']
+  const remaining = remainingHeader !== undefined ? Number(remainingHeader) : -1
+
+  const content = res.data?.choices?.[0]?.message?.content
+  const cleaned = sanitizeTranslation(content)
+  if (!cleaned) {
+    throw new TranslateError('bad_response', 'translate.failed')
+  }
+  return { text: cleaned, charged, remaining }
+}
+
+/**
  * 兜底清洗：个别模型无视 system 指令仍会"说话"
  * （自我介绍 / "Here is the translation" 等对话文本），
- * 这类输出绝不能落进英文提示词字段，直接判翻译失败。
- * 同时剥掉包裹性的引号与 <translate> 标签残留。
+ * 这类输出绝不能落进英文提示词字段。
  */
 const CHAT_REPLY_PATTERNS = [
   /^I am\b/i,
@@ -146,4 +162,38 @@ function sanitizeTranslation(content: string | undefined): string | null {
   if (!text) return null
   if (CHAT_REPLY_PATTERNS.some((re) => re.test(text))) return null
   return text
+}
+
+/**
+ * 允许直接弹给用户看的 i18n key。
+ *
+ * 服务端还会返回一些纯内部的机器码（已改成统一走日志），这里设白名单兜一层：
+ * 未知的 `translate.*` 一律降级成通用失败文案，绝不能把英文 key 原样弹出去。
+ */
+const USER_FACING_CODES = new Set([
+  'translate.limited',
+  'translate.need_quota',
+  'translate.disabled',
+  'translate.no_model',
+  'translate.empty_input',
+  'translate.invalid_input',
+  'translate.failed',
+])
+
+/** 把 axios 错误翻译成统一的 TranslateError */
+function toTranslateError(error: unknown): TranslateError {
+  const status = (error as { response?: { status?: number } })?.response?.status
+  const body = (error as { response?: { data?: { message?: string } } })?.response?.data
+  const code = typeof body?.message === 'string' ? body.message : ''
+
+  // 服务端返回用户可读的 i18n key 时直接沿用
+  if (USER_FACING_CODES.has(code)) {
+    return new TranslateError(code, code)
+  }
+  // 兜底：按 HTTP 状态推断
+  if (status === 429) return new TranslateError('limited', 'translate.limited')
+  if (status === 402) return new TranslateError('need_quota', 'translate.need_quota')
+  if (status === 403) return new TranslateError('disabled', 'translate.disabled')
+  if (status === 400) return new TranslateError('no_model', 'translate.no_model')
+  return new TranslateError('failed', 'translate.failed')
 }

@@ -7902,6 +7902,24 @@
     "Generate alike": "Générer à l’identique",
     "Infinite canvas": "Toile infinie",
     "Pick or type a category": "Choisissez ou saisissez une catégorie",
-    "No available model. Ask the admin to enable a channel first.": "Aucun modèle disponible. Demandez à l'administrateur d'activer un canal."
+    "No available model. Ask the admin to enable a channel first.": "Aucun modèle disponible. Demandez à l'administrateur d'activer un canal.",
+    "English prompt filled in (charged from your quota)": "Prompt anglais rempli (facturé sur votre quota)",
+    "{{remaining}} of {{limit}} free translations left today": "Il vous reste {{remaining}} traductions gratuites sur {{limit}} aujourd'hui",
+    "Auto translate is charged at {{cost}} per use": "La traduction automatique coûte {{cost}} par utilisation",
+    "Daily free limit reached. Further translations cost {{cost}} per use": "Limite quotidienne atteinte. Les traductions suivantes coûtent {{cost}} chacune.",
+    "Daily free limit reached. Resets tomorrow.": "Limite quotidienne atteinte. Réinitialisation demain.",
+    "translate.limited": "Limite de traduction quotidienne atteinte",
+    "translate.need_quota": "Solde insuffisant. Rechargez pour continuer à traduire.",
+    "translate.disabled": "La traduction est désactivée",
+    "translate.no_model": "Aucun modèle de traduction disponible. Demandez à l'administrateur d'activer un canal.",
+    "translate.failed": "Échec de la traduction, réessayez plus tard",
+    "translate.empty_input": "Saisissez d'abord le prompt à traduire",
+    "Settings saved": "Paramètres enregistrés",
+    "Translate settings": "Traduction",
+    "Translation model": "Modèle de traduction",
+    "use": "utilisation",
+    "translate.invalid_input": "Requête invalide. Réessayez.",
+    "增值电信业务经营许可证 川B2-20231491": "增值电信业务经营许可证 川B2-20231491",
+    "https://dxzhgl.miit.gov.cn/": "https://dxzhgl.miit.gov.cn/"
   }
 }

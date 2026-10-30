@@ -381,6 +381,7 @@ func migrateDB() error {
 		&GalleryIngestJob{},
 		&GalleryProject{},
 		&CanvasDocument{},
+		&GalleryTranslateUsage{},
 	)
 	if err != nil {
 		return err

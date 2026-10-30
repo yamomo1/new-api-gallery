@@ -119,6 +119,10 @@ function getSystemSettingsNavGroups(t: TFunction): NavGroup[] {
               url: '/system-settings/seo',
             },
             {
+              title: t('Translate settings', { defaultValue: '翻译设置' }),
+              url: '/system-settings/translate',
+            },
+            {
               title: t('Gallery presets', { defaultValue: '画廊预设' }),
               url: '/system-settings/gallery-presets',
             },

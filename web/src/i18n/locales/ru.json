@@ -7902,6 +7902,24 @@
     "Generate alike": "Сгенерировать такое же",
     "Infinite canvas": "Бесконечный холст",
     "Pick or type a category": "Выберите или введите категорию",
-    "No available model. Ask the admin to enable a channel first.": "Нет доступных моделей. Попросите администратора включить канал."
+    "No available model. Ask the admin to enable a channel first.": "Нет доступных моделей. Попросите администратора включить канал.",
+    "English prompt filled in (charged from your quota)": "Английский prompt заполнен (списано с вашей квоты)",
+    "{{remaining}} of {{limit}} free translations left today": "Осталось бесплатных переводов сегодня: {{remaining}} из {{limit}}",
+    "Auto translate is charged at {{cost}} per use": "Автоперевод стоит {{cost}} за один вызов",
+    "Daily free limit reached. Further translations cost {{cost}} per use": "Дневной бесплатный лимит исчерпан. Далее {{cost}} за перевод.",
+    "Daily free limit reached. Resets tomorrow.": "Дневной лимит исчерпан. Сброс завтра.",
+    "translate.limited": "Достигнут дневной лимит переводов",
+    "translate.need_quota": "Недостаточно квоты. Пополните баланс для продолжения.",
+    "translate.disabled": "Перевод отключён",
+    "translate.no_model": "Нет доступной модели перевода. Попросите администратора включить канал.",
+    "translate.failed": "Ошибка перевода, попробуйте позже",
+    "translate.empty_input": "Сначала введите prompt для перевода",
+    "Settings saved": "Настройки сохранены",
+    "Translate settings": "Перевод",
+    "Translation model": "Модель перевода",
+    "use": "вызов",
+    "translate.invalid_input": "Некорректный запрос. Попробуйте снова.",
+    "增值电信业务经营许可证 川B2-20231491": "增值电信业务经营许可证 川B2-20231491",
+    "https://dxzhgl.miit.gov.cn/": "https://dxzhgl.miit.gov.cn/"
   }
 }

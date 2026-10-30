@@ -4,10 +4,10 @@
  * 列表展示「我」发布的画廊条目（含草稿/被拒状态），支持新建/编辑/删除。
  * 后端接口：/api/prompt-gallery/v1/mine（GET/POST/PUT/DELETE）。
  */
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useSearch } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
-import { Pencil, Plus, Trash2 } from 'lucide-react'
+import { Languages, Loader2, Pencil, Plus, Trash2 } from 'lucide-react'
 
 import { Main } from '@/components/layout'
 import { Button } from '@/components/ui/button'
@@ -37,11 +37,15 @@ import {
   extractGenerationMeta,
   normalizePromptText,
 } from '@/lib/comfy-metadata'
-import { getUserModels } from '@/lib/api'
-import { translatePromptToEnglish } from '@/lib/prompt-translate'
+import {
+  translatePromptToEnglish,
+  getTranslateStatus,
+  TranslateError,
+  type TranslateStatus,
+} from '@/lib/prompt-translate'
 import { useResolvedImageUrl } from '@/lib/storage'
 import { toast } from 'sonner'
-import { Languages, Loader2 } from 'lucide-react'
+import { formatQuotaWithCurrency } from '@/lib/currency'
 
 import type { PromptGallerySubmit } from './api'
 import type { PromptGalleryItem } from './types'
@@ -98,8 +102,28 @@ export function MyWorks() {
   const deleteMutation = useDeletePromptGallery()
 
   const [translating, setTranslating] = useState(false)
+  const [translateStatus, setTranslateStatus] = useState<TranslateStatus | null>(null)
 
   const items = data?.items ?? []
+
+  /**
+   * 翻译配额与规则（一天几次、超出后怎么收费）。
+   *
+   * 拿不到就当「不限」处理 —— 配额展示是锦上添花，
+   * 不该因为这一次请求失败就让整个投稿表单看起来坏了。
+   */
+  useEffect(() => {
+    let alive = true
+    // 拿配额失败不该炸出未捕获的 Promise 异常：当「不限」处理，见下方注释
+    getTranslateStatus()
+      .then((s) => {
+        if (alive) setTranslateStatus(s)
+      })
+      .catch(() => setTranslateStatus(null))
+    return () => {
+      alive = false
+    }
+  }, [])
 
   /**
    * 用站内模型把提示词翻成英文，填进「英文提示词」字段。
@@ -108,25 +132,39 @@ export function MyWorks() {
    * 而 prompt_en 会进详情页正文与 sitemap。让用户手打一遍英文不现实，
    * 一次点击的成本才是可接受的。
    *
-   * 模型选择：翻译走 /pg/chat/completions，Distribute 按模型名路由到渠道。
-   * 不传 model 时后端拿不到路由目标直接报错 —— 所以必须先从
-   * 用户可用模型里挑一个（优先选像是对话模型的），一个都没有时
-   * 给出「请先配置渠道」的明确指引，而不是笼统的翻译失败。
+   * 模型与提示词都在服务端决定（后台「翻译设置」可改），
+   * 前端不再掺和 —— 掺和的结果就是用户能随便改模型刷贵的推理。
    */
-  const pickChatModel = async (): Promise<string | null> => {
-    try {
-      const res = await getUserModels()
-      const names = res.data ?? []
-      if (!names.length) return null
-      // 优先挑名字里带对话模型特征的；否则用第一个
-      const chatLike = names.find((n) =>
-        /chat|gpt|claude|gemini|glm|qwen|deepseek|mistral|kimi|doubao/i.test(n)
-      )
-      return chatLike || names[0]
-    } catch {
-      return null
+
+  /**
+   * 展示给用户看的限制规则。
+   *
+   * 管理员填了自定义文案就优先用它（运营话术随时能改）；没填则按配置自动拼：
+   * 「今天还剩 N 次」→ 用完后自动切成「继续翻译按 X/次计费」。
+   * 规则要在点之前就看见，别等 429 弹出来才知道。
+   */
+  const translateRule = useMemo(() => {
+    const s = translateStatus
+    if (!s || !s.enabled) return ''
+    if (s.notice.trim()) return s.notice.trim()
+    const cost = s.overageQuota > 0 ? formatQuotaWithCurrency(s.overageQuota) : ''
+    if (s.dailyLimit <= 0) {
+      return s.overageEnabled && cost
+        ? t('Auto translate is charged at {{cost}} per use', { cost })
+        : ''
     }
-  }
+    if (s.remaining > 0) {
+      return t('{{remaining}} of {{limit}} free translations left today', {
+        remaining: s.remaining,
+        limit: s.dailyLimit,
+      })
+    }
+    return s.overageEnabled && cost
+      ? t('Daily free limit reached. Further translations cost {{cost}} per use', {
+          cost,
+        })
+      : t('Daily free limit reached. Resets tomorrow.', { defaultValue: '今日翻译次数已用完，明天再来' })
+  }, [translateStatus, t])
 
   const handleTranslate = async () => {
     const source = form.prompt.trim()
@@ -136,18 +174,22 @@ export function MyWorks() {
     }
     setTranslating(true)
     try {
-      const model = await pickChatModel()
-      if (!model) {
-        toast.error(t('No available model. Ask the admin to enable a channel first.'))
-        return
+      const result = await translatePromptToEnglish(source)
+      set('prompt_en', result.text)
+      setTranslateStatus((prev) =>
+        prev && result.remaining >= 0
+          ? { ...prev, remaining: result.remaining, used: prev.used + 1 }
+          : prev
+      )
+      if (result.charged) {
+        toast.success(t('English prompt filled in (charged from your quota)'))
+      } else {
+        toast.success(t('English prompt filled in'))
       }
-      const translated = await translatePromptToEnglish(source, model)
-      if (!translated) {
-        toast.error(t('Translation failed, please try again later'))
-        return
-      }
-      set('prompt_en', translated)
-      toast.success(t('English prompt filled in'))
+    } catch (error) {
+      const key =
+        error instanceof TranslateError ? error.message : 'translate.failed'
+      toast.error(t(key))
     } finally {
       setTranslating(false)
     }
@@ -411,6 +453,10 @@ export function MyWorks() {
                 placeholder={t('English version of the prompt for bilingual display')}
                 rows={3}
               />
+              {/* 限制规则必须摆在按钮下面，别等用户点出错才告诉他 */}
+              {translateRule && (
+                <p className='text-xs text-muted-foreground'>{translateRule}</p>
+              )}
             </div>
             )}
 

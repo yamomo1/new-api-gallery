@@ -88,7 +88,8 @@ describe('security sidebar visibility', () => {
       'Profile',
       'My works',
       'Security & Access',
-      'Workspace',
+      // 「工作台」改名「无限画布」后标题变了，入口 URL 仍沿用 /workspace
+      'Infinite canvas',
       'My Canvases',
     ])
     expect(

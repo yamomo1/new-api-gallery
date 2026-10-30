@@ -68,6 +68,35 @@ func SetRelayRouter(router *gin.Engine) {
 	{
 		playgroundRouter.POST("/chat/completions", controller.Playground)
 	}
+	// 提示词自动翻译（二开新增）
+	//
+	// 为什么要单独建组而不复用 playgroundRouter：中间件顺序是致命的。
+	// GalleryTranslateModel 把后台配置的模型名塞进 resolved_task_model，
+	// 必须在 Distribute 选渠道之前跑完；而 playgroundRouter 在 group 层
+	// 已经挂了 Distribute，后加的 handler 只会排在它后面 —— 那时渠道早就选完了。
+	//
+	// 路径必须在 /pg 下亦然：GenRelayInfo 靠 "/pg" 前缀判定 IsPlayground，
+	// 只有游乐场语义才跳过令牌预扣、按用户额度计费 —— 这正是翻译要的。
+	translateRouter := router.Group("/pg")
+	translateRouter.Use(middleware.RouteTag("relay"))
+	translateRouter.Use(middleware.SystemPerformanceCheck())
+	translateRouter.Use(middleware.UserAuth())
+	translateRouter.Use(middleware.GalleryTranslateModel())
+	translateRouter.Use(middleware.Distribute())
+	{
+		translateRouter.POST("/translate", controller.GalleryTranslate)
+	}
+	// 后台自测提示词效果：仅超管，不占用户每日次数
+	translateTestRouter := router.Group("/pg")
+	translateTestRouter.Use(middleware.RouteTag("relay"))
+	translateTestRouter.Use(middleware.SystemPerformanceCheck())
+	translateTestRouter.Use(middleware.UserAuth())
+	translateTestRouter.Use(middleware.RootAuth())
+	translateTestRouter.Use(middleware.GalleryTranslateModel())
+	translateTestRouter.Use(middleware.Distribute())
+	{
+		translateTestRouter.POST("/translate/test", controller.TestGalleryTranslate)
+	}
 	relayV1Router := router.Group("/v1")
 	relayV1Router.Use(middleware.RouteTag("relay"))
 	relayV1Router.Use(middleware.SystemPerformanceCheck())

@@ -128,6 +128,20 @@ func SetApiRouter(router *gin.Engine) {
 			// 画布工作台凭证：登录态自动下发 OpenAI 兼容 token（用量计入本人额度）
 			canvasRoute.GET("/session", middleware.UserAuth(), controller.GetCanvasSession)
 		}
+		// 提示词自动翻译（二开新增）：配额/规则查询留给前台展示，
+		// 真正的执行与后台自测挂在 /pg/translate（见 relay-router）。
+		translateRoute := apiRouter.Group("/gallery-translate")
+		{
+			// 配额/规则查询，登录即可看 —— 前台要展示「还剩几次」
+			translateRoute.GET("/status", middleware.UserAuth(), controller.GetGalleryTranslateStatus)
+		}
+		// 翻译配置的读写与在线自测：仅超管
+		translateAdminRoute := apiRouter.Group("/gallery-translate")
+		translateAdminRoute.Use(middleware.RootAuth())
+		{
+			translateAdminRoute.GET("/config", controller.GetGalleryTranslateConfig)
+			translateAdminRoute.PUT("/config", controller.UpdateGalleryTranslateConfig)
+		}
 		apiRouter.GET("/verification", middleware.EmailVerificationRateLimit(), middleware.TurnstileCheck(), controller.SendEmailVerification)
 		apiRouter.GET("/reset_password", middleware.CriticalRateLimit(), middleware.TurnstileCheck(), controller.SendPasswordResetEmail)
 		apiRouter.POST("/user/reset", middleware.CriticalRateLimit(), anonymousRequestBodyLimit, controller.ResetPassword)

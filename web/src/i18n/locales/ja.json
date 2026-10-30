@@ -7902,6 +7902,24 @@
     "Generate alike": "同じ設定で生成",
     "Infinite canvas": "無限キャンバス",
     "Pick or type a category": "カテゴリを選択または入力",
-    "No available model. Ask the admin to enable a channel first.": "利用可能なモデルがありません。管理者にチャンネルの有効化を依頼してください。"
+    "No available model. Ask the admin to enable a channel first.": "利用可能なモデルがありません。管理者にチャンネルの有効化を依頼してください。",
+    "English prompt filled in (charged from your quota)": "英訳を入力しました（今回はクォータから消費）",
+    "{{remaining}} of {{limit}} free translations left today": "本日の無料翻訳は残り {{remaining}}/{{limit}} 回です",
+    "Auto translate is charged at {{cost}} per use": "自動翻訳は1回あたり {{cost}} の課金です",
+    "Daily free limit reached. Further translations cost {{cost}} per use": "本日の無料回数を使い切りました。継続する場合は1回 {{cost}} かかります",
+    "Daily free limit reached. Resets tomorrow.": "本日の無料回数を使い切りました。明日リセットされます。",
+    "translate.limited": "本日の翻訳回数の上限に達しました",
+    "translate.need_quota": "クォータが不足しています。チャージしてから翻訳してください。",
+    "translate.disabled": "翻訳機能は無効です",
+    "translate.no_model": "利用可能な翻訳モデルがありません。管理者にチャンネルの有効化を依頼してください。",
+    "translate.failed": "翻訳に失敗しました。しばらくしてからお試しください。",
+    "translate.empty_input": "翻訳するプロンプトを入力してください",
+    "Settings saved": "設定を保存しました",
+    "Translate settings": "翻訳設定",
+    "Translation model": "翻訳モデル",
+    "use": "回",
+    "translate.invalid_input": "リクエストの形式が正しくありません。もう一度お試しください。",
+    "增值电信业务经营许可证 川B2-20231491": "增值电信业务经营许可证 川B2-20231491",
+    "https://dxzhgl.miit.gov.cn/": "https://dxzhgl.miit.gov.cn/"
   }
 }

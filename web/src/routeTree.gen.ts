@@ -85,6 +85,7 @@ import { Route as AuthenticatedSystemSettingsSeoIndexRouteImport } from './route
 import { Route as AuthenticatedSystemSettingsSiteIndexRouteImport } from './routes/_authenticated/system-settings/site/index'
 import { Route as AuthenticatedSystemSettingsSiteSectionRouteImport } from './routes/_authenticated/system-settings/site/$section'
 import { Route as AuthenticatedSystemSettingsStorageIndexRouteImport } from './routes/_authenticated/system-settings/storage/index'
+import { Route as AuthenticatedSystemSettingsTranslateIndexRouteImport } from './routes/_authenticated/system-settings/translate/index'
 import { Route as AuthenticatedSystemSettingsWatermarkIndexRouteImport } from './routes/_authenticated/system-settings/watermark/index'
 
 const IndexRoute = IndexRouteImport.update({
@@ -508,6 +509,12 @@ const AuthenticatedSystemSettingsStorageIndexRoute =
     path: '/storage/',
     getParentRoute: () => AuthenticatedSystemSettingsRouteRoute,
   } as any)
+const AuthenticatedSystemSettingsTranslateIndexRoute =
+  AuthenticatedSystemSettingsTranslateIndexRouteImport.update({
+    id: '/translate/',
+    path: '/translate/',
+    getParentRoute: () => AuthenticatedSystemSettingsRouteRoute,
+  } as any)
 const AuthenticatedSystemSettingsWatermarkIndexRoute =
   AuthenticatedSystemSettingsWatermarkIndexRouteImport.update({
     id: '/watermark/',
@@ -590,6 +597,7 @@ export interface FileRoutesByFullPath {
   '/system-settings/seo/': typeof AuthenticatedSystemSettingsSeoIndexRoute
   '/system-settings/site/': typeof AuthenticatedSystemSettingsSiteIndexRoute
   '/system-settings/storage/': typeof AuthenticatedSystemSettingsStorageIndexRoute
+  '/system-settings/translate/': typeof AuthenticatedSystemSettingsTranslateIndexRoute
   '/system-settings/watermark/': typeof AuthenticatedSystemSettingsWatermarkIndexRoute
 }
 export interface FileRoutesByTo {
@@ -666,6 +674,7 @@ export interface FileRoutesByTo {
   '/system-settings/seo': typeof AuthenticatedSystemSettingsSeoIndexRoute
   '/system-settings/site': typeof AuthenticatedSystemSettingsSiteIndexRoute
   '/system-settings/storage': typeof AuthenticatedSystemSettingsStorageIndexRoute
+  '/system-settings/translate': typeof AuthenticatedSystemSettingsTranslateIndexRoute
   '/system-settings/watermark': typeof AuthenticatedSystemSettingsWatermarkIndexRoute
 }
 export interface FileRoutesById {
@@ -746,6 +755,7 @@ export interface FileRoutesById {
   '/_authenticated/system-settings/seo/': typeof AuthenticatedSystemSettingsSeoIndexRoute
   '/_authenticated/system-settings/site/': typeof AuthenticatedSystemSettingsSiteIndexRoute
   '/_authenticated/system-settings/storage/': typeof AuthenticatedSystemSettingsStorageIndexRoute
+  '/_authenticated/system-settings/translate/': typeof AuthenticatedSystemSettingsTranslateIndexRoute
   '/_authenticated/system-settings/watermark/': typeof AuthenticatedSystemSettingsWatermarkIndexRoute
 }
 export interface FileRouteTypes {
@@ -825,6 +835,7 @@ export interface FileRouteTypes {
     | '/system-settings/seo/'
     | '/system-settings/site/'
     | '/system-settings/storage/'
+    | '/system-settings/translate/'
     | '/system-settings/watermark/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -901,6 +912,7 @@ export interface FileRouteTypes {
     | '/system-settings/seo'
     | '/system-settings/site'
     | '/system-settings/storage'
+    | '/system-settings/translate'
     | '/system-settings/watermark'
   id:
     | '__root__'
@@ -980,6 +992,7 @@ export interface FileRouteTypes {
     | '/_authenticated/system-settings/seo/'
     | '/_authenticated/system-settings/site/'
     | '/_authenticated/system-settings/storage/'
+    | '/_authenticated/system-settings/translate/'
     | '/_authenticated/system-settings/watermark/'
   fileRoutesById: FileRoutesById
 }
@@ -1539,6 +1552,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSystemSettingsStorageIndexRouteImport
       parentRoute: typeof AuthenticatedSystemSettingsRouteRoute
     }
+    '/_authenticated/system-settings/translate/': {
+      id: '/_authenticated/system-settings/translate/'
+      path: '/translate'
+      fullPath: '/system-settings/translate/'
+      preLoaderRoute: typeof AuthenticatedSystemSettingsTranslateIndexRouteImport
+      parentRoute: typeof AuthenticatedSystemSettingsRouteRoute
+    }
     '/_authenticated/system-settings/watermark/': {
       id: '/_authenticated/system-settings/watermark/'
       path: '/watermark'
@@ -1596,6 +1616,7 @@ interface AuthenticatedSystemSettingsRouteRouteChildren {
   AuthenticatedSystemSettingsSeoIndexRoute: typeof AuthenticatedSystemSettingsSeoIndexRoute
   AuthenticatedSystemSettingsSiteIndexRoute: typeof AuthenticatedSystemSettingsSiteIndexRoute
   AuthenticatedSystemSettingsStorageIndexRoute: typeof AuthenticatedSystemSettingsStorageIndexRoute
+  AuthenticatedSystemSettingsTranslateIndexRoute: typeof AuthenticatedSystemSettingsTranslateIndexRoute
   AuthenticatedSystemSettingsWatermarkIndexRoute: typeof AuthenticatedSystemSettingsWatermarkIndexRoute
 }
 
@@ -1641,6 +1662,8 @@ const AuthenticatedSystemSettingsRouteRouteChildren: AuthenticatedSystemSettings
       AuthenticatedSystemSettingsSiteIndexRoute,
     AuthenticatedSystemSettingsStorageIndexRoute:
       AuthenticatedSystemSettingsStorageIndexRoute,
+    AuthenticatedSystemSettingsTranslateIndexRoute:
+      AuthenticatedSystemSettingsTranslateIndexRoute,
     AuthenticatedSystemSettingsWatermarkIndexRoute:
       AuthenticatedSystemSettingsWatermarkIndexRoute,
   }
