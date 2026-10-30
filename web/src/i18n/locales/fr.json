@@ -4759,7 +4759,7 @@
     "Polling": "Sondage",
     "Polling mode requires Redis and memory cache, otherwise performance will be significantly degraded": "Le mode d'interrogation nécessite Redis et un cache mémoire, sinon les performances seront considérablement dégradées",
     "Poor": "Mauvais",
-    "Popular": "Popular",
+    "Popular": "Populaire",
     "Port": "Port",
     "Port must be a positive integer": "Le port doit être un entier positif",
     "Position {{position}}": "Position {{position}}",
@@ -7898,6 +7898,7 @@
     "English prompt filled in": "英文提示词已填入",
     "Fill in the prompt first": "请先填写提示词",
     "Gallery presets": "画廊预设",
-    "Nothing changed": "没有改动"
+    "Nothing changed": "没有改动",
+    "Generate alike": "Générer à l’identique"
   }
 }

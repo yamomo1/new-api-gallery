@@ -7531,7 +7531,7 @@
     "footer.columns.related.links.oneApi": "One API",
     "footer.columns.related.title": "Related Projects",
     "footer.defaultCopyright": "All rights reserved.",
-    "footer.n\u0061pi.projectAttributionSuffix": "All rights reserved. Designed and developed by the project contributors.",
+    "footer.napi.projectAttributionSuffix": "All rights reserved. Designed and developed by the project contributors.",
     "footer.sourceCode": "Source Code",
     "gpt-3.5-turbo": "gpt-3.5-turbo",
     "gpt-3.5-turbo-0125": "gpt-3.5-turbo-0125",
@@ -7898,6 +7898,7 @@
     "English prompt filled in": "英文提示词已填入",
     "Fill in the prompt first": "请先填写提示词",
     "Gallery presets": "画廊预设",
-    "Nothing changed": "没有改动"
+    "Nothing changed": "没有改动",
+    "Generate alike": "Generate alike"
   }
 }

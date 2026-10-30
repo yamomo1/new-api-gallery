@@ -4759,7 +4759,7 @@
     "Polling": "Thăm dò",
     "Polling mode requires Redis and memory cache, otherwise performance will be significantly degraded": "Chế độ thăm dò yêu cầu Redis và bộ nhớ đệm, nếu không hiệu suất sẽ bị suy giảm đáng kể.",
     "Poor": "Nghèo",
-    "Popular": "Popular",
+    "Popular": "Phổ biến",
     "Port": "Cảng",
     "Port must be a positive integer": "Cổng phải là số nguyên dương",
     "Position {{position}}": "Vị trí {{position}}",
@@ -7898,6 +7898,7 @@
     "English prompt filled in": "英文提示词已填入",
     "Fill in the prompt first": "请先填写提示词",
     "Gallery presets": "画廊预设",
-    "Nothing changed": "没有改动"
+    "Nothing changed": "没有改动",
+    "Generate alike": "Tạo ảnh tương tự"
   }
 }

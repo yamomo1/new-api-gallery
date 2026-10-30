@@ -4759,7 +4759,7 @@
     "Polling": "ポーリング",
     "Polling mode requires Redis and memory cache, otherwise performance will be significantly degraded": "ポーリングモードにはRedisとメモリキャッシュが必要です。そうでない場合、パフォーマンスが大幅に低下します",
     "Poor": "悪い",
-    "Popular": "Popular",
+    "Popular": "人気",
     "Port": "ポート",
     "Port must be a positive integer": "ポートは正の整数でなければなりません",
     "Position {{position}}": "{{position}} 番目",
@@ -7898,6 +7898,7 @@
     "English prompt filled in": "英文提示词已填入",
     "Fill in the prompt first": "请先填写提示词",
     "Gallery presets": "画廊预设",
-    "Nothing changed": "没有改动"
+    "Nothing changed": "没有改动",
+    "Generate alike": "同じ設定で生成"
   }
 }

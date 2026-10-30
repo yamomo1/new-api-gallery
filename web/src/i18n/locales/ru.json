@@ -4759,7 +4759,7 @@
     "Polling": "Опрос",
     "Polling mode requires Redis and memory cache, otherwise performance will be significantly degraded": "Режим опроса требует Redis и кэш памяти, в противном случае производительность будет значительно снижена",
     "Poor": "Плохо",
-    "Popular": "Popular",
+    "Popular": "Популярное",
     "Port": "Порт",
     "Port must be a positive integer": "Порт должен быть положительным целым числом",
     "Position {{position}}": "Позиция {{position}}",
@@ -7898,6 +7898,7 @@
     "English prompt filled in": "英文提示词已填入",
     "Fill in the prompt first": "请先填写提示词",
     "Gallery presets": "画廊预设",
-    "Nothing changed": "没有改动"
+    "Nothing changed": "没有改动",
+    "Generate alike": "Сгенерировать такое же"
   }
 }

@@ -7,10 +7,12 @@ import { toast } from 'sonner'
 import { PublicLayout } from '@/components/layout'
 import { PageTransition } from '@/components/page-transition'
 import { Button } from '@/components/ui/button'
+import { canvasStudioNewUrl } from '@/features/canvas/studio'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/stores/auth-store'
 
 import { GalleryCard, GalleryCardSkeleton, GalleryFilterPanel } from './components'
+import { MasonryGrid } from './components/masonry-grid'
 import {
   useLikePromptGallery,
   useMyPromptGalleryFavorites,
@@ -150,6 +152,19 @@ export function PromptGallery() {
     }
   }, [total])
 
+  // 「生成同款」：先复制提示词再进画布，用户直接 Ctrl+V 就能用。
+  // 画布（infinite-canvas）目前不通过 URL 接收提示词参数，所以不能假装能自动带入。
+  const handleGenerateAlike = useCallback(
+    async (item: PromptGalleryItem) => {
+      const ok = await copyText(item.prompt)
+      if (ok) toast.success(t('Prompt copied'))
+      const target = canvasStudioNewUrl()
+      if (target) window.open(target, '_blank', 'noopener')
+      else toast.info(t('Open the canvas from the sidebar'))
+    },
+    [t]
+  )
+
   const handleShare = useCallback(async () => {
     const ok = await copyText(window.location.href)
     if (ok) toast.success(t('Link copied'))
@@ -267,26 +282,39 @@ export function PromptGallery() {
             onRandom={handleRandom}
           />
 
-          {/* 瀑布流 */}
-          <div className='columns-2 gap-6 md:columns-3 xl:columns-4'>
-            {isLoading
-              ? Array.from({ length: 8 }).map((_, i) => <GalleryCardSkeleton key={i} />)
-              : items.map((item, i) => (
-                  <GalleryCard
-                    key={item.id}
-                    item={item}
-                    index={i}
-                    onOpen={openDetail}
-                    liked={likedIds.has(item.id)}
-                    likeCount={likeCounts[item.id]}
-                    onLike={handleLike}
-                    favorite={favorites.has(item.id)}
-                    onToggleFavorite={toggleFavorite}
-                    onCopy={handleCopy}
-                    onShare={handleShareItem}
-                  />
-                ))}
-          </div>
+          {/* 瀑布流：JS 最短列分配（规范 §8.8），展开只推挤本列、绝不跨列闪跳 */}
+          {isLoading ? (
+            <div className='flex items-start gap-6'>
+              {['c0', 'c1', 'c2', 'c3'].map((ck, ci) => (
+                <div key={ck} className='flex min-w-0 flex-1 flex-col gap-6'>
+                  {[`${ck}-0`, `${ck}-1`].map((sk, i) => (
+                    <GalleryCardSkeleton key={sk} index={ci * 2 + i} />
+                  ))}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <MasonryGrid
+              items={items}
+              getKey={(item) => item.id}
+              deps={[category, type, model, tag, sort, favoritesOnly]}
+              renderItem={(item, _i, ref) => (
+                <GalleryCard
+                  ref={ref}
+                  item={item}
+                  onOpen={openDetail}
+                  liked={likedIds.has(item.id)}
+                  likeCount={likeCounts[item.id]}
+                  onLike={handleLike}
+                  favorite={favorites.has(item.id)}
+                  onToggleFavorite={toggleFavorite}
+                  onCopy={handleCopy}
+                  onShare={handleShareItem}
+                  onGenerate={handleGenerateAlike}
+                />
+              )}
+            />
+          )}
 
           {!isLoading && items.length === 0 && (
             <div className='py-24 text-center text-muted-foreground'>
@@ -301,7 +329,7 @@ export function PromptGallery() {
             <div className='mt-10 flex justify-center'>
               <button
                 type='button'
-                className='rounded-full border border-border px-6 py-2.5 text-sm text-muted-foreground transition-colors hover:border-foreground/30 hover:text-foreground'
+                className='rounded-[10px] border border-border px-6 py-2.5 text-sm text-muted-foreground transition-colors hover:border-foreground/30 hover:text-foreground'
                 onClick={() => setOffset((v) => v + PAGE_SIZE)}
               >
                 {t('Load more')}

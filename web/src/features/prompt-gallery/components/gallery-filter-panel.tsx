@@ -58,9 +58,9 @@ function ChipRow({ children }: { children: React.ReactNode }) {
 }
 
 const chipBase =
-  'shrink-0 whitespace-nowrap rounded-full px-3.5 py-1.5 text-[13px] font-medium outline-none transition-all duration-200 focus-visible:ring-2 focus-visible:ring-ring'
+  'shrink-0 whitespace-nowrap rounded-lg px-3.5 py-1.5 text-[13px] font-medium outline-none transition-all duration-200 focus-visible:ring-2 focus-visible:ring-ring'
 
-/** 未选中 chip：幽灵态，hover 浮起 */
+/** 未选中 chip：幽灵态，hover 浮起（方形圆角 8px，见规范 §8.8） */
 function ghostChip(active: boolean) {
   return cn(
     chipBase,
@@ -70,6 +70,10 @@ function ghostChip(active: boolean) {
       : 'border border-transparent text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground'
   )
 }
+
+/** 分段控件轨道：磨砂玻璃 + 方形圆角（规范 §8.8） */
+const segmentedTrack =
+  'inline-flex items-center gap-0.5 rounded-[11px] border border-border bg-muted/60 p-1 backdrop-blur-[16px] saturate-150'
 
 /** 筛选面板（对标参考站）：分类 / 搜索+类型+排序 / 模型 / 标签，带入场与滑动指示动效 */
 export function GalleryFilterPanel({
@@ -115,14 +119,14 @@ export function GalleryFilterPanel({
                   aria-pressed={active}
                   onClick={() => onCategoryChange(key)}
                   className={cn(
-                    'relative shrink-0 whitespace-nowrap rounded-full px-4 py-1.5 text-[13px] font-medium outline-none transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-ring',
+                    'relative shrink-0 whitespace-nowrap rounded-lg px-4 py-1.5 text-[13px] font-medium outline-none transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-ring',
                     active ? 'text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
                   )}
                 >
                   {active && (
                     <motion.span
                       layoutId='gallery-category-pill'
-                      className='absolute inset-0 rounded-full bg-primary shadow-sm'
+                      className='absolute inset-0 rounded-lg bg-primary shadow-sm'
                       transition={{ type: 'spring', bounce: 0.15, duration: 0.4 }}
                     />
                   )}
@@ -144,11 +148,11 @@ export function GalleryFilterPanel({
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder={t('Search prompts, styles and ideas')}
-            className='h-9 rounded-full border-transparent bg-muted/60 pl-9 text-[13px] shadow-none transition-colors focus-visible:border-border focus-visible:bg-background'
+            className='h-9 rounded-[10px] border-transparent bg-muted/60 pl-9 text-[13px] shadow-none transition-colors focus-visible:border-border focus-visible:bg-background'
           />
         </div>
 
-        <div className='inline-flex rounded-full bg-muted/60 p-0.5'>
+        <div className={segmentedTrack}>
           {TYPES.map(({ value, labelKey }) => {
             const active = type === value
             return (
@@ -158,14 +162,14 @@ export function GalleryFilterPanel({
                 aria-pressed={active}
                 onClick={() => onTypeChange(value)}
                 className={cn(
-                  'relative whitespace-nowrap rounded-full px-3 py-1.5 text-[13px] font-medium transition-colors',
+                  'relative whitespace-nowrap rounded-lg px-3 py-1.5 text-[13px] font-medium transition-colors',
                   active ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
                 )}
               >
                 {active && (
                   <motion.span
                     layoutId='gallery-type-pill'
-                    className='absolute inset-0 rounded-full bg-background shadow-sm'
+                    className='absolute inset-0 rounded-lg border border-border bg-card shadow-sm'
                     transition={{ type: 'spring', bounce: 0.15, duration: 0.4 }}
                   />
                 )}
@@ -189,7 +193,7 @@ export function GalleryFilterPanel({
                 aria-pressed={sort === value}
                 onClick={() => onSortChange(value)}
                 className={cn(
-                  'whitespace-nowrap rounded-full px-2.5 py-1 text-[13px] font-medium transition-colors',
+                  'whitespace-nowrap rounded-lg px-2.5 py-1 text-[13px] font-medium transition-colors',
                   sort === value
                     ? 'bg-foreground/10 text-foreground'
                     : 'text-muted-foreground hover:text-foreground'
@@ -206,7 +210,7 @@ export function GalleryFilterPanel({
               aria-label={t('Random')}
               title={t('Random')}
               whileTap={{ scale: 0.9, rotate: -12 }}
-              className='flex size-8 items-center justify-center rounded-full border border-border/80 text-muted-foreground transition-colors hover:border-foreground/30 hover:text-foreground'
+              className='flex size-8 items-center justify-center rounded-lg border border-border/80 text-muted-foreground transition-colors hover:border-foreground/30 hover:text-foreground'
             >
               <Shuffle className='size-3.5' />
             </motion.button>
