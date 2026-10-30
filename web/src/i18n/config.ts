@@ -42,6 +42,38 @@ const bundles: Record<
 /** 兼容旧引用：现在只预置英文，其余语言运行时补进 i18n。 */
 export const resources = { en } as const
 
+/**
+ * 把语言包 JSON 摊平到 `translation` 命名空间下。
+ *
+ * 坑（2026-10-30 线上事故，全站只有英文的真凶）：
+ * 语言文件的结构是 `{ "translation": { "Home": "首页", ... } }` —— 顶层已经
+ * 带了命名空间。而 `addResourceBundle(key, 'translation', bundle)` 的第三个
+ * 参数**必须**是该命名空间的内容本身，不是整个文件对象。
+ *
+ * 之前直接传 `mod.default`，i18next 里的结构就变成
+ *   zhCN → translation → translation → { Home: "首页" }
+ * 多套了一层。查词时取 `zhCN.translation["Home"]` 永远取不到，于是
+ * `fallbackLng: 'en'` 兜底，界面全英文；而 `i18n.language` 明明是 'zhCN'，
+ * 从表象上完全看不出问题。
+ *
+ * en 不受影响是因为它走 `init({ resources: { en } })`，那个入口接受
+ * 「语言 → 命名空间 → 词条」的完整结构，与 addResourceBundle 语义不同。
+ */
+function unwrapNamespace(bundle: Record<string, unknown>): Record<string, unknown> {
+  const inner = bundle?.translation
+  // 只有「顶层恰好只有 translation 一个键」时才是命名空间外壳。
+  // 若将来语言文件改成扁平结构（不带外壳），这里原样返回，不需要再改。
+  if (
+    inner &&
+    typeof inner === 'object' &&
+    !Array.isArray(inner) &&
+    Object.keys(bundle).length === 1
+  ) {
+    return inner as Record<string, unknown>
+  }
+  return bundle
+}
+
 const SUPPORTED = ['en', 'zhCN', 'fr', 'ru', 'ja', 'vi', 'zhTW'] as const
 
 /** 把 i18n.language（可能是 zh-CN / zhcn）归一到 resources 的键名 */
@@ -170,7 +202,13 @@ export function ensureLanguageBundle(lng?: string): Promise<void> {
     const load = bundles[key]
     if (!load) return
     const mod = await load()
-    i18n.addResourceBundle(key, 'translation', mod.default, true, true)
+    i18n.addResourceBundle(
+      key,
+      'translation',
+      unwrapNamespace(mod.default),
+      true,
+      true
+    )
   })()
   // 失败不能写进 loading 缓存：否则这个语言会被永久标记为「已加载」，
   // 用户之后再怎么切都拿不到词条（只能刷新页面）。

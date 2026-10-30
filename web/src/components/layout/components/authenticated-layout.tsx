@@ -51,7 +51,22 @@ export function AuthenticatedLayout(props: AuthenticatedLayoutProps) {
                 'peer-data-[variant=inset]:h-[calc(100svh-var(--app-header-height,0px)-(var(--spacing)*4))]'
               )}
             >
-              {props.children ?? <AnimatedOutlet />}
+              {/*
+                统一的可滚动内容槽。
+                坑（2026-10-30）：这里原来直接渲染 children，而 SidebarInset
+                本身是 `overflow-hidden` + 固定视口高度。系统设置下多数页面
+                （内容标识 / SEO / 页面写的是裸 <div className="p-6">）没有
+                自己的滚动容器，内容一超出就被裁掉，再被根布局 `__root.tsx`
+                里的 SiteFooter 盖住底部 —— 表现为「设置页没有滚动条、底部
+                信息被页脚遮住」。
+                给一个 `min-h-0 flex-1 overflow-y-auto` 的槽之后，所有子页面
+                无需各自处理就能滚动；已经自带滚动容器的页面（如
+                section-page-layout 的 `overflow-auto`）内层滚动优先，
+                不会出现双滚动条。
+              */}
+              <div className='flex min-h-0 w-full flex-1 flex-col overflow-y-auto'>
+                {props.children ?? <AnimatedOutlet />}
+              </div>
             </SidebarInset>
           </div>
         </SidebarProvider>

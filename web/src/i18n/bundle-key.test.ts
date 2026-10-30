@@ -99,3 +99,74 @@ describe('语言包 key 解析', () => {
     expect(i.t('h')).toBe('你好')
   })
 })
+
+/**
+ * 回归测试：语言包 JSON 顶层自带 `translation` 外壳。
+ *
+ * 背景（2026-10-30 线上事故，全站只剩英文的**真正**根因）：
+ * 语言文件长这样 `{ "translation": { "Home": "首页" } }`，
+ * 而 `addResourceBundle(key, 'translation', bundle)` 的第三个参数必须
+ * 是该命名空间下的**词条本身**。直接传 `mod.default` 会让结构变成
+ *   zhCN → translation → translation → { Home: "首页" }
+ * 多套一层，查 `zhCN.translation["Home"]` 恒为 undefined，于是全量回落
+ * fallbackLng 'en'。而 `i18n.language` 一直是 'zhCN'、`<html lang>` 也是
+ * zh-CN，从表象上完全看不出问题 —— 所以必须有这条测试盯着结构。
+ */
+describe('语言包命名空间外壳', () => {
+  /** 与 config.ts 里的 unwrapNamespace 保持一致 */
+  function unwrapNamespace(bundle: Record<string, unknown>) {
+    const inner = bundle?.translation
+    if (
+      inner &&
+      typeof inner === 'object' &&
+      !Array.isArray(inner) &&
+      Object.keys(bundle).length === 1
+    ) {
+      return inner as Record<string, unknown>
+    }
+    return bundle
+  }
+
+  test('真实 JSON 结构多套一层时 t() 取不到词（复现事故）', async () => {
+    const i = await initLike({ lng: 'zhCN' })
+    // 模拟 `await import('./locales/zh.json')` 的 mod.default
+    const mod = { default: { translation: { h: '你好' } } }
+    i.addResourceBundle('zhCN', 'translation', mod.default, true, true)
+    // 不加 unwrap 就是坏的：取不到中文，回落英文
+    expect(i.t('h')).toBe('Hi')
+  })
+
+  test('unwrap 之后能正确取到中文', async () => {
+    const i = await initLike({ lng: 'zhCN' })
+    const mod = { default: { translation: { h: '你好' } } }
+    i.addResourceBundle(
+      'zhCN',
+      'translation',
+      unwrapNamespace(mod.default),
+      true,
+      true
+    )
+    expect(i.t('h')).toBe('你好')
+  })
+
+  test('扁平结构（无外壳）原样保留，不被误剥', async () => {
+    const i = await initLike({ lng: 'zhCN' })
+    i.addResourceBundle(
+      'zhCN',
+      'translation',
+      unwrapNamespace({ h: '你好', 'translation key': '带 translation 字样的键' }),
+      true,
+      true
+    )
+    expect(i.t('h')).toBe('你好')
+  })
+
+  test('外壳里只有一个键才剥；多键时按原样处理', () => {
+    expect(unwrapNamespace({ translation: { a: '1' } })).toEqual({ a: '1' })
+    // 两个键 → 不是外壳，原样返回
+    expect(unwrapNamespace({ translation: { a: '1' }, extra: 'x' })).toEqual({
+      translation: { a: '1' },
+      extra: 'x',
+    })
+  })
+})
