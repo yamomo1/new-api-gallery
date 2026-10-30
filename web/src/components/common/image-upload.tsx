@@ -9,6 +9,12 @@ interface ImageUploadProps {
   value?: string
   /** 上传成功后回调，传相对 key（数据库存 key，展示时按地域解析成国内外地址） */
   onChange?: (value: string) => void
+  /**
+   * 用户选中文件、尚未上传时触发（在 uploadImage 之前）。
+   * 用于从文件本身提取元数据（如 ComfyUI 写进 PNG 的提示词）。
+   * 抛错会被忽略，绝不影响上传。
+   */
+  onFileSelected?: (file: File) => void
   placeholder?: string
   disabled?: boolean
 }
@@ -18,6 +24,7 @@ interface ImageUploadProps {
 export function ImageUpload({
   value,
   onChange,
+  onFileSelected,
   placeholder,
   disabled,
 }: ImageUploadProps) {
@@ -33,6 +40,13 @@ export function ImageUpload({
     e.target.value = ''
     if (!file) return
     setError(undefined)
+    // 元数据提取是「锦上添花」，任何异常都只能吞掉：
+    // 绝不允许一个解析失败把上传也一起拦住。
+    // 用 Promise.resolve().catch 而不是 try/catch —— 回调可能是 async 函数，
+    // 同步 try/catch 抓不到它返回的 rejected promise（会变成 unhandled rejection）。
+    Promise.resolve()
+      .then(() => onFileSelected?.(file))
+      .catch(() => { /* empty */ })
     setLoading(true)
     try {
       const { key } = await uploadImage(file)

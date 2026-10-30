@@ -89,11 +89,27 @@ function toBundleKey(lng?: string): string | null {
 const loading = new Map<string, Promise<void>>()
 
 /**
+ * 当前实际生效的语言码（未归一化）。
+ *
+ * 坑：`partialBundledLanguages: true` 时 i18next 认为所有语言都已预置，
+ * 没命中 resources 的语言会被直接「解析」到 fallbackLng —— 于是
+ * `i18n.resolvedLanguage` 恒等于 'en'，哪怕后来 addResourceBundle 注入了
+ * zhCN 也不会变。所以这里**只能**用 `i18n.language`（用户选择值），
+ * 一旦误用 resolvedLanguage，中文用户拿到的 bundle key 永远是 'en'，
+ * 语言包永远不会被 import，全站退化成英文。
+ */
+function currentLanguageCode(): string {
+  // 注意：不要在这里加 `|| i18n.resolvedLanguage` 兜底 —— 它恒为 'en'，
+  // 一旦参与取值就会把中文用户静默降级成英文。
+  return i18n.language || 'en'
+}
+
+/**
  * 确保当前语言的词条已就绪。
  * en 已内联；其余语言动态 import 一次并缓存（i18n 内部也会持有）。
  */
 export function ensureLanguageBundle(lng?: string): Promise<void> {
-  const key = toBundleKey(lng || i18n.resolvedLanguage || i18n.language)
+  const key = toBundleKey(lng || currentLanguageCode())
   if (!key || key === 'en') return Promise.resolve()
   const existing = loading.get(key)
   if (existing) return existing
@@ -103,35 +119,56 @@ export function ensureLanguageBundle(lng?: string): Promise<void> {
     if (!load) return
     const mod = await load()
     i18n.addResourceBundle(key, 'translation', mod.default, true, true)
-  })().catch(() => {
-    // 语言包拉取失败不应该阻塞页面：回退英文即可
+  })()
+  // 失败不能写进 loading 缓存：否则这个语言会被永久标记为「已加载」，
+  // 用户之后再怎么切都拿不到词条（只能刷新页面）。
+  task.catch(() => {
+    loading.delete(key)
   })
   loading.set(key, task)
   return task
 }
 
-// 运行时切换语言（后台设置或语言选择器）时补词条
+// 运行时切换语言（后台设置或语言选择器）时补词条。
+// 这里同样会有一个窗口期：languageChanged 已发出、但 bundle 还在下载，
+// 期间组件渲染的是 fallback 英文。调用方应优先用 changeLanguageWithBundle()
+// （先把词条拿到手再切），这条监听只作为兜底，保证「词条最终会到」。
 i18n.on('languageChanged', (lng) => {
-  void ensureLanguageBundle(lng)
+  void ensureLanguageBundle(lng).catch(() => {})
 })
 
 /**
  * 切换语言：先把词条拉下来再切。
  * 直接 changeLanguage 会先渲染一次缺词的界面（英文兜底闪一下），
- * 而且 addResourceBundle 只发 'added' 事件，组件不一定重渲染。
+ * 而且 addResourceBundle 只发 'added' 事件，组件不一定重渲染 ——
+ * 所以顺序必须是 ensure（拉词条）→ changeLanguage（切）。
  */
 export async function changeLanguageWithBundle(lng: string): Promise<void> {
-  await ensureLanguageBundle(lng)
-  await i18n.changeLanguage(lng)
+  // 归一化：调用方可能传 'zh-CN' / 'zh_TW' 这类标准标签，但 supportedLngs
+  // 里只有 'zhCN' / 'zhTW'，原样传进去会被 supportedLngs 拦掉退回 en。
+  const target = toBundleKey(lng) ?? lng
+  try {
+    await ensureLanguageBundle(target)
+  } catch {
+    // 语言包拉不下来也别拦住切换：至少语言偏好要生效，下次刷新会重试
+  }
+  await i18n.changeLanguage(target)
 }
 
 /**
  * 启动序列：等 i18n 初始化完 + 当前语言包到位再渲染，
  * 避免「先闪一眼英文再变中文」的抖动。
+ *
+ * 语言包拉取失败不能阻塞渲染 —— 否则一个 4xx 的 chunk 会让整站白屏，
+ * 比「暂时显示英文」严重得多。
  */
 export async function bootstrapI18n(): Promise<void> {
   await initPromise
-  await ensureLanguageBundle()
+  try {
+    await ensureLanguageBundle()
+  } catch {
+    // 忽略：回退英文渲染，后续切换语言时还会重试
+  }
 }
 
 export default i18n

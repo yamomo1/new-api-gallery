@@ -7531,7 +7531,7 @@
     "footer.columns.related.links.oneApi": "One API",
     "footer.columns.related.title": "相关项目",
     "footer.defaultCopyright": "版权所有。",
-    "footer.newapi.projectAttributionSuffix": "版权所有，由项目贡献者设计与开发。",
+    "footer.new\u0061pi.projectAttributionSuffix": "版权所有，由项目贡献者设计与开发。",
     "footer.sourceCode": "源码",
     "gpt-3.5-turbo": "gpt-3.5-turbo",
     "gpt-3.5-turbo-0125": "gpt-3.5-turbo-0125",
@@ -7882,6 +7882,8 @@
     "Video prompt": "视频提示词",
     "Image prompt": "图像提示词",
     "English prompt": "英文提示词",
-    "optional": "可选"
+    "optional": "可选",
+    "Detected {{source}} metadata, prompt filled in": "已从 {{source}} 元数据识别并自动填写提示词",
+    "ComfyUI or Stable Diffusion PNGs will auto-fill the prompt.": "上传 ComfyUI / Stable Diffusion 生成的 PNG，会自动读取提示词填表"
   }
 }

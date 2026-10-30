@@ -32,7 +32,12 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ImageUpload } from '@/components/common/image-upload'
+import {
+  extractGenerationMeta,
+  normalizePromptText,
+} from '@/lib/comfy-metadata'
 import { useResolvedImageUrl } from '@/lib/storage'
+import { toast } from 'sonner'
 
 import type { PromptGallerySubmit } from './api'
 import type { PromptGalleryItem } from './types'
@@ -113,6 +118,58 @@ export function MyWorks() {
     key: K,
     value: PromptGallerySubmit[K]
   ) => setForm((f) => ({ ...f, [key]: value }))
+
+  /**
+   * 用户选中封面图时，尝试从图片里把生成参数捞出来自动填表。
+   *
+   * 覆盖 ComfyUI（PNG tEXt 里的 prompt/workflow）与 A1111（parameters）。
+   * 这是投稿转化的关键：让 ComfyUI 用户不用回节点界面手动抄几百字提示词。
+   *
+   * 三条克制原则：
+   * 1. 只填**空字段**，绝不覆盖用户已经手写的内容；
+   * 2. 认不出来就静默跳过，不弹错、不打断上传；
+   * 3. 只填能确定映射的字段（提示词/模型/标签），不臆造分类。
+   */
+  const handleCoverSelected = async (file: File) => {
+    const meta = await extractGenerationMeta(file)
+    if (!meta?.prompt) return
+
+    const prompt = normalizePromptText(meta.prompt)
+    if (!prompt) return
+
+    // 先算好「要填什么」，再一次性 patch —— 避免在 updater 里做判断与计数
+    // （StrictMode 下 updater 会跑两次，且 React 19 的执行时机不保证）。
+    const patch: Partial<PromptGallerySubmit> = {}
+    if (!form.prompt.trim()) patch.prompt = prompt
+    if (!form.model.trim() && meta.model) patch.model = meta.model
+    if (!form.title.trim()) {
+      const firstClause = prompt.split(/[,，.。\n]/)[0]?.trim() ?? ''
+      patch.title = firstClause.slice(0, 40)
+    }
+    // 负向提示词塞进标签，方便复现时参考（用户可自行改掉）
+    if (meta.negativePrompt && !form.tags.trim()) {
+      patch.tags = meta.negativePrompt
+        .split(/[,，]/)
+        .map((s) => s.trim())
+        .filter(Boolean)
+        .slice(0, 6)
+        .join(', ')
+    }
+
+    const fillKeys = (['prompt', 'model', 'tags'] as const).filter(
+      (k) => patch[k] !== undefined
+    )
+    setForm((f) => ({ ...f, ...patch }))
+    if (fillKeys.length === 0) return
+
+    const sourceLabel =
+      meta.source === 'comfyui' ? 'ComfyUI' : 'Stable Diffusion'
+    toast.success(
+      t('Detected {{source}} metadata, prompt filled in', {
+        source: sourceLabel,
+      })
+    )
+  }
 
   const handleSubmit = async () => {
     if (!form.title.trim() || !form.prompt.trim()) return
@@ -303,8 +360,14 @@ export function MyWorks() {
               <ImageUpload
                 value={form.cover}
                 onChange={(url) => set('cover', url)}
+                onFileSelected={(file) => void handleCoverSelected(file)}
                 placeholder={t('Upload a cover image')}
               />
+              <p className='text-xs text-muted-foreground'>
+                {t(
+                  'ComfyUI or Stable Diffusion PNGs will auto-fill the prompt.'
+                )}
+              </p>
             </div>
 
             <div className='grid grid-cols-2 gap-3'>
