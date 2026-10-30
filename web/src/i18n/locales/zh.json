@@ -7900,6 +7900,8 @@
     "Gallery presets": "画廊预设",
     "Nothing changed": "没有改动",
     "Generate alike": "生成同款",
-    "Infinite canvas": "无限画布"
+    "Infinite canvas": "无限画布",
+    "Pick or type a category": "选择或输入分类",
+    "No available model. Ask the admin to enable a channel first.": "暂无可用模型，请先让管理员启用渠道"
   }
 }
