@@ -272,6 +272,23 @@ func InitOptionMap() {
 	common.OptionMap["WatermarkVideoMaxMB"] = "50"
 
 	common.OptionMap["UpstreamCostRatio"] = "{}" // 上游进货价表：{"模型名":{"in":0.5,"out":1.5}}（USD/1M tokens），毛利看板用它算成本
+
+	// ===== 画廊预设值（二开新增）=====
+	// 库里还没作品、或者想引导投稿时，前台筛选栏和投稿表单需要一份可选清单。
+	// 逗号分隔，空串表示不加预设。仅用于「提示候选项」，不影响已有数据的真实值。
+	common.OptionMap["GalleryPresetModels"] = strings.Join([]string{
+		"gpt-image-2.5", "gpt-image-1", "Midjourney",
+		"Flux.1 Dev", "Flux.1 Pro", "SDXL", "SD 1.5",
+		"Stable Diffusion 3.5", "Seedream 4.0", "Kling 2.1",
+		"Nano Banana", "Ideogram 3",
+	}, ",")
+	common.OptionMap["GalleryPresetTags"] = strings.Join([]string{
+		"人像", "风景", "赛博朋克", "国风", "插画", "摄影",
+		"产品图", "建筑", "动漫", "写实", "极简", "电影感",
+	}, ",")
+	// 投稿表单里各字段是否显示（后台可关，方便按运营需要裁剪）
+	common.OptionMap["GalleryFormFields"] = "title,prompt,prompt_en,model,type,cover,category,tags"
+
 	modelConfigs := config.GlobalConfig.ExportAllConfigs()
 	maps.Copy(common.OptionMap, modelConfigs)
 

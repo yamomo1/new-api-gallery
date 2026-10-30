@@ -61,8 +61,8 @@ export type PromptGalleryListResult = {
   total: number
   offset: number
   limit: number
-  /** 后台列表附带的可选模型/分类（全量，不限审核状态） */
-  facets?: { models: string[]; categories: string[] }
+  /** 后台列表附带的可选模型/分类/标签（全量，不限审核状态） */
+  facets?: { models: string[]; categories: string[]; tags?: string[] }
 }
 
 /** 后台审核列表的筛选条件 */export type PromptGalleryAdminParams = {

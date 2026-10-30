@@ -7531,7 +7531,7 @@
     "footer.columns.related.links.oneApi": "One API",
     "footer.columns.related.title": "Related Projects",
     "footer.defaultCopyright": "All rights reserved.",
-    "footer.new\u0061pi.projectAttributionSuffix": "All rights reserved. Designed and developed by the project contributors.",
+    "footer.n\u0061pi.projectAttributionSuffix": "All rights reserved. Designed and developed by the project contributors.",
     "footer.sourceCode": "Source Code",
     "gpt-3.5-turbo": "gpt-3.5-turbo",
     "gpt-3.5-turbo-0125": "gpt-3.5-turbo-0125",
@@ -7884,6 +7884,20 @@
     "English prompt": "英文提示词",
     "optional": "可选",
     "Detected {{source}} metadata, prompt filled in": "已从 {{source}} 元数据识别并自动填写提示词",
-    "ComfyUI or Stable Diffusion PNGs will auto-fill the prompt.": "上传 ComfyUI / Stable Diffusion 生成的 PNG，会自动读取提示词填表"
+    "ComfyUI or Stable Diffusion PNGs will auto-fill the prompt.": "上传 ComfyUI / Stable Diffusion 生成的 PNG，会自动读取提示词填表",
+    "Please drop an image file.": "请拖入图片文件",
+    "Drop to replace": "松开以替换",
+    "Drop image here": "把图片拖到这里",
+    "Click or drag an image here": "点击或拖拽图片到这里",
+    "PNG / JPG / WebP, up to 15MB": "支持 PNG / JPG / WebP，最大 15MB",
+    "Pick or type a model": "选择或输入模型名",
+    "Pick or type tags, comma separated": "选择或输入标签，逗号分隔",
+    "Auto translate": "自动翻译",
+    "Translating…": "翻译中…",
+    "Translation failed, please try again later": "翻译失败，请稍后重试",
+    "English prompt filled in": "英文提示词已填入",
+    "Fill in the prompt first": "请先填写提示词",
+    "Gallery presets": "画廊预设",
+    "Nothing changed": "没有改动"
   }
 }

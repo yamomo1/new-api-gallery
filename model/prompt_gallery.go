@@ -162,6 +162,8 @@ func GetPromptGalleryFacets() (*PromptGalleryFacet, error) {
 		Pluck("model", &facet.Models).Error; err != nil {
 		return nil, err
 	}
+	// 预设模型补在真实模型之后：空库时筛选栏仍有可点的候选项。
+	facet.Models = mergePresetValues(facet.Models, common.OptionMap["GalleryPresetModels"])
 	if err := DB.Model(&PromptGallery{}).
 		Where("status = ?", PromptGalleryStatusPublished).
 		Distinct("type").Where("type <> ''").
@@ -200,8 +202,42 @@ func GetPromptGalleryFacets() (*PromptGalleryFacet, error) {
 	if len(tags) > 24 {
 		tags = tags[:24]
 	}
-	facet.Tags = tags
+	// 预设标签补在真实标签之后：库里没作品时筛选栏也不会是空的。
+	facet.Tags = mergePresetValues(tags, common.OptionMap["GalleryPresetTags"])
 	return facet, nil
+}
+
+// mergePresetValues 把后台配置的预设值并入聚合结果，去重且保持「真实数据在前」。
+// 这样运营既能看到库中实际存在的项，也能在空库时给出引导性候选项。
+func mergePresetValues(actual []string, presetCSV string) []string {
+	if strings.TrimSpace(presetCSV) == "" {
+		return actual
+	}
+	seen := make(map[string]struct{}, len(actual))
+	out := make([]string, 0, len(actual)+8)
+	for _, v := range actual {
+		v = strings.TrimSpace(v)
+		if v == "" {
+			continue
+		}
+		if _, ok := seen[strings.ToLower(v)]; ok {
+			continue
+		}
+		seen[strings.ToLower(v)] = struct{}{}
+		out = append(out, v)
+	}
+	for _, v := range strings.Split(presetCSV, ",") {
+		v = strings.TrimSpace(v)
+		if v == "" {
+			continue
+		}
+		if _, ok := seen[strings.ToLower(v)]; ok {
+			continue
+		}
+		seen[strings.ToLower(v)] = struct{}{}
+		out = append(out, v)
+	}
+	return out
 }
 
 // MyGalleryQuery 工作台「个人作品」查询条件

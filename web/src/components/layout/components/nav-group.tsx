@@ -157,7 +157,9 @@ function SidebarMenuCollapsible({
   // 检查当前路径是否匹配子菜单项
   const isSubItemActive = checkIsActive(href, item)
   // 使用受控状态，初始值基于当前路径是否匹配
-  const [isOpen, setIsOpen] = useState(() => isSubItemActive)
+  // `defaultOpen` 让靠后的分组（如「Fork settings」）一进来就展开，
+  // 否则用户在侧边栏里根本看不到它的子项。
+  const [isOpen, setIsOpen] = useState(() => isSubItemActive || !!item.defaultOpen)
 
   // 当路径变化时，如果匹配子菜单项，自动展开父级菜单
   useEffect(() => {

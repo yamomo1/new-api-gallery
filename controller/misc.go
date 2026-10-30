@@ -136,6 +136,10 @@ func GetStatus(c *gin.Context) {
 		"log_max_range_days":          operation_setting.GetLogSetting().MaxRangeDays,
 		"quota_remind_enabled":        common.QuotaRemindEnabled,
 		"quota_remind_threshold":      common.QuotaRemindThreshold,
+
+		// 二开：画廊投稿表单可配置字段（后台「Fork settings → 画廊预设」维护）
+		// 逗号分隔的字段名列表，前端据此决定投稿/编辑弹窗里渲染哪些字段块。
+		"gallery_form_fields": common.OptionMap["GalleryFormFields"],
 	}
 
 	// 根据启用状态注入可选内容

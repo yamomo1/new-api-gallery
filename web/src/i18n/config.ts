@@ -44,6 +44,73 @@ export const resources = { en } as const
 
 const SUPPORTED = ['en', 'zhCN', 'fr', 'ru', 'ja', 'vi', 'zhTW'] as const
 
+/** 把 i18n.language（可能是 zh-CN / zhcn）归一到 resources 的键名 */
+function toBundleKey(lng?: string): string | null {
+  if (!lng) return null
+  const raw = lng.replace('_', '-').toLowerCase()
+  if (raw.startsWith('zh')) {
+    return raw.includes('tw') || raw.includes('hk') || raw.includes('mo')
+      ? 'zhTW'
+      : 'zhCN'
+  }
+  for (const code of SUPPORTED) {
+    const lower = code.toLowerCase()
+    if (lower === raw || lower === raw.split('-')[0]) {
+      return code
+    }
+  }
+  return null
+}
+
+/** localStorage 里存语言偏好的 key（由 LanguageDetector 的 caches 写入） */
+const LANGUAGE_CACHE_KEY = 'i18nextLng'
+
+/**
+ * 读取并修复持久化的语言偏好。
+ *
+ * 为什么需要「修复」：`supportedLngs` 只认 `zhCN` / `zhTW` 这种非标准写法，
+ * 而且是大小写敏感的精确匹配。历史上任何一次把 `zh-CN` / `zhcn` 写进
+ * localStorage，`i18n.changeLanguage()` 都会直接拒掉并静默退回 `en`，
+ * 而后这个错误值又被 detector 在下次启动时读回来 —— 用户从此永久卡在英文，
+ * 连手动切换都可能被覆盖（切换后写的还是同一个坏值）。
+ *
+ * 这里在 init 之前把缓存值归一化一次，坏值直接改写为正确码；
+ * 实在认不出来的就删掉，让 detector 回退到 navigator。
+ */
+function repairCachedLanguage(): string | undefined {
+  if (typeof window === 'undefined') return undefined
+  let raw: string | null = null
+  try {
+    raw = window.localStorage.getItem(LANGUAGE_CACHE_KEY)
+  } catch {
+    // 隐私模式下 localStorage 可能直接抛错
+    return undefined
+  }
+  if (!raw) return undefined
+
+  const normalized = toBundleKey(raw)
+  if (!normalized) {
+    try {
+      window.localStorage.removeItem(LANGUAGE_CACHE_KEY)
+    } catch {
+      /* empty */
+    }
+    return undefined
+  }
+  // 缓存里存的不是规范写法（大小写/连字符），改写回去，避免下次再被拒
+  if (normalized !== raw) {
+    try {
+      window.localStorage.setItem(LANGUAGE_CACHE_KEY, normalized)
+    } catch {
+      /* empty */
+    }
+  }
+  return normalized
+}
+
+/** init 之前跑一次，拿到修复后的偏好值 */
+const cachedLanguage = repairCachedLanguage()
+
 const initPromise = i18n
   .use(LanguageDetector)
   .use(initReactI18next)
@@ -66,25 +133,10 @@ const initPromise = i18n
       // codes (non-Chinese codes pass through for normal supportedLngs matching).
       convertDetectedLanguage,
     },
+    // 缓存值已经过 repairCachedLanguage() 归一化，直接钉死为初始语言，
+    // 避免 detector 再读一次原始（可能已损坏的）localStorage 值。
+    ...(cachedLanguage ? { lng: cachedLanguage } : {}),
   })
-
-/** 把 i18n.language（可能是 zh-CN / zhcn）归一到 resources 的键名 */
-function toBundleKey(lng?: string): string | null {
-  if (!lng) return null
-  const raw = lng.replace('_', '-').toLowerCase()
-  if (raw.startsWith('zh')) {
-    return raw.includes('tw') || raw.includes('hk') || raw.includes('mo')
-      ? 'zhTW'
-      : 'zhCN'
-  }
-  for (const code of SUPPORTED) {
-    const lower = code.toLowerCase()
-    if (lower === raw || lower === raw.split('-')[0]) {
-      return code
-    }
-  }
-  return null
-}
 
 const loading = new Map<string, Promise<void>>()
 

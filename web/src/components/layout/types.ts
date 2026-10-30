@@ -34,6 +34,14 @@ type BaseNavItem = {
    * `useSidebarView`). Route-level guards still enforce access independently.
    */
   requiredRole?: number
+  /**
+   * 进入所属视图时默认展开（仅对 NavCollapsible 生效）。
+   *
+   * 系统设置视图里组级条目多达十几个，靠后的分组（如「Fork settings」）
+   * 默认折叠时用户在侧边栏里看不到它的子项，会误以为「点不开 / 不能下拉」。
+   * 这里给需要强调的分组加默认展开。
+   */
+  defaultOpen?: boolean
 }
 
 /**

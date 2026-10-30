@@ -187,6 +187,11 @@ export interface SystemStatus {
   quota_remind_enabled?: boolean
   /** Site default low balance reminder threshold, in quota units */
   quota_remind_threshold?: number
+  /**
+   * 二开：画廊投稿表单可配置字段（逗号分隔）。
+   * 由后台 Option `GalleryFormFields` 下发，前端据此决定投稿弹窗渲染哪些字段。
+   */
+  gallery_form_fields?: string
   [key: string]: unknown
 }
 

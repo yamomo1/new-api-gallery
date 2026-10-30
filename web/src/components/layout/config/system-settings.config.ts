@@ -107,6 +107,8 @@ function getSystemSettingsNavGroups(t: TFunction): NavGroup[] {
         {
           title: t('Fork settings'),
           icon: Images,
+          // 这组在列表靠后，默认折叠时用户看不到子项，会误以为「不能下拉」
+          defaultOpen: true,
           items: [
             {
               title: t('Watermark', { defaultValue: '内容标识' }),
@@ -115,6 +117,10 @@ function getSystemSettingsNavGroups(t: TFunction): NavGroup[] {
             {
               title: t('SEO', { defaultValue: 'SEO 管理' }),
               url: '/system-settings/seo',
+            },
+            {
+              title: t('Gallery presets', { defaultValue: '画廊预设' }),
+              url: '/system-settings/gallery-presets',
             },
             {
               title: t('Home settings'),
@@ -140,7 +146,11 @@ function getSystemSettingsNavGroups(t: TFunction): NavGroup[] {
  */
 export const SYSTEM_SETTINGS_VIEW: SidebarView = {
   id: 'system-settings',
-  pathPattern: /^\/system-settings(\/|$)/,
+  // 「Fork settings」组里混了两个不在 /system-settings 下的页面
+  // （/admin/home-settings、/admin/prompt-gallery）。如果只匹配前一个前缀，
+  // 点这两项会跳出本视图 → 侧边栏瞬间退回根导航（用户看到的就是
+  // 「点了之后侧边栏回到上一级」）。所以这里要把它们一起纳入匹配。
+  pathPattern: /^\/(system-settings|admin\/home-settings|admin\/prompt-gallery)(\/|$)/,
   parent: {
     to: '/dashboard/overview',
     label: 'Back to Dashboard',

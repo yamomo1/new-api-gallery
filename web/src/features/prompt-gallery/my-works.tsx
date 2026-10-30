@@ -32,12 +32,15 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ImageUpload } from '@/components/common/image-upload'
+import { ComboInput } from '@/components/ui/combo-input'
 import {
   extractGenerationMeta,
   normalizePromptText,
 } from '@/lib/comfy-metadata'
+import { translatePromptToEnglish } from '@/lib/prompt-translate'
 import { useResolvedImageUrl } from '@/lib/storage'
 import { toast } from 'sonner'
+import { Languages, Loader2 } from 'lucide-react'
 
 import type { PromptGallerySubmit } from './api'
 import type { PromptGalleryItem } from './types'
@@ -45,8 +48,10 @@ import {
   useCreatePromptGallery,
   useDeletePromptGallery,
   useMyPromptGalleries,
+  usePromptGalleryFacets,
   useUpdatePromptGallery,
 } from './hooks/use-prompt-gallery'
+import { useGalleryFormFields } from './use-form-fields'
 
 const EMPTY_FORM: PromptGallerySubmit = {
   title: '',
@@ -80,11 +85,46 @@ export function MyWorks() {
   const [form, setForm] = useState<PromptGallerySubmit>(EMPTY_FORM)
 
   const { data, isLoading } = useMyPromptGalleries({ limit: 100 })
+  // 模型名与标签的候选项：来自后台「画廊预设」+ 库里已有的真实值
+  const { data: facets } = usePromptGalleryFacets()
+  const modelOptions = facets?.models ?? []
+  const tagOptions = facets?.tags ?? []
+  // 投稿表单字段显隐：后台「Fork settings → 画廊预设」的 GalleryFormFields 控制
+  const { visible: fieldVisible } = useGalleryFormFields()
   const createMutation = useCreatePromptGallery()
   const updateMutation = useUpdatePromptGallery()
   const deleteMutation = useDeletePromptGallery()
 
+  const [translating, setTranslating] = useState(false)
+
   const items = data?.items ?? []
+
+  /**
+   * 用站内模型把提示词翻成英文，填进「英文提示词」字段。
+   *
+   * 为什么值得做：中文提示词对海外用户和英文搜索都是死水，
+   * 而 prompt_en 会进详情页正文与 sitemap。让用户手打一遍英文不现实，
+   * 一次点击的成本才是可接受的。
+   */
+  const handleTranslate = async () => {
+    const source = form.prompt.trim()
+    if (!source) {
+      toast.error(t('Fill in the prompt first'))
+      return
+    }
+    setTranslating(true)
+    try {
+      const translated = await translatePromptToEnglish(source)
+      if (!translated) {
+        toast.error(t('Translation failed, please try again later'))
+        return
+      }
+      set('prompt_en', translated)
+      toast.success(t('English prompt filled in'))
+    } finally {
+      setTranslating(false)
+    }
+  }
 
   const openCreate = () => {
     setEditing(null)
@@ -312,13 +352,31 @@ export function MyWorks() {
               />
             </div>
 
+            {fieldVisible('prompt_en') && (
             <div className='space-y-1.5'>
-              <Label htmlFor='prompt-en'>
-                {t('English prompt')}
-                <span className='ml-1 text-xs font-normal text-muted-foreground'>
-                  ({t('optional')})
-                </span>
-              </Label>
+              <div className='flex items-center justify-between'>
+                <Label htmlFor='prompt-en'>
+                  {t('English prompt')}
+                  <span className='ml-1 text-xs font-normal text-muted-foreground'>
+                    ({t('optional')})
+                  </span>
+                </Label>
+                <Button
+                  type='button'
+                  variant='ghost'
+                  size='sm'
+                  className='h-6 gap-1 px-1.5 text-xs text-muted-foreground hover:text-foreground'
+                  onClick={handleTranslate}
+                  disabled={translating || !form.prompt.trim()}
+                >
+                  {translating ? (
+                    <Loader2 className='size-3 animate-spin' />
+                  ) : (
+                    <Languages className='size-3' />
+                  )}
+                  {translating ? t('Translating…') : t('Auto translate')}
+                </Button>
+              </div>
               <Textarea
                 id='prompt-en'
                 value={form.prompt_en ?? ''}
@@ -327,17 +385,22 @@ export function MyWorks() {
                 rows={3}
               />
             </div>
+            )}
 
+            {(fieldVisible('model') || fieldVisible('type')) && (
             <div className='grid grid-cols-2 gap-3'>
+              {fieldVisible('model') && (
               <div className='space-y-1.5'>
                 <Label htmlFor='model'>{t('Model')}</Label>
-                <Input
-                  id='model'
+                <ComboInput
                   value={form.model}
-                  onChange={(e) => set('model', e.target.value)}
-                  placeholder='gpt-image-2.5'
+                  onChange={(v) => set('model', v)}
+                  options={modelOptions}
+                  placeholder={t('Pick or type a model')}
                 />
               </div>
+              )}
+              {fieldVisible('type') && (
               <div className='space-y-1.5'>
                 <Label>{t('Type')}</Label>
                 <Select
@@ -353,8 +416,11 @@ export function MyWorks() {
                   </SelectContent>
                 </Select>
               </div>
+              )}
             </div>
+            )}
 
+            {fieldVisible('cover') && (
             <div className='space-y-1.5'>
               <Label htmlFor='cover'>{t('Cover image')}</Label>
               <ImageUpload
@@ -369,8 +435,11 @@ export function MyWorks() {
                 )}
               </p>
             </div>
+            )}
 
+            {(fieldVisible('category') || fieldVisible('tags')) && (
             <div className='grid grid-cols-2 gap-3'>
+              {fieldVisible('category') && (
               <div className='space-y-1.5'>
                 <Label htmlFor='category'>{t('Category')}</Label>
                 <Input
@@ -379,16 +448,20 @@ export function MyWorks() {
                   onChange={(e) => set('category', e.target.value)}
                 />
               </div>
+              )}
+              {fieldVisible('tags') && (
               <div className='space-y-1.5'>
                 <Label htmlFor='tags'>{t('Tags')}</Label>
-                <Input
-                  id='tags'
+                <ComboInput
                   value={form.tags}
-                  onChange={(e) => set('tags', e.target.value)}
-                  placeholder='a, b, c'
+                  onChange={(v) => set('tags', v)}
+                  options={tagOptions}
+                  placeholder={t('Pick or type tags, comma separated')}
                 />
               </div>
+              )}
             </div>
+            )}
           </div>
 
           <DialogFooter>

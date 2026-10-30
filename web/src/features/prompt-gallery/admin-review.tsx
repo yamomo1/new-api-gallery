@@ -45,6 +45,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { ComboInput } from '@/components/ui/combo-input'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
@@ -188,6 +189,7 @@ export function AdminPromptGalleryReview() {
   const items = data?.items ?? []
   const total = data?.total ?? items.length
   const models = data?.facets?.models ?? []
+  const tagOptions = data?.facets?.tags ?? []
   const filtersDirty =
     filters.status !== DEFAULT_FILTERS.status ||
     filters.type !== DEFAULT_FILTERS.type ||
@@ -618,11 +620,11 @@ export function AdminPromptGalleryReview() {
               <div className='grid gap-3 sm:grid-cols-3'>
                 <div className='space-y-1.5'>
                   <Label>{t('Model')}</Label>
-                  <Input
+                  <ComboInput
                     value={editing.model}
-                    onChange={(e) =>
-                      setEditing({ ...editing, model: e.target.value })
-                    }
+                    onChange={(v) => setEditing({ ...editing, model: v })}
+                    options={models}
+                    placeholder={t('Pick or type a model')}
                   />
                 </div>
                 <div className='space-y-1.5'>
@@ -673,11 +675,11 @@ export function AdminPromptGalleryReview() {
                 </div>
                 <div className='space-y-1.5'>
                   <Label>{t('Tags')}</Label>
-                  <Input
+                  <ComboInput
                     value={editing.tags}
-                    onChange={(e) =>
-                      setEditing({ ...editing, tags: e.target.value })
-                    }
+                    onChange={(v) => setEditing({ ...editing, tags: v })}
+                    options={tagOptions}
+                    placeholder={t('Pick or type tags, comma separated')}
                   />
                 </div>
               </div>
