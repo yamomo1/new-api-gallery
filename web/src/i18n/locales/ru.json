@@ -3395,7 +3395,7 @@
     "Latency trend (last 24h)": "Тренд задержки (за 24 часа)",
     "Later": "Позже",
     "Later requests follow the new channel.": "Последующие запросы используют новый канал.",
-    "Latest": "Latest",
+    "Latest": "Новые",
     "Latest platform updates and notices": "Последние обновления и уведомления платформы",
     "Latest version": "Последняя версия",
     "Lavender Dream": "Лавандовая мечта",
@@ -7901,6 +7901,11 @@
     "Show all": "Показать всё",
     "Certified work": "Подтверждено",
     "Work details": "О работе",
-    "License scope": "Лицензия"
+    "License scope": "Лицензия",
+    "Work showcase": "Галерея работ",
+    "Hottest": "Популярные",
+    "Share your work": "Поделиться работой",
+    "Upload image": "Загрузить изображение",
+    "Upload video": "Загрузить видео"
   }
 }

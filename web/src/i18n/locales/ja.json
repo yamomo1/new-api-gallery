@@ -3395,7 +3395,7 @@
     "Latency trend (last 24h)": "レイテンシ推移（直近 24 時間）",
     "Later": "後で",
     "Later requests follow the new channel.": "以降のリクエストは新しいチャネルを使用します。",
-    "Latest": "Latest",
+    "Latest": "新着順",
     "Latest platform updates and notices": "最新のプラットフォーム更新と通知",
     "Latest version": "最新バージョン",
     "Lavender Dream": "ラベンダードリーム",
@@ -7901,6 +7901,11 @@
     "Show all": "すべて表示",
     "Certified work": "認証済み",
     "Work details": "作品詳細",
-    "License scope": "ライセンス"
+    "License scope": "ライセンス",
+    "Work showcase": "作品ギャラリー",
+    "Hottest": "人気順",
+    "Share your work": "作品を投稿",
+    "Upload image": "画像をアップロード",
+    "Upload video": "動画をアップロード"
   }
 }

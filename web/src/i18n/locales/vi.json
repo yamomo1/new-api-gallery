@@ -3395,7 +3395,7 @@
     "Latency trend (last 24h)": "Xu hướng độ trễ (24 giờ qua)",
     "Later": "Để sau",
     "Later requests follow the new channel.": "Các yêu cầu sau sẽ dùng kênh mới.",
-    "Latest": "Latest",
+    "Latest": "Mới nhất",
     "Latest platform updates and notices": "Cập nhật và thông báo nền tảng mới nhất",
     "Latest version": "Phiên bản mới nhất",
     "Lavender Dream": "Mộng hoa oải hương",
@@ -7901,6 +7901,11 @@
     "Show all": "Xem tất cả",
     "Certified work": "Đã xác minh",
     "Work details": "Chi tiết tác phẩm",
-    "License scope": "Phạm vi cấp phép"
+    "License scope": "Phạm vi cấp phép",
+    "Work showcase": "Thư viện tác phẩm",
+    "Hottest": "Phổ biến",
+    "Share your work": "Chia sẻ tác phẩm",
+    "Upload image": "Tải ảnh lên",
+    "Upload video": "Tải video lên"
   }
 }

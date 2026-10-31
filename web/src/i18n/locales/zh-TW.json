@@ -3395,7 +3395,7 @@
     "Latency trend (last 24h)": "延遲趨勢（最近 24 小時）",
     "Later": "稍後",
     "Later requests follow the new channel.": "後續請求改用新渠道。",
-    "Latest": "Latest",
+    "Latest": "最新",
     "Latest platform updates and notices": "最新平台更新和通知",
     "Latest version": "最新版本",
     "Lavender Dream": "薰衣草夢",
@@ -7927,6 +7927,11 @@
     "Show all": "全部展開",
     "Certified work": "已認證",
     "Work details": "作品詳情",
-    "License scope": "許可範圍"
+    "License scope": "許可範圍",
+    "Work showcase": "作品展示",
+    "Hottest": "最熱",
+    "Share your work": "我要曬圖",
+    "Upload image": "上傳圖片",
+    "Upload video": "上傳影片"
   }
 }

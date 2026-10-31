@@ -16,7 +16,7 @@ import { cn } from '@/lib/utils'
 import { CreateWithThis } from '../create-with-this'
 import type { PromptGalleryItem } from '../types'
 import { formatPublishDate, parseGalleryMedia, parseGalleryTags } from '../utils'
-import { RecommendStrip } from './recommend-strip'
+import { WorkGallery } from './detail/work-gallery'
 import { AuthorCard } from './detail/author-card'
 import { MediaGallery } from './detail/media-gallery'
 import { MediaLightbox } from './detail/media-lightbox'
@@ -266,7 +266,7 @@ export function GalleryDetailBody({
         </section>
 
         <div className='mt-8'>
-          <RecommendStrip item={item} onSelect={onSelectRecommend} />
+          <WorkGallery item={item} onSelect={onSelectRecommend} />
         </div>
       </div>
 
