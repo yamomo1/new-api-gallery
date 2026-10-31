@@ -7896,6 +7896,11 @@
     "Chinese & English": "中国語・英語",
     "This work has no reusable workflow or model info yet. You can still copy the prompt above.": "この作品には再利用できるワークフロー／モデル情報がまだありません。画像右下の「生成情報」からプロンプトをコピーできます。",
     "Comments are coming soon": "コメント機能は近日公開予定です",
-    "Full prompt": "プロンプト全文"
+    "Full prompt": "プロンプト全文",
+    "First published": "初公開",
+    "Show all": "すべて表示",
+    "Certified work": "認証済み",
+    "Work details": "作品詳細",
+    "License scope": "ライセンス"
   }
 }

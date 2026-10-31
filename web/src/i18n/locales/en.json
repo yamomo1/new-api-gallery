@@ -7920,6 +7920,11 @@
     "Chinese & English": "Chinese & English",
     "This work has no reusable workflow or model info yet. You can still copy the prompt above.": "This work has no reusable workflow or model info yet. Use “Generation info” at the bottom right of the image to copy the prompt.",
     "Comments are coming soon": "Comments are coming soon",
-    "Full prompt": "Full prompt"
+    "Full prompt": "Full prompt",
+    "First published": "First published",
+    "Show all": "Show all",
+    "Certified work": "Certified",
+    "Work details": "Work details",
+    "License scope": "License"
   }
 }

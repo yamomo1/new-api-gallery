@@ -7896,6 +7896,11 @@
     "Chinese & English": "Китайский и английский",
     "This work has no reusable workflow or model info yet. You can still copy the prompt above.": "У этой работы пока нет готового воркфлоу или данных о модели. Скопируйте промпт через «Информация о генерации» в правом нижнем углу изображения.",
     "Comments are coming soon": "Комментарии скоро появятся",
-    "Full prompt": "Полный промпт"
+    "Full prompt": "Полный промпт",
+    "First published": "Впервые опубликовано",
+    "Show all": "Показать всё",
+    "Certified work": "Подтверждено",
+    "Work details": "О работе",
+    "License scope": "Лицензия"
   }
 }

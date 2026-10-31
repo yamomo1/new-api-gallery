@@ -30,12 +30,12 @@ export function MetaSection({
   return (
     <section
       className={cn(
-        'overflow-hidden rounded-xl border border-border/60 bg-card',
+        'overflow-hidden rounded-lg border border-border/50 bg-card',
         className
       )}
     >
-      <div className='flex items-center justify-between gap-2 border-b border-border/60 px-3.5 py-2.5'>
-        <h3 className='text-[13px] font-medium text-foreground/90'>{title}</h3>
+      <div className='flex items-center justify-between gap-2 border-b border-border/40 px-[9px] pt-2 pb-1.5'>
+        <h3 className='text-[14px] font-medium text-foreground/90'>{title}</h3>
         {action}
       </div>
       <div>{children}</div>
@@ -55,11 +55,11 @@ export function KeyValueRow({
   children: ReactNode
 }) {
   return (
-    <div className='flex border-b border-border/50 last:border-b-0'>
-      <div className='w-[84px] shrink-0 border-r border-border/50 px-3.5 py-2 text-[12.5px] leading-relaxed text-muted-foreground'>
+    <div className='flex border-b border-border/40 last:border-b-0'>
+      <div className='w-[92px] shrink-0 border-r border-border/40 px-[9px] py-[5px] text-[12px] leading-relaxed text-muted-foreground'>
         {label}
       </div>
-      <div className='min-w-0 flex-1 px-3.5 py-2 text-[12.5px] leading-relaxed break-words text-foreground/85'>
+      <div className='min-w-0 flex-1 px-[9px] py-[5px] text-[12px] leading-relaxed break-words text-foreground/85'>
         {children}
       </div>
     </div>
@@ -77,10 +77,10 @@ export function MetaChip({
   return (
     <span
       className={cn(
-        'inline-flex items-center rounded-lg px-2.5 py-1 text-[12.5px] leading-none',
+        'inline-flex h-[29px] items-center rounded-full px-3 text-[12px] leading-none',
         tone === 'primary'
-          ? 'bg-primary/12 text-primary'
-          : 'bg-muted text-muted-foreground'
+          ? 'bg-[#FFF2D6] text-[#E49026] dark:bg-primary/15 dark:text-primary'
+          : 'bg-[#F4F5F9] text-[#666] dark:bg-muted dark:text-muted-foreground'
       )}
     >
       {children}
@@ -102,18 +102,18 @@ export function PrimaryActions({
 }) {
   const { t } = useTranslation()
   return (
-    <div className='flex items-stretch gap-2.5'>
+    <div className='flex items-stretch gap-2'>
       <button
         type='button'
         onClick={onToggleFavorite}
         className={cn(
-          'flex h-11 flex-1 items-center justify-center gap-2 rounded-xl border text-[14px] font-medium transition-colors',
+          'flex h-12 flex-1 items-center justify-center gap-1.5 rounded-lg text-[15px] font-medium transition-colors',
           favorited
-            ? 'border-primary/40 bg-primary/10 text-primary'
-            : 'border-border bg-card text-foreground/80 hover:border-border hover:bg-muted'
+            ? 'bg-[#FFF2D6] text-[#E49026] dark:bg-primary/15 dark:text-primary'
+            : 'bg-[#ECEFF5] text-[#222] hover:bg-[#e3e7f0] dark:bg-muted dark:text-foreground dark:hover:bg-muted/80'
         )}
       >
-        <Star className={cn('size-4.5', favorited && 'fill-current')} />
+        <Star className={cn('size-4', favorited && 'fill-current')} />
         {favorited
           ? t('Favorited', { defaultValue: '已收藏' })
           : t('Favorite', { defaultValue: '收藏' })}
@@ -123,7 +123,7 @@ export function PrimaryActions({
           type='button'
           onClick={onCreate}
           disabled={createDisabled}
-          className='flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-primary text-[14px] font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50'
+          className='flex h-12 flex-1 items-center justify-center gap-1.5 rounded-lg bg-[#FED578] text-[15px] font-medium text-[#8A4200] transition-opacity hover:opacity-90 disabled:opacity-50'
         >
           <Play className='size-4 fill-current' />
           {t('Create with this', { defaultValue: '去创作' })}

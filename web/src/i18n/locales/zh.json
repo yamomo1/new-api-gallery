@@ -7922,6 +7922,11 @@
     "Chinese & English": "中英双语",
     "This work has no reusable workflow or model info yet. You can still copy the prompt above.": "这条作品暂未配置可复用的工作流/模型信息，可点图片右下的「生成信息」复制提示词。",
     "Comments are coming soon": "评论功能即将上线",
-    "Full prompt": "提示词全文"
+    "Full prompt": "提示词全文",
+    "First published": "首次发布",
+    "Show all": "全部展开",
+    "Certified work": "已认证",
+    "Work details": "作品详情",
+    "License scope": "许可范围"
   }
 }

@@ -83,7 +83,7 @@ export function MediaGallery({
 
   if (media.length === 0) {
     return (
-      <div className='flex aspect-[3/4] max-h-[420px] w-full items-center justify-center rounded-lg bg-muted text-muted-foreground/50'>
+      <div className='flex h-[520px] w-full items-center justify-center rounded-[13px] bg-[#f6f6f6] text-muted-foreground/50 md:h-[600px] dark:bg-muted'>
         <ImageOff className='size-9' />
       </div>
     )
@@ -93,7 +93,7 @@ export function MediaGallery({
     <div className='relative'>
       <div
         ref={scrollerRef}
-        className='flex snap-x snap-mandatory gap-3 overflow-x-auto pb-1 [scrollbar-width:none] md:gap-4 [&::-webkit-scrollbar]:hidden'
+        className='flex snap-x snap-mandatory gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden'
       >
         {media.map((src, i) => {
           const video = isVideoUrl(src)
@@ -101,11 +101,11 @@ export function MediaGallery({
             <figure
               key={src}
               className={cn(
-                'group relative m-0 shrink-0 snap-start overflow-hidden rounded-lg bg-muted',
-                // 多图一屏两张；单图限制最大宽度，避免 1000px 宽的正方形把首屏撑爆
+                // 参考站：卡片 413×600、间距 8、圆角 13、底色 #F6F6F6、图片 contain 不裁切
+                'group relative m-0 shrink-0 snap-start overflow-hidden rounded-[13px] bg-[#f6f6f6] dark:bg-muted',
                 multiple
-                  ? 'w-full md:w-[calc((100%-1rem)/2)]'
-                  : 'mx-auto w-full max-w-[560px]'
+                  ? 'w-full md:w-[calc((100%-0.5rem)/2)]'
+                  : 'w-full md:w-[calc((100%-0.5rem)/2)]'
               )}
             >
               <button
@@ -122,7 +122,7 @@ export function MediaGallery({
                       loop
                       playsInline
                       preload='metadata'
-                      className='block aspect-[3/4] w-full object-cover'
+                      className='block h-[520px] w-full object-contain md:h-[600px]'
                     />
                     <span className='pointer-events-none absolute inset-0 flex items-center justify-center'>
                       <span className='flex size-14 items-center justify-center rounded-full bg-black/45 text-white backdrop-blur-sm'>
@@ -135,7 +135,7 @@ export function MediaGallery({
                     src={src}
                     alt={item.title}
                     loading={i === 0 ? 'eager' : 'lazy'}
-                    className='block aspect-[3/4] w-full object-cover transition-transform duration-500 group-hover:scale-[1.02]'
+                    className='block h-[520px] w-full object-contain transition-transform duration-500 group-hover:scale-[1.01] md:h-[600px]'
                   />
                 )}
               </button>
@@ -187,7 +187,7 @@ export function MediaGallery({
             disabled={!canPrev}
             aria-label={t('Previous image')}
             className={cn(
-              'absolute top-1/2 left-2 z-20 flex size-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-black shadow-md ring-1 ring-black/5 transition-all hover:bg-white',
+              'absolute top-1/2 left-2 z-20 flex size-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/25 text-white backdrop-blur-sm transition-all hover:bg-black/40',
               !canPrev && 'pointer-events-none opacity-0'
             )}
           >
@@ -199,7 +199,7 @@ export function MediaGallery({
             disabled={!canNext}
             aria-label={t('Next image')}
             className={cn(
-              'absolute top-1/2 right-2 z-20 flex size-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-black shadow-md ring-1 ring-black/5 transition-all hover:bg-white',
+              'absolute top-1/2 right-2 z-20 flex size-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/25 text-white backdrop-blur-sm transition-all hover:bg-black/40',
               !canNext && 'pointer-events-none opacity-0'
             )}
           >

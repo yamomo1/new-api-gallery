@@ -77,7 +77,7 @@ export function GenerationPopover({
     <div
       role='dialog'
       aria-label={t('Generation info', { defaultValue: '生成信息' })}
-      className='absolute inset-x-2.5 bottom-2.5 z-20 flex max-h-[calc(100%-1.25rem)] flex-col overflow-y-auto rounded-2xl border border-black/5 bg-card p-4 text-left shadow-2xl [scrollbar-width:thin] md:inset-x-3 md:bottom-3'
+      className='absolute inset-x-2.5 bottom-2.5 z-20 flex max-h-[calc(100%-1.25rem)] flex-col overflow-y-auto rounded-2xl border border-black/5 bg-white p-4 text-left shadow-2xl dark:bg-card [scrollbar-width:thin] md:inset-x-3 md:bottom-3'
       onClick={(event) => event.stopPropagation()}
     >
       <div className='flex shrink-0 items-center justify-between gap-2'>
@@ -156,7 +156,7 @@ export function GenerationPopover({
       <button
         type='button'
         onClick={onUse}
-        className='mt-3.5 inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-lg bg-primary text-[13px] font-medium text-primary-foreground transition-opacity hover:opacity-90'
+        className='mt-3.5 inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-lg bg-[#FED578] text-[13px] font-medium text-[#8A4200] transition-opacity hover:opacity-90'
       >
         <Wand2 className='size-4' />
         {t('Create the same', { defaultValue: '做同款' })}

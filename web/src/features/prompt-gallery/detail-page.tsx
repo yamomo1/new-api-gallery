@@ -193,13 +193,14 @@ export function PromptGalleryDetailPage({ id }: { id: number }) {
     <PublicLayout showMainContainer={false}>
       <PageTransition>
         {/* 详情页铺纯白底（浅色模式按设计稿 #FFFFFF），深色模式跟随主题 */}
-        <div className='min-h-svh bg-white pt-24 pb-16 dark:bg-background'>
-          <div className='mx-auto w-full max-w-[1440px] px-4 md:px-8'>
+        <div className='min-h-svh bg-white pt-20 pb-16 dark:bg-background'>
+          {/* 内容宽度对齐参考站：1236（含 16px 内边距）→ 实际内容 1204 */}
+          <div className='mx-auto w-full max-w-[1236px] px-4'>
             {/* 面包屑 + 搜索：面包屑走内链，搜索是站内长尾入口 */}
-            <div className='mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
+            <div className='mb-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between'>
               <nav
                 aria-label={t('Breadcrumb')}
-                className='flex flex-wrap items-center gap-1 text-[13px] text-muted-foreground'
+                className='flex flex-wrap items-center gap-1 text-[11.5px] text-muted-foreground'
               >
                 <Link to='/' className='transition-colors hover:text-foreground'>
                   {t('Home')}
@@ -224,7 +225,7 @@ export function PromptGalleryDetailPage({ id }: { id: number }) {
             </div>
 
             {isLoading && (
-              <div className='grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-7'>
+              <div className='grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_362px]'>
                 <div className='space-y-5'>
                   <Skeleton className='h-8 w-2/3' />
                   <Skeleton className='aspect-[3/4] w-full rounded-lg' />

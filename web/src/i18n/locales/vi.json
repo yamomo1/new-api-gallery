@@ -7896,6 +7896,11 @@
     "Chinese & English": "Trung và Anh",
     "This work has no reusable workflow or model info yet. You can still copy the prompt above.": "Tác phẩm này chưa có workflow hoặc thông tin mô hình để dùng lại. Sao chép prompt qua “Thông tin tạo ảnh” ở góc dưới bên phải ảnh.",
     "Comments are coming soon": "Tính năng bình luận sắp ra mắt",
-    "Full prompt": "Toàn bộ prompt"
+    "Full prompt": "Toàn bộ prompt",
+    "First published": "Công bố lần đầu",
+    "Show all": "Xem tất cả",
+    "Certified work": "Đã xác minh",
+    "Work details": "Chi tiết tác phẩm",
+    "License scope": "Phạm vi cấp phép"
   }
 }

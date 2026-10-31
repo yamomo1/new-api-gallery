@@ -7896,6 +7896,11 @@
     "Chinese & English": "Chinois et anglais",
     "This work has no reusable workflow or model info yet. You can still copy the prompt above.": "Cette œuvre n'a pas encore de workflow ou d'informations de modèle réutilisables. Utilisez « Génération » en bas à droite de l'image pour copier le prompt.",
     "Comments are coming soon": "Les commentaires arrivent bientôt",
-    "Full prompt": "Prompt complet"
+    "Full prompt": "Prompt complet",
+    "First published": "Première publication",
+    "Show all": "Tout afficher",
+    "Certified work": "Certifié",
+    "Work details": "Détails de l'œuvre",
+    "License scope": "Licence"
   }
 }

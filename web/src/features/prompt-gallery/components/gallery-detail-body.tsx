@@ -1,5 +1,13 @@
 import { useTranslation } from 'react-i18next'
-import { ChevronDown, ExternalLink, Eye, Heart, Sparkles } from 'lucide-react'
+import {
+  ChevronDown,
+  ExternalLink,
+  Eye,
+  Heart,
+  MessageSquare,
+  Share2,
+  Sparkles,
+} from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 
 import { runningHubInviteUrl } from '@/features/canvas/runninghub'
@@ -35,11 +43,15 @@ type GalleryDetailBodyProps = {
 }
 
 /**
- * 作品详情主体：左栏内容 + 右栏信息卡。
- *
- * 布局参考 liblib 模型详情页——标题与媒体在左，右栏是一条 300px 的窄信息栏
- * （作者 → 操作 → 版本详情 → 使用参数 → 使用说明）。
- * 详情页与列表页弹窗共用本组件，避免两套 UI 漂移。
+ * 作品详情主体（按 liblib 模型页实测尺寸复刻）
+ * ---------------------------------------------------------------
+ * 实测基准（1440 视口，参考页）：
+ *  - 容器 1236（含 16 内边距）→ 内容 1204；左栏 826 + 间隔 16 + 右栏 362
+ *  - 标题 24px/500、行高 36
+ *  - 标签 chip 12px、全圆角、padding 4×12、底色 #F4F5F9
+ *  - 图片卡片 413×600、间距 8、圆角 13、底色 #F6F6F6、object-contain
+ *  - 正文 14px / 行高 1.7 / #0F1419
+ *  - 右栏：作者 → 操作 → 参数表 → 许可范围
  */
 export function GalleryDetailBody({
   item,
@@ -56,12 +68,15 @@ export function GalleryDetailBody({
   const { t } = useTranslation()
   // 大图查看器当前图片下标；null = 关闭
   const [viewerIndex, setViewerIndex] = useState<number | null>(null)
+  // 提示词默认收 6 行，点「全部展开」再放全（对齐参考站的收起态）
+  const [promptOpen, setPromptOpen] = useState(false)
 
   const media = useMemo(() => parseGalleryMedia(item), [item])
   const tags = useMemo(() => parseGalleryTags(item.tags), [item])
 
   useEffect(() => {
     setViewerIndex(null)
+    setPromptOpen(false)
   }, [item.id])
 
   const typeLabel =
@@ -76,15 +91,16 @@ export function GalleryDetailBody({
   }
 
   return (
-    <div className='grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-7'>
-      {/* ── 左栏：标题 → 媒体 → 提示词 → 去创作 → 推荐 ── */}
-      <div className='min-w-0 space-y-6'>
+    <div className='grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_362px]'>
+      {/* ── 左栏：标题 → 标签 → 版本 → 图片 → 正文 → 教学 → 创作 → 讨论 → 相关 ── */}
+      <div className='min-w-0'>
         <header>
-          <h1 className='text-[26px] leading-tight font-semibold tracking-tight md:text-[32px]'>
+          <h1 className='text-[22px] leading-9 font-medium tracking-normal text-foreground md:text-[24px]'>
             {item.title}
           </h1>
-          {/* 标签行：模型/类型/分类/标签 靠左，浏览点赞靠右（对齐参考稿） */}
-          <div className='mt-3.5 flex flex-wrap items-center gap-2'>
+
+          {/* 标签行：模型/类型/分类/话题 靠左，浏览点赞分享靠右 */}
+          <div className='mt-3 flex flex-wrap items-center gap-2.5'>
             {item.model && (
               <MetaChip tone='primary'>
                 <Sparkles className='mr-1 size-3' />
@@ -94,30 +110,51 @@ export function GalleryDetailBody({
             <MetaChip>{typeLabel}</MetaChip>
             {item.category && <MetaChip>{item.category}</MetaChip>}
             {tags.map((tag) => (
-              <button
-                key={tag}
-                type='button'
-                onClick={() => onTagSelect?.(tag)}
-                className='rounded-lg bg-muted px-2.5 py-1 text-[12.5px] leading-none text-muted-foreground transition-colors hover:bg-muted/70 hover:text-foreground'
-              >
-                #{tag}
+              <button key={tag} type='button' onClick={() => onTagSelect?.(tag)}>
+                <MetaChip>{`#${tag}`}</MetaChip>
               </button>
             ))}
-            <div className='ml-auto flex items-center gap-3.5 text-[12.5px] text-muted-foreground'>
+            <div className='ml-auto flex items-center gap-3.5 text-[12px] text-foreground/80'>
               <span className='inline-flex items-center gap-1'>
-                <Eye className='size-3.5' />
+                <Eye className='size-3.5 text-muted-foreground' />
                 {item.views}
               </span>
               <span className='inline-flex items-center gap-1'>
-                <Heart className='size-3.5' />
+                <Heart className='size-3.5 text-muted-foreground' />
                 {likeCount ?? item.likes}
               </span>
+              {onShare && (
+                <button
+                  type='button'
+                  onClick={() => onShare(item)}
+                  aria-label={t('Share work', { defaultValue: '分享作品' })}
+                  className='text-muted-foreground transition-colors hover:text-foreground'
+                >
+                  <Share2 className='size-4' />
+                </button>
+              )}
             </div>
+          </div>
+
+          {/* 版本行：左侧版本号，右侧更新/首发时间（参考站有这一行） */}
+          <div className='mt-3 flex flex-wrap items-center justify-between gap-2'>
+            <span className='inline-flex items-center gap-1.5 text-[20px] leading-6 font-bold text-foreground'>
+              <Sparkles className='size-4 text-[#E49026]' />
+              v1
+            </span>
+            <p className='text-[12px] text-muted-foreground'>
+              {t('Last updated', { defaultValue: '最近更新' })}：
+              {formatPublishDate(item.updated_at)}
+              <span className='ml-3'>
+                {t('First published', { defaultValue: '首次发布' })}：
+                {formatPublishDate(item.created_at)}
+              </span>
+            </p>
           </div>
         </header>
 
-        {/* 移动端把作者与操作提到标题下方，避免用户滚到底部才能收藏 */}
-        <div className='space-y-3 lg:hidden'>
+        {/* 移动端把作者与操作提到标题下方，避免滚到底才能收藏 */}
+        <div className='mt-4 space-y-3 lg:hidden'>
           <AuthorCard
             authorId={item.author_id}
             author={item.author}
@@ -130,90 +167,114 @@ export function GalleryDetailBody({
           />
         </div>
 
-        {/* 媒体：并排双图 + 左右切换；每张图右下角「生成信息」浮层，点图看大图 */}
-        <MediaGallery
-          item={item}
-          media={media}
-          onOpenViewer={setViewerIndex}
-          onScrollToCreate={scrollToCreate}
-        />
+        <div className='mt-4'>
+          <MediaGallery
+            item={item}
+            media={media}
+            onOpenViewer={setViewerIndex}
+            onScrollToCreate={scrollToCreate}
+          />
+        </div>
 
-        <section>
-          <h2 className='mb-2.5 text-[15px] font-semibold text-foreground'>
+        {/* 提示词正文：参考站是图片下方直接铺开的正文，不再收进卡片 */}
+        <div className='mt-4'>
+          <p
+            className={cn(
+              'text-[14px] leading-[1.7] whitespace-pre-wrap text-[#0f1419] dark:text-foreground/90',
+              !promptOpen && 'line-clamp-6'
+            )}
+          >
+            {item.prompt}
+          </p>
+          {item.prompt_en?.trim() && promptOpen && (
+            <p className='mt-3 text-[14px] leading-[1.7] whitespace-pre-wrap text-muted-foreground'>
+              {item.prompt_en}
+            </p>
+          )}
+          <button
+            type='button'
+            onClick={() => setPromptOpen((v) => !v)}
+            className='mt-2 inline-flex items-center gap-1 text-[13px] text-muted-foreground transition-colors hover:text-foreground'
+          >
+            {promptOpen
+              ? t('Collapse', { defaultValue: '收起' })
+              : t('Show all', { defaultValue: '全部展开' })}
+            <ChevronDown
+              className={cn('size-4 transition-transform', promptOpen && 'rotate-180')}
+            />
+          </button>
+        </div>
+
+        {/* 使用教学：三步 + RunningHub 入口（本站补充，参考站无） */}
+        <section className='mt-6'>
+          <h2 className='mb-2 text-[14px] font-medium text-foreground'>
             {t('How to use this prompt', { defaultValue: '使用教学' })}
           </h2>
-          <div className='rounded-xl border border-border/60 bg-card px-4 py-3.5'>
-            <ol className='space-y-1.5 text-[12.5px] leading-relaxed text-muted-foreground'>
-              <li>
-                1.{' '}
-                {t('Copy the prompt from the image panel', {
-                  defaultValue: '点图片右下的「生成信息」，复制提示词',
-                })}
-              </li>
-              <li>
-                2.{' '}
-                {t('Pick the same model in ComfyUI or RunningHub', {
-                  defaultValue: '在 ComfyUI 或 RunningHub 里选择同一模型',
-                })}
-              </li>
-              <li>
-                3.{' '}
-                {t('Paste it and generate, then tweak the parameters', {
-                  defaultValue: '粘贴提示词并生成，再按需微调参数',
-                })}
-              </li>
-            </ol>
-            {/* 外链走 runningHubInviteUrl 单一真源，始终带推广码；勿手拼 URL */}
-            <div className='mt-3 flex justify-end'>
-              <a
-                href={runningHubInviteUrl()}
-                target='_blank'
-                rel='noopener noreferrer'
-                title={t('Opens RunningHub in a new tab with your invite code')}
-                className='inline-flex items-center gap-1 text-[12px] font-medium text-primary transition-colors hover:text-primary/80'
-              >
-                <ExternalLink className='size-3.5' />
-                {t('Try on RunningHub')}
-              </a>
-            </div>
-          </div>
+          <ol className='space-y-1 text-[13px] leading-relaxed text-muted-foreground'>
+            <li>
+              1.{' '}
+              {t('Copy the prompt from the image panel', {
+                defaultValue: '点图片右下的「生成信息」，复制提示词',
+              })}
+            </li>
+            <li>
+              2.{' '}
+              {t('Pick the same model in ComfyUI or RunningHub', {
+                defaultValue: '在 ComfyUI 或 RunningHub 里选择同一模型',
+              })}
+            </li>
+            <li>
+              3.{' '}
+              {t('Paste it and generate, then tweak the parameters', {
+                defaultValue: '粘贴提示词并生成，再按需微调参数',
+              })}
+            </li>
+          </ol>
+          {/* 外链走 runningHubInviteUrl 单一真源，始终带推广码；勿手拼 URL */}
+          <a
+            href={runningHubInviteUrl()}
+            target='_blank'
+            rel='noopener noreferrer'
+            title={t('Opens RunningHub in a new tab with your invite code')}
+            className='mt-2 inline-flex items-center gap-1 text-[12.5px] font-medium text-primary transition-colors hover:text-primary/80'
+          >
+            <ExternalLink className='size-3.5' />
+            {t('Try on RunningHub')}
+          </a>
         </section>
 
-        {/* 提示词正文：默认折叠但一直在 DOM 里 —— 详情页是长尾搜索入口，
-            不能让提示词只存在于「点了才挂载」的浮层里，否则爬虫读不到正文 */}
-        <details className='group rounded-xl border border-border/60 bg-card'>
-          <summary className='flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-[13px] font-medium text-foreground'>
-            {t('Full prompt', { defaultValue: '提示词全文' })}
-            <ChevronDown className='size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180' />
-          </summary>
-          <div className='max-h-[280px] overflow-y-auto border-t border-border/50 px-4 py-3 text-[13px] leading-relaxed whitespace-pre-wrap text-foreground/85 [scrollbar-width:thin]'>
-            {item.prompt}
-            {item.prompt_en?.trim() && (
-              <>
-                <span className='mt-3 block h-px bg-border/50' />
-                <span className='mt-3 block text-foreground/70'>
-                  {item.prompt_en}
-                </span>
-              </>
-            )}
-          </div>
-        </details>
-
-        <div id='gallery-create-with-this' className='scroll-mt-24'>
+        <div id='gallery-create-with-this' className='mt-6 scroll-mt-24'>
           <CreateWithThis item={item} />
         </div>
 
-        <RecommendStrip item={item} onSelect={onSelectRecommend} />
+        {/* 讨论：尚未接入后端，只给空态，不做能点没反应的假输入框 */}
+        <section className='mt-7'>
+          <h2 className='text-[14px] font-medium text-foreground'>
+            {t('Comments', { defaultValue: '评论' })}
+          </h2>
+          <div className='mt-2.5 flex items-center gap-2 rounded-full border border-border/60 bg-muted/40 px-3 py-2'>
+            <span className='text-[12px] text-muted-foreground/70'>
+              {t('Comments are coming soon', { defaultValue: '评论功能即将上线' })}
+            </span>
+          </div>
+          <div className='mt-4 flex flex-col items-center gap-1.5 text-center'>
+            <MessageSquare className='size-7 text-muted-foreground/25' />
+            <p className='text-[12px] text-muted-foreground/70'>
+              {t('No comments yet', { defaultValue: '暂无评论' })}
+            </p>
+          </div>
+        </section>
+
+        <div className='mt-8'>
+          <RecommendStrip item={item} onSelect={onSelectRecommend} />
+        </div>
       </div>
 
-      {/* ── 右栏：作者 → 操作 → 元信息 ── */}
+      {/* ── 右栏：作者 → 操作 → 认证信息 → 参数 → 许可 ── */}
       <aside
-        className={cn(
-          'space-y-3',
-          variant === 'page' && 'lg:sticky lg:top-24'
-        )}
+        className={cn('space-y-2.5', variant === 'page' && 'lg:sticky lg:top-20')}
       >
-        <div className='hidden space-y-3 lg:block'>
+        <div className='hidden space-y-2.5 lg:block'>
           <AuthorCard
             authorId={item.author_id}
             author={item.author}
@@ -225,16 +286,30 @@ export function GalleryDetailBody({
             onToggleFavorite={() => onToggleFavorite?.(item.id)}
             onCreate={scrollToCreate}
           />
+
+          <p className='px-0.5 text-[11.5px] text-muted-foreground'>
+            {t('Certified work', { defaultValue: '已认证' })}
+            {' · '}
+            {formatPublishDate(item.created_at)}
+            {' '}
+            {t('Content generated by AI', { defaultValue: '内容由 AI 生成' })}
+          </p>
         </div>
 
-        <MetaSection
-          title={t('Version details', { defaultValue: '版本详情' })}
-        >
+        <MetaSection title={t('Work details', { defaultValue: '作品详情' })}>
           <KeyValueRow label={t('Type', { defaultValue: '类型' })}>
             {typeLabel}
           </KeyValueRow>
-          <KeyValueRow label={t('Status', { defaultValue: '状态' })}>
-            {t('Published', { defaultValue: '已发布' })}
+          <KeyValueRow label={t('Base model', { defaultValue: '基础模型' })}>
+            {item.model || '—'}
+          </KeyValueRow>
+          <KeyValueRow label={t('Category', { defaultValue: '分类' })}>
+            {item.category || '—'}
+          </KeyValueRow>
+          <KeyValueRow label={t('Language', { defaultValue: '语言' })}>
+            {item.prompt_en?.trim()
+              ? t('Chinese & English', { defaultValue: '中英双语' })
+              : t('Chinese', { defaultValue: '中文' })}
           </KeyValueRow>
           <KeyValueRow label={t('Published at', { defaultValue: '发布时间' })}>
             {formatPublishDate(item.created_at)}
@@ -245,31 +320,15 @@ export function GalleryDetailBody({
           <KeyValueRow label={t('Likes', { defaultValue: '点赞' })}>
             {likeCount ?? item.likes}
           </KeyValueRow>
-          <KeyValueRow label={t('Base model', { defaultValue: '基础模型' })}>
-            {item.model || '—'}
-          </KeyValueRow>
-        </MetaSection>
-
-        <MetaSection
-          title={t('Prompt parameters', { defaultValue: '使用参数' })}
-        >
-          <KeyValueRow label={t('Category', { defaultValue: '分类' })}>
-            {item.category || '—'}
-          </KeyValueRow>
-          <KeyValueRow label={t('Language', { defaultValue: '语言' })}>
-            {item.prompt_en?.trim()
-              ? t('Chinese & English', { defaultValue: '中英双语' })
-              : t('Chinese', { defaultValue: '中文' })}
-          </KeyValueRow>
           {tags.length > 0 && (
             <KeyValueRow label={t('Tags', { defaultValue: '标签' })}>
               <div className='flex flex-wrap gap-1'>
-                {tags.slice(0, 6).map((tag) => (
+                {tags.slice(0, 8).map((tag) => (
                   <button
                     key={tag}
                     type='button'
                     onClick={() => onTagSelect?.(tag)}
-                    className='rounded-[4px] bg-muted px-1.5 py-[2px] text-[11px] text-muted-foreground transition-colors hover:text-foreground'
+                    className='rounded bg-muted px-1.5 py-[2px] text-[11px] text-muted-foreground transition-colors hover:text-foreground'
                   >
                     #{tag}
                   </button>
@@ -279,8 +338,8 @@ export function GalleryDetailBody({
           )}
         </MetaSection>
 
-        <MetaSection title={t('Usage notes', { defaultValue: '使用说明' })}>
-          <ul className='space-y-1.5 px-3.5 py-3 text-[12px] leading-relaxed text-muted-foreground'>
+        <MetaSection title={t('License scope', { defaultValue: '许可范围' })}>
+          <ul className='space-y-1.5 px-[9px] py-2.5 text-[12px] leading-relaxed text-muted-foreground'>
             <li>
               {t('Prompt is free to copy and adapt.', {
                 defaultValue: '提示词可自由复制、修改与商用。',
@@ -291,11 +350,6 @@ export function GalleryDetailBody({
                 defaultValue: '示例图版权归发布者，转载请标注来源。',
               })}
             </li>
-            {item.author && (
-              <li>
-                {t('Credit', { defaultValue: '来源' })}：@{item.author}
-              </li>
-            )}
           </ul>
         </MetaSection>
 
@@ -305,27 +359,18 @@ export function GalleryDetailBody({
             onClick={() => onLike(item)}
             disabled={liked}
             className={cn(
-              'w-full rounded-lg border px-3 py-2 text-[12.5px] transition-colors',
+              'flex h-10 w-full items-center justify-center gap-1.5 rounded-lg border text-[13px] transition-colors',
               liked
                 ? 'border-primary/40 bg-primary/10 text-primary'
                 : 'border-border/60 bg-card text-muted-foreground hover:text-foreground'
             )}
           >
+            <Heart className={cn('size-4', liked && 'fill-current')} />
             {liked
               ? t('You liked this', { defaultValue: '已点赞' })
               : t('Like this work', { defaultValue: '点赞这份作品' })}
           </button>
         ) : null}
-
-        {onShare && (
-          <button
-            type='button'
-            onClick={() => onShare(item)}
-            className='w-full rounded-lg border border-border/60 bg-card px-3 py-2 text-[12.5px] text-muted-foreground transition-colors hover:text-foreground'
-          >
-            {t('Share work', { defaultValue: '分享作品' })}
-          </button>
-        )}
 
         <DetailDisclaimer />
       </aside>

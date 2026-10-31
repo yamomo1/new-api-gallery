@@ -372,7 +372,7 @@ export function MediaLightbox({
           <button
             type='button'
             onClick={onCreate}
-            className='inline-flex h-10 flex-1 items-center justify-center gap-1.5 rounded-lg bg-primary text-[13px] font-medium text-primary-foreground transition-opacity hover:opacity-90'
+            className='inline-flex h-10 flex-1 items-center justify-center gap-1.5 rounded-lg bg-[#FED578] text-[13px] font-medium text-[#8A4200] transition-opacity hover:opacity-90'
           >
             <Wand2 className='size-4' />
             {t('Create the same', { defaultValue: '做同款' })}

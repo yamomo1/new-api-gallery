@@ -73,15 +73,15 @@ export function AuthorCard({
   }
 
   return (
-    <div className='rounded-xl border border-border/60 bg-card p-4'>
-      <div className='flex items-start gap-3'>
-        <div className='flex size-12 shrink-0 items-center justify-center rounded-full bg-muted text-[18px] font-medium text-foreground/70'>
+    <div className='rounded-lg bg-card p-3.5'>
+      <div className='flex items-start gap-2.5'>
+        <div className='flex size-9 shrink-0 items-center justify-center rounded-full bg-muted text-[13px] font-medium text-foreground/70'>
           {initial || '?'}
         </div>
 
         <div className='min-w-0 flex-1'>
           <div className='flex items-start justify-between gap-2'>
-            <p className='truncate text-[16px] leading-6 font-semibold text-foreground'>
+            <p className='truncate text-[14px] leading-5 font-medium text-foreground'>
               {name}
             </p>
             {showFollow && (
@@ -90,10 +90,10 @@ export function AuthorCard({
                 onClick={handleFollow}
                 disabled={followMutation.isPending}
                 className={cn(
-                  'h-8 shrink-0 rounded-lg px-3.5 text-[13px] font-medium transition-colors disabled:opacity-60',
+                  'h-6 shrink-0 rounded px-2 text-[11px] font-medium transition-colors disabled:opacity-60',
                   following
-                    ? 'border border-border bg-transparent text-muted-foreground hover:text-foreground'
-                    : 'bg-primary/12 text-primary hover:bg-primary/18'
+                    ? 'bg-muted text-muted-foreground hover:text-foreground'
+                    : 'bg-[#1F6DFF]/10 text-[#1F6DFF] hover:bg-[#1F6DFF]/15'
                 )}
               >
                 {following
@@ -106,10 +106,10 @@ export function AuthorCard({
           {/* 认证徽标：有标签用主色，未认证回退「热心网友」用中性色 */}
           <div
             className={cn(
-              'mt-1.5 inline-flex items-center gap-1 rounded-md px-2 py-[3px] text-[12px] leading-none',
+              'mt-1 inline-flex items-center gap-1 rounded-md px-2 py-[3px] text-[11.5px] leading-none',
               rawBadge
-                ? 'bg-primary/12 text-primary'
-                : 'bg-muted text-muted-foreground'
+                ? 'bg-[#1F6DFF]/10 text-[#1F6DFF]'
+                : 'bg-black/[0.04] text-muted-foreground dark:bg-muted'
             )}
           >
             {rawBadge ? (
@@ -123,7 +123,8 @@ export function AuthorCard({
       </div>
 
       {/* 作者统计：粉丝 / 作品 / 浏览 / 点赞（加载中占位保持高度不跳） */}
-      <div className='mt-3 flex min-h-[22px] flex-wrap items-center gap-x-4 gap-y-1 border-t border-border/50 pt-2.5 text-[12px] text-muted-foreground'>
+      {/* 数字用参考站的金棕色，图标保持中性灰 */}
+      <div className='mt-2.5 flex min-h-[20px] flex-wrap items-center gap-x-3.5 gap-y-1 border-t border-border/40 pt-2 text-[11.5px] text-[#B07A16] [&_svg]:text-muted-foreground dark:text-primary/90'>
         {data ? (
           <>
             <span className='inline-flex items-center gap-1'>
