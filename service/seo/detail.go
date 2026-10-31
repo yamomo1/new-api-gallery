@@ -202,7 +202,13 @@ func absoluteURL(raw string) string {
 	if strings.HasPrefix(raw, "http://") || strings.HasPrefix(raw, "https://") {
 		return raw
 	}
-	return LoadConfig().BaseURL + "/" + strings.TrimPrefix(raw, "/")
+	// 只把「以 / 开头的真实相对路径」拼成绝对地址；
+	// 其余（脏数据 "0"、无意义占位等）一律退回空，让上层用站点默认 OG 图，
+	// 避免拼出 https://<host>/0 这种坏地址（线上曾出现过 og:image=.../0）。
+	if strings.HasPrefix(raw, "/") {
+		return strings.TrimSuffix(LoadConfig().BaseURL, "/") + raw
+	}
+	return ""
 }
 
 func truncateRunes(s string, max int) string {
