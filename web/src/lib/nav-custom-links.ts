@@ -9,6 +9,7 @@
 import {
   Boxes,
   FileText,
+  FolderOpen,
   Info,
   Frame,
   Home,
@@ -103,6 +104,7 @@ export type NavLinkPreset = {
 export const NAV_LINK_PRESETS: NavLinkPreset[] = [
   { id: 'home', titleKey: 'Home', url: '/' },
   { id: 'gallery', titleKey: 'Prompt Gallery', url: '/prompt-gallery', icon: 'images' },
+  { id: 'my-works', titleKey: 'My works', url: '/my-works', requireAuth: true, icon: 'folder' },
   // 「工作台」改名「无限画布」后的别名：URL 沿用 /workspace（旧书签/外链要继续可用），
   // 只是显示名与侧边栏对齐，避免后台下拉里还冒出一个没人认得的老词。
   { id: 'workspace', titleKey: 'Infinite canvas', url: '/workspace', requireAuth: true, icon: 'frame' },
@@ -164,6 +166,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
   trophy: Trophy,
   about: Info,
   file: FileText,
+  folder: FolderOpen,
   settings: Settings,
   plug: Plug,
   rocket: Rocket,

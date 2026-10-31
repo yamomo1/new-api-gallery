@@ -86,11 +86,9 @@ describe('security sidebar visibility', () => {
     ).toEqual([
       'Wallet',
       'Profile',
-      'My works',
       'Security & Access',
-      // 「工作台」改名「无限画布」后标题变了，入口 URL 仍沿用 /workspace
-      'Infinite canvas',
-      'My Canvases',
+      // 二开的画廊/画布入口已移出硬编码，改由后台「导航链接」配置
+      // （见 use-sidebar-data.ts personal 分组注释）
     ])
     expect(
       result.current

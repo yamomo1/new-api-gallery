@@ -84,7 +84,16 @@ function LinkRow({
           <Input
             value={link.title}
             placeholder={link.titleKey ? t(link.titleKey) : t('Link title')}
-            onChange={(e) => onChange({ ...link, title: e.target.value })}
+            onChange={(e) => {
+              const title = e.target.value
+              onChange({
+                ...link,
+                title,
+                // 手动编辑标题 = 启用自定义标题：清掉预设 i18n key。
+                // 否则运行时 resolveTitle 永远渲染 titleKey 的翻译值，用户改了标题也不生效。
+                ...(title ? { titleKey: undefined } : {}),
+              })
+            }}
           />
         </div>
         <div className='flex flex-col gap-1'>

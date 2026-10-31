@@ -12,7 +12,11 @@ import { createFileRoute } from '@tanstack/react-router'
 import { CanvasStudioRedirect } from '@/features/canvas/studio-redirect'
 
 export const Route = createFileRoute('/_authenticated/workspace')({
-  beforeLoad: () => {
+  beforeLoad: ({ preload }) => {
+    // 悬浮预加载（defaultPreload: 'intent'）也会执行 beforeLoad；
+    // 这里若同步 window.location.replace，侧边栏/顶栏链接一 hover 就会被带去画布。
+    // 预加载阶段直接放行，等真正点击进入时再跳。
+    if (preload) return
     if (typeof window !== 'undefined') {
       window.location.replace('/studio/canvas')
     }

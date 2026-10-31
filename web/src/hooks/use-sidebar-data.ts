@@ -23,12 +23,8 @@ import {
   CreditCard,
   FileText,
   FlaskConical,
-  FolderOpen,
-  Frame,
-  Images,
   Key,
   LayoutDashboard,
-  LayoutGrid,
   ListTodo,
   MessageSquare,
   PlugZap,
@@ -67,11 +63,6 @@ export function useSidebarData(): SidebarData {
             title: t('Playground'),
             url: '/playground',
             icon: FlaskConical,
-          },
-          {
-            title: t('Prompt Gallery'),
-            url: '/prompt-gallery',
-            icon: Images,
           },
           {
             title: t('Chat'),
@@ -133,25 +124,13 @@ export function useSidebarData(): SidebarData {
             icon: User,
           },
           {
-            title: t('My works'),
-            url: '/my-works',
-            icon: FolderOpen,
-          },
-          {
             title: t('Security & Access'),
             url: '/security',
             icon: ShieldCheck,
           },
-          {
-            title: t('Infinite canvas'),
-            url: '/workspace',
-            icon: LayoutGrid,
-          },
-          {
-            title: t('My Canvases'),
-            url: '/my-canvases',
-            icon: Frame,
-          },
+          // 二开的画廊/画布入口不再硬编码在这里：
+          // 统一走后台「系统设置 → 导航链接」配置（预设里有 提示词画廊/无限画布/
+          // 我的画布/我的作品），否则后台改不了名也关不掉。
         ],
       },
       {
