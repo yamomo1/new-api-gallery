@@ -103,7 +103,9 @@ export type NavLinkPreset = {
 export const NAV_LINK_PRESETS: NavLinkPreset[] = [
   { id: 'home', titleKey: 'Home', url: '/' },
   { id: 'gallery', titleKey: 'Prompt Gallery', url: '/prompt-gallery', icon: 'images' },
-  { id: 'workspace', titleKey: 'Workspace', url: '/workspace', requireAuth: true, icon: 'layout-grid' },
+  // 「工作台」改名「无限画布」后的别名：URL 沿用 /workspace（旧书签/外链要继续可用），
+  // 只是显示名与侧边栏对齐，避免后台下拉里还冒出一个没人认得的老词。
+  { id: 'workspace', titleKey: 'Infinite canvas', url: '/workspace', requireAuth: true, icon: 'frame' },
   { id: 'canvas', titleKey: 'Canvas Studio', url: '/canvas', icon: 'frame' },
   { id: 'my-canvases', titleKey: 'My Canvases', url: '/my-canvases', requireAuth: true, icon: 'frame' },
   { id: 'console', titleKey: 'Console', url: '/dashboard' },

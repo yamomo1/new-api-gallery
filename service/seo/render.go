@@ -580,7 +580,7 @@ func LLMsTxt() string {
 	b.WriteString("# " + cfg.SiteName + " (" + cfg.Brand + ")\n\n")
 	b.WriteString("> " + cfg.Description + "\n\n")
 	b.WriteString("## 站点是什么\n")
-	b.WriteString("- 中文 AI 创作平台，核心是「提示词画廊 + AI 画布工作台」。\n")
+	b.WriteString("- 中文 AI 创作平台，核心是「提示词画廊 + 无限画布」。\n")
 	b.WriteString("- 画廊里的提示词中英双语对照，可直接复制到 ComfyUI / Flux / Stable Diffusion / 可灵 / Seedance 等工具使用。\n")
 	b.WriteString("- 平台生成的所有图片与视频均带 AI 生成标识（显式角标 + 元数据隐式标识）。\n\n")
 

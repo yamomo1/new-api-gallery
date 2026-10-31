@@ -90,8 +90,10 @@ func DefaultConfig() *Config {
 		Brand:         "YMM",
 		BaseURL:       "https://cdymm.com",
 		TitleTemplate: "{page} · {site}",
-		DefaultTitle:  "一幕AI · 提示词画廊与 AI 画布工作台",
-		Description:   "一幕AI（YMM）是面向创作者的 AI 绘画与视频生成平台：精选提示词画廊可直接复用，AI 画布工作台支持文生图、图生图、文生视频与图生视频，中英双语提示词一键复制。",
+		// 「工作台」已改名「无限画布」，这里的措辞要与前台保持一致；
+		// 注意：线上若后台保存过 SeoConfig，DB 里的值会盖住这份默认值，改名必须同步改后台那一处。
+		DefaultTitle:  "一幕AI · 提示词画廊与无限画布",
+		Description:   "一幕AI（YMM）是面向创作者的 AI 绘画与视频生成平台：精选提示词画廊可直接复用，无限画布支持文生图、图生图、文生视频与图生视频，中英双语提示词一键复制。",
 		Keywords:      "一幕AI,YMM,AI绘画,AI视频生成,提示词,提示词画廊,AI画布,文生图,图生视频,提示词大全",
 		OGImage:       "https://cdymm.com/logo.png",
 		Locale:        "zh_CN",
@@ -100,7 +102,7 @@ func DefaultConfig() *Config {
 		Pages: map[string]PageMeta{
 			"/": {
 				Title:       "AI 绘画、视频生成与提示词画廊",
-				Description: "一幕AI（YMM）提示词画廊：上千条可直接复用的中文/英文 AI 绘画与视频提示词，配 AI 画布工作台，文生图、图生视频一站完成。",
+				Description: "一幕AI（YMM）提示词画廊：上千条可直接复用的中文/英文 AI 绘画与视频提示词，配无限画布，文生图、图生视频一站完成。",
 				Keywords:    "一幕AI,AI绘画,提示词画廊,AI提示词,文生图,AI视频生成",
 				ChangeFreq:  "daily",
 				Priority:    1,
@@ -119,10 +121,13 @@ func DefaultConfig() *Config {
 				Priority:    0.8,
 			},
 			"/canvas": {
+				// /canvas 与 /workspace 都是「无限画布」的入口（后者会在浏览器里 replace 到 /studio/canvas），
+				// 两条都不该被单独收录，否则和真正的画布页重复。
 				Title:       "AI 画布 · 一句话搭好创作流程",
-				Description: "一幕AI 的 AI 画布工作台：在无限画布上编排图片与视频生成流程，支持提示词、参考图、多轮迭代，成果可一键入库。",
+				Description: "一幕AI 无限画布：在无限画布上编排图片与视频生成流程，支持提示词、参考图、多轮迭代，成果可一键入库。",
 				ChangeFreq:  "weekly",
 				Priority:    0.8,
+				Robots:      "noindex,follow",
 			},
 			"/about": {
 				Title:       "关于我们",
@@ -152,6 +157,9 @@ func DefaultConfig() *Config {
 			"/login":    {Robots: "noindex,follow"},
 			"/register": {Robots: "noindex,follow"},
 			"/setup":    {Robots: "noindex,nofollow"},
+			// /workspace 是「无限画布」的历史入口：命中后浏览器会 replace 到 /studio/canvas，
+			// 本身没有内容，留档即可，不要让它落到 DefaultTitle 被单独收录。
+			"/workspace": {Robots: "noindex,follow"},
 		},
 	}
 }
