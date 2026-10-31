@@ -36,6 +36,9 @@ electron/dist
 deploy/data/
 deploy/logs/
 deploy/backups/
+
+# 本地开发同步用的连接串（含生产/本地数据库口令，严禁提交）
+deploy/.sync-env
 .gomodcache/
 .gocache-temp
 .gopath

@@ -1,0 +1,13 @@
+# ============================================================================
+# 复制本文件为 .sync-env 后填写（.sync-env 已被 .gitignore 忽略，不会提交）
+# 连接串格式：postgresql://USER:PASSWORD@HOST:PORT/DBNAME
+# ============================================================================
+
+# 生产库连接串
+# 取值位置：服务器 /opt/new-api-gallery/new-api-gallery/deploy/.env 里的 SQL_DSN
+# 若本地能直连 1Panel 的 PostgreSQL，直接填它的连接串即可；
+# 若不能直连，请按 LOCAL-DEV.md 的「方式二」先把 options 导出再 scp 回来。
+PROD_DSN="postgresql://USER:PASSWORD@PROD_HOST:5432/new-api"
+
+# 本地库连接串（你本机起的 PostgreSQL，见 LOCAL-DEV.md）
+LOCAL_DSN="postgresql://postgres:localdev@localhost:5432/new-api"
