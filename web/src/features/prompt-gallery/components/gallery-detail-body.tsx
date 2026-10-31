@@ -38,6 +38,8 @@ type GalleryDetailBodyProps = {
   onShare?: (item: PromptGalleryItem) => void
   onTagSelect?: (tag: string) => void
   onSelectRecommend?: (id: number) => void
+  /** 作品展示里的「做同款」：带 ?create=1 跳到该作品并滚到创作入口 */
+  onCreateRecommend?: (id: number) => void
   /** page：常规页面（右栏 sticky 到顶栏下方）；dialog：全屏弹窗内滚动 */
   variant?: 'page' | 'dialog'
 }
@@ -63,6 +65,7 @@ export function GalleryDetailBody({
   onShare,
   onTagSelect,
   onSelectRecommend,
+  onCreateRecommend,
   variant = 'page',
 }: GalleryDetailBodyProps) {
   const { t } = useTranslation()
@@ -91,11 +94,12 @@ export function GalleryDetailBody({
   }
 
   return (
-    <div className='grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_362px]'>
+    <div>
+      <div className='grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_362px]'>
       {/* ── 左栏：标题 → 标签 → 版本 → 图片 → 正文 → 教学 → 创作 → 讨论 → 相关 ── */}
       <div className='min-w-0'>
         <header>
-          <h1 className='text-[22px] leading-9 font-medium tracking-normal text-foreground md:text-[24px]'>
+          <h1 className='text-[26px] leading-tight font-semibold tracking-tight text-foreground md:text-[30px]'>
             {item.title}
           </h1>
 
@@ -265,9 +269,6 @@ export function GalleryDetailBody({
           </div>
         </section>
 
-        <div className='mt-8'>
-          <WorkGallery item={item} onSelect={onSelectRecommend} />
-        </div>
       </div>
 
       {/* ── 右栏：作者 → 操作 → 认证信息 → 参数 → 许可 ── */}
@@ -370,6 +371,16 @@ export function GalleryDetailBody({
 
         <DetailDisclaimer />
       </aside>
+      </div>
+
+      {/* 作品展示：拉通整行，和上方内容同宽 */}
+      <div className='mt-10'>
+        <WorkGallery
+          item={item}
+          onSelect={onSelectRecommend}
+          onOpenCreate={onCreateRecommend}
+        />
+      </div>
 
       {viewerIndex !== null && (
         <MediaLightbox

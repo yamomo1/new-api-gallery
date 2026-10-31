@@ -81,7 +81,7 @@ export function AuthorCard({
 
         <div className='min-w-0 flex-1'>
           <div className='flex items-start justify-between gap-2'>
-            <p className='truncate text-[14px] leading-5 font-medium text-foreground'>
+            <p className='truncate text-[16px] leading-6 font-semibold text-foreground'>
               {name}
             </p>
             {showFollow && (

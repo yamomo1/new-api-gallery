@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
-import { ImagePlus, Play, Video } from 'lucide-react'
+import { Heart, ImagePlus, Play, Video, Wand2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -34,9 +34,12 @@ const COLUMN_KEYS = ['c0', 'c1', 'c2', 'c3'] as const
 export function WorkGallery({
   item,
   onSelect,
+  onOpenCreate,
 }: {
   item: PromptGalleryItem
   onSelect?: (id: number) => void
+  /** 「做同款」：详情页传入带 ?create=1 的跳转；弹窗场景不传则回退到 onSelect */
+  onOpenCreate?: (id: number) => void
 }) {
   const { t } = useTranslation()
   const navigate = useNavigate()
@@ -183,20 +186,57 @@ export function WorkGallery({
                   )
                 }
 
+                const initial = (it.author || '?').trim().slice(0, 1).toUpperCase()
+
                 return (
-                  <a
+                  <div
                     key={it.id}
-                    href={`/prompt-gallery/${it.id}`}
-                    title={it.title}
-                    onClick={(event) => {
-                      if (!onSelect) return
-                      event.preventDefault()
-                      onSelect(it.id)
-                    }}
-                    className='group block overflow-hidden rounded-xl bg-muted'
+                    className='group relative overflow-hidden rounded-xl bg-muted transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_0_0_1px_rgba(15,20,25,0.06),0_22px_44px_-18px_rgba(15,20,25,0.45)]'
                   >
-                    {thumb}
-                  </a>
+                    <a
+                      href={`/prompt-gallery/${it.id}`}
+                      title={it.title}
+                      onClick={(event) => {
+                        if (!onSelect) return
+                        event.preventDefault()
+                        onSelect(it.id)
+                      }}
+                      className='block'
+                    >
+                      <span className='block overflow-hidden'>{thumb}</span>
+                    </a>
+
+                    {/* 悬浮信息层：底部渐变 + 作者/标题 + 做同款/点赞（对齐参考站） */}
+                    <div className='pointer-events-none absolute inset-0 flex items-end justify-between gap-2 bg-gradient-to-t from-black/80 via-black/25 to-transparent p-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100'>
+                      <div className='flex min-w-0 items-center gap-2'>
+                        <span className='flex size-7 shrink-0 items-center justify-center rounded-full bg-white/25 text-[11px] font-medium text-white ring-1 ring-white/35 backdrop-blur-sm'>
+                          {initial}
+                        </span>
+                        <span className='line-clamp-1 text-[13px] font-medium text-white drop-shadow-sm'>
+                          {it.title}
+                        </span>
+                      </div>
+                      <div className='flex shrink-0 items-center gap-1.5'>
+                        <button
+                          type='button'
+                          onClick={(event) => {
+                            event.preventDefault()
+                            event.stopPropagation()
+                            if (onOpenCreate) onOpenCreate(it.id)
+                            else onSelect?.(it.id)
+                          }}
+                          className='pointer-events-auto inline-flex h-7 items-center gap-1 rounded-full bg-black/40 px-2.5 text-[12px] text-white ring-1 ring-white/25 backdrop-blur-sm transition-colors hover:bg-black/55'
+                        >
+                          <Wand2 className='size-3.5' />
+                          {t('Create the same', { defaultValue: '做同款' })}
+                        </button>
+                        <span className='inline-flex h-7 items-center gap-1 rounded-full bg-black/40 px-2.5 text-[12px] text-white ring-1 ring-white/25 backdrop-blur-sm'>
+                          <Heart className='size-3.5' />
+                          {it.likes}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
                 )
               })}
             </div>

@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { Link, useNavigate } from '@tanstack/react-router'
+import { Link, useNavigate, useSearch } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { ChevronRight } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
@@ -64,6 +64,8 @@ export function PromptGalleryDetailPage({ id }: { id: number }) {
   const item: PromptGalleryItem | undefined = detailQuery.data
   const likeMutation = useLikePromptGallery()
   const favoriteMutation = useTogglePromptGalleryFavorite()
+  // 「做同款」深链（?create=1）：作品加载完后滚到创作入口
+  const { create } = useSearch({ from: '/prompt-gallery/$id' })
 
   const media: string[] = useMemo(
     () => (item ? parseGalleryMedia(item) : []),
@@ -99,6 +101,16 @@ export function PromptGalleryDetailPage({ id }: { id: number }) {
     // tags/media 由 item 派生，依赖 item 即可
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [item])
+
+  useEffect(() => {
+    if (!create || !item) return
+    const timer = window.setTimeout(() => {
+      document
+        .querySelector('#gallery-create-with-this')
+        ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 260)
+    return () => window.clearTimeout(timer)
+  }, [create, item])
 
   // 记录不存在：明确告诉搜索引擎这张页面该下架
   useEffect(() => {
@@ -173,6 +185,17 @@ export function PromptGalleryDetailPage({ id }: { id: number }) {
       void navigate({
         to: '/prompt-gallery/$id',
         params: { id: String(nextId) },
+      })
+    },
+    [navigate]
+  )
+
+  const handleCreateRecommend = useCallback(
+    (nextId: number) => {
+      void navigate({
+        to: '/prompt-gallery/$id',
+        params: { id: String(nextId) },
+        search: { create: 1 },
       })
     },
     [navigate]
@@ -268,6 +291,7 @@ export function PromptGalleryDetailPage({ id }: { id: number }) {
                 onShare={handleShare}
                 onTagSelect={handleTagSelect}
                 onSelectRecommend={handleSelectRecommend}
+                onCreateRecommend={handleCreateRecommend}
                 variant='page'
               />
             )}
