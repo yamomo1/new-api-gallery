@@ -121,8 +121,8 @@ func DefaultConfig() *Config {
 				Priority:    0.8,
 			},
 			"/canvas": {
-				// /canvas 与 /workspace 都是「无限画布」的入口（后者会在浏览器里 replace 到 /studio/canvas），
-				// 两条都不该被单独收录，否则和真正的画布页重复。
+				// /canvas 是「无限画布」的入口，浏览器里会 replace 到 /studio/canvas，
+				// 本身没有独立内容，标记 noindex 避免和真正的画布页重复收录。
 				Title:       "AI 画布 · 一句话搭好创作流程",
 				Description: "一幕AI 无限画布：在无限画布上编排图片与视频生成流程，支持提示词、参考图、多轮迭代，成果可一键入库。",
 				ChangeFreq:  "weekly",
@@ -157,9 +157,6 @@ func DefaultConfig() *Config {
 			"/login":    {Robots: "noindex,follow"},
 			"/register": {Robots: "noindex,follow"},
 			"/setup":    {Robots: "noindex,nofollow"},
-			// /workspace 是「无限画布」的历史入口：命中后浏览器会 replace 到 /studio/canvas，
-			// 本身没有内容，留档即可，不要让它落到 DefaultTitle 被单独收录。
-			"/workspace": {Robots: "noindex,follow"},
 		},
 	}
 }

@@ -22,6 +22,6 @@ import { createFileRoute } from '@tanstack/react-router'
 import { GalleryHome } from '@/features/gallery-home'
 
 export const Route = createFileRoute('/')({
-  // 登录 / 游客都能直接看画廊首页；想去工作台走侧边栏「工作台」入口即可
+  // 登录 / 游客都能直接看画廊首页；想去画布走侧边栏「无限画布」入口即可
   component: GalleryHome,
 })

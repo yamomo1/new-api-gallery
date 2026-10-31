@@ -1,0 +1,13 @@
+彻底移除 /workspace 历史路由及所有残留引用
+
+/workspace 原本是「工作台」功能页删除后的兼容跳转壳，与
+/canvas 功能重复。现在彻底删除：
+- 删除路由文件 routes/_authenticated/workspace.tsx，重生 routeTree.gen.ts
+- 导航预设 NAV_LINK_PRESETS 移除 workspace 条目
+- SEO 默认配置移除 /workspace（noindex 留档已无意义）
+- Go 软 404 白名单 knownSpaSegments 移除 workspace 段
+- 清理若干注释与占位符里的 /workspace 提及
+
+说明：单条路由文件体量极小，对服务端镜像体积几乎无影响；
+镜像体积由基础镜像与内嵌 web/dist 决定，本地 new-api-local*
+等二进制已被 .gitignore/.dockerignore 排除，不会进镜像。

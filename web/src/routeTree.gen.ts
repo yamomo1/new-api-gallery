@@ -30,7 +30,6 @@ import { Route as errors503RouteImport } from './routes/(errors)/503'
 import { Route as AuthenticatedChat2linkRouteImport } from './routes/_authenticated/chat2link'
 import { Route as AuthenticatedMyCanvasesRouteImport } from './routes/_authenticated/my-canvases'
 import { Route as AuthenticatedSystemSettingsRouteRouteImport } from './routes/_authenticated/system-settings/route'
-import { Route as AuthenticatedWorkspaceRouteImport } from './routes/_authenticated/workspace'
 import { Route as AboutIndexRouteImport } from './routes/about/index'
 import { Route as OauthProviderRouteImport } from './routes/oauth/$provider'
 import { Route as PricingIndexRouteImport } from './routes/pricing/index'
@@ -192,11 +191,6 @@ const AuthenticatedSystemSettingsRouteRoute =
     path: '/system-settings',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedWorkspaceRoute = AuthenticatedWorkspaceRouteImport.update({
-  id: '/workspace',
-  path: '/workspace',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 const AboutIndexRoute = AboutIndexRouteImport.update({
   id: '/about/',
   path: '/about/',
@@ -542,7 +536,6 @@ export interface FileRoutesByFullPath {
   '/503': typeof errors503Route
   '/chat2link': typeof AuthenticatedChat2linkRoute
   '/my-canvases': typeof AuthenticatedMyCanvasesRoute
-  '/workspace': typeof AuthenticatedWorkspaceRoute
   '/oauth/$provider': typeof OauthProviderRoute
   '/prompt-gallery/$id': typeof PromptGalleryIdRoute
   '/about/': typeof AboutIndexRoute
@@ -619,7 +612,6 @@ export interface FileRoutesByTo {
   '/503': typeof errors503Route
   '/chat2link': typeof AuthenticatedChat2linkRoute
   '/my-canvases': typeof AuthenticatedMyCanvasesRoute
-  '/workspace': typeof AuthenticatedWorkspaceRoute
   '/oauth/$provider': typeof OauthProviderRoute
   '/prompt-gallery/$id': typeof PromptGalleryIdRoute
   '/about': typeof AboutIndexRoute
@@ -700,7 +692,6 @@ export interface FileRoutesById {
   '/(errors)/503': typeof errors503Route
   '/_authenticated/chat2link': typeof AuthenticatedChat2linkRoute
   '/_authenticated/my-canvases': typeof AuthenticatedMyCanvasesRoute
-  '/_authenticated/workspace': typeof AuthenticatedWorkspaceRoute
   '/oauth/$provider': typeof OauthProviderRoute
   '/prompt-gallery/$id': typeof PromptGalleryIdRoute
   '/about/': typeof AboutIndexRoute
@@ -780,7 +771,6 @@ export interface FileRouteTypes {
     | '/503'
     | '/chat2link'
     | '/my-canvases'
-    | '/workspace'
     | '/oauth/$provider'
     | '/prompt-gallery/$id'
     | '/about/'
@@ -857,7 +847,6 @@ export interface FileRouteTypes {
     | '/503'
     | '/chat2link'
     | '/my-canvases'
-    | '/workspace'
     | '/oauth/$provider'
     | '/prompt-gallery/$id'
     | '/about'
@@ -937,7 +926,6 @@ export interface FileRouteTypes {
     | '/(errors)/503'
     | '/_authenticated/chat2link'
     | '/_authenticated/my-canvases'
-    | '/_authenticated/workspace'
     | '/oauth/$provider'
     | '/prompt-gallery/$id'
     | '/about/'
@@ -1165,13 +1153,6 @@ declare module '@tanstack/react-router' {
       path: '/system-settings'
       fullPath: '/system-settings'
       preLoaderRoute: typeof AuthenticatedSystemSettingsRouteRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/workspace': {
-      id: '/_authenticated/workspace'
-      path: '/workspace'
-      fullPath: '/workspace'
-      preLoaderRoute: typeof AuthenticatedWorkspaceRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/about/': {
@@ -1677,7 +1658,6 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSystemSettingsRouteRoute: typeof AuthenticatedSystemSettingsRouteRouteWithChildren
   AuthenticatedChat2linkRoute: typeof AuthenticatedChat2linkRoute
   AuthenticatedMyCanvasesRoute: typeof AuthenticatedMyCanvasesRoute
-  AuthenticatedWorkspaceRoute: typeof AuthenticatedWorkspaceRoute
   AuthenticatedCanvasDocumentIdRoute: typeof AuthenticatedCanvasDocumentIdRoute
   AuthenticatedChatChatIdRoute: typeof AuthenticatedChatChatIdRoute
   AuthenticatedDashboardSectionRoute: typeof AuthenticatedDashboardSectionRoute
@@ -1710,7 +1690,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
     AuthenticatedSystemSettingsRouteRouteWithChildren,
   AuthenticatedChat2linkRoute: AuthenticatedChat2linkRoute,
   AuthenticatedMyCanvasesRoute: AuthenticatedMyCanvasesRoute,
-  AuthenticatedWorkspaceRoute: AuthenticatedWorkspaceRoute,
   AuthenticatedCanvasDocumentIdRoute: AuthenticatedCanvasDocumentIdRoute,
   AuthenticatedChatChatIdRoute: AuthenticatedChatChatIdRoute,
   AuthenticatedDashboardSectionRoute: AuthenticatedDashboardSectionRoute,

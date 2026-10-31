@@ -30,7 +30,7 @@ var knownSpaSegments = map[string]bool{
 	"reset": true, "sign-in": true, "sign-up": true,
 	"401": true, "403": true, "404": true, "500": true, "503": true,
 	"chat2link": true, "my-canvases": true, "system-settings": true,
-	"workspace": true, "about": true, "pricing": true, "prompt-gallery": true,
+	"about": true, "pricing": true, "prompt-gallery": true,
 	"rankings": true, "setup": true, "user": true, "keys": true, "models": true,
 	"my-works": true, "playground": true, "profile": true, "profit": true,
 	"redemption-codes": true, "security": true, "subscriptions": true,

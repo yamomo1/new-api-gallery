@@ -100,7 +100,7 @@ function LinkRow({
           <Label className='text-xs'>{t('URL')}</Label>
           <Input
             value={link.url}
-            placeholder='/workspace 或 https://example.com'
+            placeholder='/canvas 或 https://example.com'
             onChange={(e) => onChange({ ...link, url: e.target.value })}
           />
         </div>
