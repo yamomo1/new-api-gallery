@@ -1,5 +1,5 @@
 import { ChevronLeft, ChevronRight, ImageOff, Info, Play, Video } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { cn } from '@/lib/utils'
@@ -33,30 +33,82 @@ export function MediaGallery({
 }) {
   const { t } = useTranslation()
   const scrollerRef = useRef<HTMLDivElement>(null)
-  // 点击「生成信息」固定住的浮层（null = 没固定，跟随 hover）
-  const [openIndex, setOpenIndex] = useState<number | null>(null)
-  // 鼠标悬停的卡片：悬浮即弹浮层，不用先点按钮
-  const [hoverIndex, setHoverIndex] = useState<number | null>(null)
+  // 浮层挂在哪个按钮上（同时记录按钮位置，用来贴着按钮定位）
+  const [anchor, setAnchor] = useState<{ index: number; rect: DOMRect } | null>(
+    null
+  )
+  // 点按钮「钉住」的浮层（钉住后移开鼠标也不消失）
+  const [pinnedIndex, setPinnedIndex] = useState<number | null>(null)
+  const closeTimer = useRef<number | null>(null)
 
-  // 同时只允许一张卡片显示浮层：hover 优先，其次是点按钮固定的那张
-  const activeIndex = hoverIndex ?? openIndex
+  const cancelClose = useCallback(() => {
+    if (closeTimer.current !== null) {
+      window.clearTimeout(closeTimer.current)
+      closeTimer.current = null
+    }
+  }, [])
+
+  // 离开按钮/浮层后延迟关闭，留出从按钮移到浮层的鼠标路径
+  const scheduleClose = useCallback(() => {
+    cancelClose()
+    closeTimer.current = window.setTimeout(() => {
+      setAnchor(null)
+      setPinnedIndex(null)
+      closeTimer.current = null
+    }, 160)
+  }, [cancelClose])
+
+  useEffect(() => cancelClose, [cancelClose])
 
   // 切作品时回到第一屏，并收起浮层
   useEffect(() => {
-    setOpenIndex(null)
-    setHoverIndex(null)
+    setAnchor(null)
+    setPinnedIndex(null)
     scrollerRef.current?.scrollTo({ left: 0 })
   }, [item.id])
 
-  // 打开浮层时若图片滚出视野，点外面关闭
+  // 浮层是 fixed 定位，页面/容器一滚就错位，直接收起
   useEffect(() => {
-    if (openIndex === null) return
+    if (!anchor) return
+    const close = () => {
+      setAnchor(null)
+      setPinnedIndex(null)
+    }
+    window.addEventListener('scroll', close, { passive: true, capture: true })
+    window.addEventListener('resize', close)
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setOpenIndex(null)
+      if (event.key === 'Escape') close()
     }
     window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [openIndex])
+    return () => {
+      window.removeEventListener('scroll', close, { capture: true })
+      window.removeEventListener('resize', close)
+      window.removeEventListener('keydown', onKey)
+    }
+  }, [anchor])
+
+  // 钉住状态下点空白处关闭
+  useEffect(() => {
+    if (!anchor || pinnedIndex === null) return
+    const onDown = (event: MouseEvent) => {
+      const target = event.target as HTMLElement | null
+      if (!target) return
+      if (target.closest('[role="dialog"]')) return
+      if (target.closest('[data-geninfo-btn]')) return
+      setAnchor(null)
+      setPinnedIndex(null)
+    }
+    document.addEventListener('mousedown', onDown)
+    return () => document.removeEventListener('mousedown', onDown)
+  }, [anchor, pinnedIndex])
+
+  const openAt = useCallback(
+    (index: number, el: HTMLElement) => {
+      cancelClose()
+      setAnchor({ index, rect: el.getBoundingClientRect() })
+    },
+    [cancelClose]
+  )
 
   // 循环翻页：到最后一屏再点「下一张」回到第一屏，第一屏点「上一张」回最后一屏
   const page = (direction: 1 | -1) => {
@@ -96,8 +148,6 @@ export function MediaGallery({
           return (
             <figure
               key={src}
-              onMouseEnter={() => setHoverIndex(i)}
-              onMouseLeave={() => setHoverIndex(null)}
               className={cn(
                 // 参考站：卡片 413×600、间距 8、圆角 13、底色 #F6F6F6、图片 contain 不裁切
                 'group relative m-0 shrink-0 snap-start overflow-hidden rounded-[13px] bg-[#f6f6f6] dark:bg-muted',
@@ -141,12 +191,25 @@ export function MediaGallery({
               {/* 生成信息入口：固定在图片右下角，浮层也从这里展开 */}
               <button
                 type='button'
-                onClick={() => setOpenIndex(openIndex === i ? null : i)}
-                aria-expanded={activeIndex === i}
+                data-geninfo-btn
+                onMouseEnter={(event) => openAt(i, event.currentTarget)}
+                onMouseLeave={scheduleClose}
+                onFocus={(event) => openAt(i, event.currentTarget)}
+                onBlur={scheduleClose}
+                onClick={(event) => {
+                  if (pinnedIndex === i) {
+                    setPinnedIndex(null)
+                    setAnchor(null)
+                    return
+                  }
+                  setPinnedIndex(i)
+                  openAt(i, event.currentTarget)
+                }}
+                aria-expanded={anchor?.index === i}
                 className={cn(
                   'absolute right-3 bottom-3 z-10 inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[12.5px] font-medium shadow-sm ring-1 ring-black/5 backdrop-blur-sm transition-colors',
                   // 按钮压在图片上，始终白底黑字（深色主题下 text-foreground 会变白 → 不可读）
-                  activeIndex === i
+                  anchor?.index === i
                     ? 'bg-neutral-900 text-white'
                     : 'bg-white/90 text-neutral-900 hover:bg-white'
                 )}
@@ -163,19 +226,24 @@ export function MediaGallery({
                 </span>
               )}
 
-              {activeIndex === i && (
-                <GenerationPopover
-                  item={item}
-                  onUse={() => {
-                    setOpenIndex(null)
-                    onScrollToCreate()
-                  }}
-                />
-              )}
             </figure>
           )
         })}
       </div>
+
+      {anchor && (
+        <GenerationPopover
+          item={item}
+          anchorRect={anchor.rect}
+          onMouseEnter={cancelClose}
+          onMouseLeave={scheduleClose}
+          onUse={() => {
+            setAnchor(null)
+            setPinnedIndex(null)
+            onScrollToCreate()
+          }}
+        />
+      )}
 
       {multiple && (
         <>

@@ -1,5 +1,6 @@
 import { Box, Check, ChevronRight, Copy, Wand2 } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useState, type CSSProperties } from 'react'
+import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
@@ -7,6 +8,9 @@ import { copyText } from '../../utils'
 import type { PromptGalleryItem } from '../../types'
 
 type ModelRow = { key: string; name: string; hint?: string }
+
+/** 浮层宽度：比图片卡内那版更大，最大不超过视口 */
+const POPOVER_WIDTH = 460
 
 /** 解析 model_sources（JSON 数组字符串），失败返回空数组 */
 function parseModelRows(raw?: string): ModelRow[] {
@@ -28,17 +32,26 @@ function parseModelRows(raw?: string): ModelRow[] {
 }
 
 /**
- * 「生成信息」浮层（覆盖在图片上，对齐 liblib 的生成信息卡）
+ * 「生成信息」浮层（悬浮/点击「生成信息」按钮才出现）
  * ---------------------------------------------------------------
- * 提示词区固定最大高度、超出内部滚动，不让长提示词把卡片撑到出屏；
- * 「做同款」直接滚到页面下方的创作入口（那里才有真正的四种下载/一键生图能力）。
+ * 用 portal 挂到 body + fixed 定位：参考站这个卡片是浮在图片之上的独立面板，
+ * 不能被图片卡片的 `overflow-hidden` 裁掉，所以不能用 absolute 挂在 figure 里。
+ *
+ * 定位规则：贴着按钮显示（按钮在上方就往上弹、下方不够就往下弹），
+ * 左右钳制在视口内；高度按可用空间给 max-height，内容超出内部滚动。
  */
 export function GenerationPopover({
   item,
+  anchorRect,
   onUse,
+  onMouseEnter,
+  onMouseLeave,
 }: {
   item: PromptGalleryItem
+  anchorRect: DOMRect
   onUse: () => void
+  onMouseEnter: () => void
+  onMouseLeave: () => void
 }) {
   const { t } = useTranslation()
   const [copied, setCopied] = useState(false)
@@ -46,11 +59,7 @@ export function GenerationPopover({
   const bilingual = Boolean(enPrompt)
   const [lang, setLang] = useState<'en' | 'zh'>('en')
   const text = bilingual && lang === 'en' ? enPrompt : item.prompt
-
-  useEffect(() => {
-    setCopied(false)
-    setLang('en')
-  }, [item.id])
+  const [style, setStyle] = useState<CSSProperties>({ opacity: 0 })
 
   const modelRows = useMemo<ModelRow[]>(() => {
     const rows = parseModelRows(item.model_sources)
@@ -61,6 +70,37 @@ export function GenerationPopover({
     const seen = new Set(main.map((row) => row.name.toLowerCase()))
     return [...main, ...rows.filter((row) => !seen.has(row.name.toLowerCase()))]
   }, [item.model, item.model_sources])
+
+  useEffect(() => {
+    setCopied(false)
+    setLang('en')
+  }, [item.id])
+
+  // 位置按锚点按钮的实时位置算：优先向上展开，上方不够再向下
+  useLayoutEffect(() => {
+    const gap = 10
+    const width = Math.min(POPOVER_WIDTH, window.innerWidth - 32)
+    const left = Math.max(
+      16,
+      Math.min(anchorRect.left, window.innerWidth - width - 16)
+    )
+    const openUp = anchorRect.top > 300
+    if (openUp) {
+      setStyle({
+        left,
+        width,
+        bottom: window.innerHeight - anchorRect.top + gap,
+        maxHeight: anchorRect.top - gap - 12,
+      })
+      return
+    }
+    setStyle({
+      left,
+      width,
+      top: anchorRect.bottom + gap,
+      maxHeight: window.innerHeight - anchorRect.bottom - gap - 12,
+    })
+  }, [anchorRect])
 
   const handleCopy = async () => {
     const ok = await copyText(text)
@@ -73,16 +113,18 @@ export function GenerationPopover({
     setTimeout(() => setCopied(false), 1500)
   }
 
-  // 底部留 48px 给「生成信息」按钮；外圈给可见描边，把卡片「框住」
-  return (
+  const content = (
     <div
       role='dialog'
       aria-label={t('Generation info', { defaultValue: '生成信息' })}
-      className='absolute inset-x-2.5 bottom-12 z-30 flex max-h-[calc(100%-3.5rem)] flex-col overflow-y-auto rounded-2xl border border-[#E2E5EC] bg-white p-4 text-left shadow-[0_16px_40px_-16px_rgba(15,20,25,0.35)] [scrollbar-width:thin] md:inset-x-3 dark:border-border dark:bg-card'
+      style={style}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
       onClick={(event) => event.stopPropagation()}
+      className='fixed z-[120] flex flex-col overflow-y-auto rounded-2xl border border-[#E2E5EC] bg-white p-5 text-left shadow-[0_24px_60px_-20px_rgba(15,20,25,0.45)] [scrollbar-width:thin] dark:border-border dark:bg-card'
     >
       <div className='flex shrink-0 items-center justify-between gap-2'>
-        <h3 className='text-[13.5px] font-semibold text-foreground'>
+        <h3 className='text-[15px] font-semibold text-foreground'>
           {t('Prompt text', { defaultValue: '提示词' })}
         </h3>
         <div className='flex items-center gap-2'>
@@ -101,8 +143,8 @@ export function GenerationPopover({
                   onClick={() => setLang(key)}
                   className={
                     lang === key
-                      ? 'rounded-full bg-background px-1.5 py-0.5 text-[11px] font-medium text-foreground shadow-sm'
-                      : 'rounded-full px-1.5 py-0.5 text-[11px] text-muted-foreground'
+                      ? 'rounded-full bg-background px-2 py-0.5 text-[11.5px] font-medium text-foreground shadow-sm'
+                      : 'rounded-full px-2 py-0.5 text-[11.5px] text-muted-foreground'
                   }
                 >
                   {label}
@@ -113,33 +155,33 @@ export function GenerationPopover({
           <button
             type='button'
             onClick={handleCopy}
-            className='inline-flex items-center gap-1 text-[12px] text-muted-foreground transition-colors hover:text-foreground'
+            className='inline-flex items-center gap-1 text-[12.5px] text-muted-foreground transition-colors hover:text-foreground'
           >
-            {copied ? <Check className='size-3.5' /> : <Copy className='size-3.5' />}
+            {copied ? <Check className='size-4' /> : <Copy className='size-4' />}
             {t('Copy', { defaultValue: '复制' })}
           </button>
         </div>
       </div>
 
-      <p className='mt-2 max-h-[168px] shrink-0 overflow-y-auto pr-1 text-[12.5px] leading-[1.75] whitespace-pre-wrap text-foreground/85 [scrollbar-width:thin]'>
+      <p className='mt-2.5 max-h-[220px] shrink-0 overflow-y-auto pr-1 text-[13.5px] leading-[1.8] whitespace-pre-wrap text-foreground/85 [scrollbar-width:thin]'>
         {text}
       </p>
 
       {modelRows.length > 0 && (
-        <div className='mt-3 border-t border-border/60 pt-3'>
-          <h4 className='text-[12.5px] font-medium text-muted-foreground'>
+        <div className='mt-3.5 border-t border-border/60 pt-3.5'>
+          <h4 className='text-[13px] font-medium text-muted-foreground'>
             {t('Model info', { defaultValue: '模型信息' })}
           </h4>
           <div className='mt-2 space-y-1.5'>
             {modelRows.slice(0, 3).map((row) => (
               <div
                 key={row.key}
-                className='flex items-center gap-2 rounded-lg border border-border/60 bg-background/60 px-2 py-1.5'
+                className='flex h-9 items-center gap-2 rounded-lg border border-border/60 bg-background/60 px-2.5'
               >
                 <span className='flex size-6 shrink-0 items-center justify-center rounded-md bg-primary/12 text-primary'>
                   <Box className='size-3.5' />
                 </span>
-                <span className='min-w-0 flex-1 truncate text-[12.5px] text-foreground/85'>
+                <span className='min-w-0 flex-1 truncate text-[13px] text-foreground/85'>
                   {row.name}
                 </span>
                 {row.hint && (
@@ -147,7 +189,7 @@ export function GenerationPopover({
                     {row.hint}
                   </span>
                 )}
-                <ChevronRight className='size-3.5 shrink-0 text-muted-foreground/60' />
+                <ChevronRight className='size-4 shrink-0 text-muted-foreground/60' />
               </div>
             ))}
           </div>
@@ -157,11 +199,14 @@ export function GenerationPopover({
       <button
         type='button'
         onClick={onUse}
-        className='mt-3.5 inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-lg bg-[#FED578] text-[13px] font-medium text-[#8A4200] transition-opacity hover:opacity-90'
+        className='mt-4 inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-lg bg-[#FED578] text-[14px] font-medium text-[#8A4200] transition-opacity hover:opacity-90'
       >
         <Wand2 className='size-4' />
         {t('Create the same', { defaultValue: '做同款' })}
       </button>
     </div>
   )
+
+  if (typeof document === 'undefined') return content
+  return createPortal(content, document.body)
 }
