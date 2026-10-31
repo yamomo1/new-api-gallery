@@ -35,7 +35,9 @@ export function PromptGallery() {
     (search as { category?: string }).category || ''
   )
   const [type, setType] = useState<PromptGalleryType | 'all'>('all')
-  const [query, setQuery] = useState('')
+  // 关键词可由详情页搜索框带进来（?search=xxx），进页面即生效
+  const searchParam = (search as { search?: string }).search || ''
+  const [query, setQuery] = useState(searchParam)
   const [debouncedQuery, setDebouncedQuery] = useState('')
   const [model, setModel] = useState('')
   const [tag, setTag] = useState<string>(
@@ -47,6 +49,11 @@ export function PromptGallery() {
   const [favorites, setFavorites] = useState<Set<number>>(() => readFavorites())
   const [likedIds, setLikedIds] = useState<Set<number>>(() => readLiked())
   const [likeCounts, setLikeCounts] = useState<Record<number, number>>({})
+
+  // 地址栏关键词变化时同步到输入框（同页内输入不回写 URL，不会打架）
+  useEffect(() => {
+    setQuery(searchParam)
+  }, [searchParam])
 
   // 搜索防抖
   useEffect(() => {

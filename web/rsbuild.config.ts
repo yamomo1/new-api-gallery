@@ -17,7 +17,8 @@ export default defineConfig(({ envMode }) => {
 
   const isProd = envMode === 'production'
   const devProxy = Object.fromEntries(
-    (['/api', '/v1', '/mj', '/pg'] as const).map((key) => [
+    // /storage：本地后台上传的图片/视频，生产由 Go 直接托管，dev 也要代理
+    (['/api', '/v1', '/mj', '/pg', '/storage'] as const).map((key) => [
       key,
       { target: serverUrl, changeOrigin: true },
     ])

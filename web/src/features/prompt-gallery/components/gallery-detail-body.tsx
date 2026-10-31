@@ -1,17 +1,17 @@
 import { useTranslation } from 'react-i18next'
-import { ExternalLink, Eye, Heart, Video } from 'lucide-react'
+import { ChevronDown, ExternalLink, Eye, Heart, Sparkles } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 
 import { runningHubInviteUrl } from '@/features/canvas/runninghub'
 import { cn } from '@/lib/utils'
-import { resolveImageUrl } from '@/lib/storage'
 
 import { CreateWithThis } from '../create-with-this'
 import type { PromptGalleryItem } from '../types'
-import { isVideoUrl, parseGalleryMedia, parseGalleryTags } from '../utils'
+import { formatPublishDate, parseGalleryMedia, parseGalleryTags } from '../utils'
 import { RecommendStrip } from './recommend-strip'
 import { AuthorCard } from './detail/author-card'
-import { GenerationInfo } from './detail/generation-info'
+import { MediaGallery } from './detail/media-gallery'
+import { MediaLightbox } from './detail/media-lightbox'
 import {
   DetailDisclaimer,
   KeyValueRow,
@@ -54,15 +54,14 @@ export function GalleryDetailBody({
   variant = 'page',
 }: GalleryDetailBodyProps) {
   const { t } = useTranslation()
-  const [activeMedia, setActiveMedia] = useState(0)
+  // 大图查看器当前图片下标；null = 关闭
+  const [viewerIndex, setViewerIndex] = useState<number | null>(null)
 
   const media = useMemo(() => parseGalleryMedia(item), [item])
   const tags = useMemo(() => parseGalleryTags(item.tags), [item])
-  const index = Math.min(activeMedia, Math.max(media.length - 1, 0))
-  const current = media[index]
 
   useEffect(() => {
-    setActiveMedia(0)
+    setViewerIndex(null)
   }, [item.id])
 
   const typeLabel =
@@ -76,37 +75,8 @@ export function GalleryDetailBody({
       ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
-  // 媒体节点提前算好：避免在 JSX 里写三元嵌套
-  let mediaNode = (
-    <div className='flex aspect-video w-full items-center justify-center text-muted-foreground/50'>
-      <Video className='size-9' />
-    </div>
-  )
-  if (current) {
-    mediaNode = isVideoUrl(current) ? (
-      <video
-        key={current}
-        src={current}
-        controls
-        autoPlay
-        loop
-        muted
-        playsInline
-        poster={resolveImageUrl(item.cover)}
-        className='max-h-[78vh] w-full rounded-lg object-contain'
-      />
-    ) : (
-      <img
-        key={current}
-        src={current}
-        alt={item.title}
-        className='max-h-[78vh] w-full rounded-lg object-contain'
-      />
-    )
-  }
-
   return (
-    <div className='grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-7'>
+    <div className='grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-7'>
       {/* ── 左栏：标题 → 媒体 → 提示词 → 去创作 → 推荐 ── */}
       <div className='min-w-0 space-y-6'>
         <header>
@@ -115,7 +85,12 @@ export function GalleryDetailBody({
           </h1>
           {/* 标签行：模型/类型/分类/标签 靠左，浏览点赞靠右（对齐参考稿） */}
           <div className='mt-3.5 flex flex-wrap items-center gap-2'>
-            {item.model && <MetaChip tone='primary'>{item.model}</MetaChip>}
+            {item.model && (
+              <MetaChip tone='primary'>
+                <Sparkles className='mr-1 size-3' />
+                {item.model}
+              </MetaChip>
+            )}
             <MetaChip>{typeLabel}</MetaChip>
             {item.category && <MetaChip>{item.category}</MetaChip>}
             {tags.map((tag) => (
@@ -155,47 +130,13 @@ export function GalleryDetailBody({
           />
         </div>
 
-        {/* 媒体：浅色卡片承托，多图用底部缩略图切换 */}
-        <div className='overflow-hidden rounded-xl border border-border/60 bg-muted/40'>
-          <div className='flex items-center justify-center p-2 md:p-3'>
-            {mediaNode}
-          </div>
-
-          {media.length > 1 && (
-            <div className='flex gap-2 overflow-x-auto border-t border-border/50 px-2.5 py-2.5'>
-              {media.map((src, i) => (
-                <button
-                  key={src}
-                  type='button'
-                  aria-label={`${i + 1}`}
-                  aria-pressed={i === index}
-                  onClick={() => setActiveMedia(i)}
-                  className={cn(
-                    'size-12 shrink-0 overflow-hidden rounded-md border-2 transition-colors',
-                    i === index
-                      ? 'border-primary'
-                      : 'border-transparent opacity-65 hover:opacity-100'
-                  )}
-                >
-                  {isVideoUrl(src) ? (
-                    <span className='flex size-full items-center justify-center bg-muted'>
-                      <Video className='size-4 text-muted-foreground' />
-                    </span>
-                  ) : (
-                    <img
-                      src={resolveImageUrl(src)}
-                      alt=''
-                      className='size-full object-cover'
-                    />
-                  )}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* 生成信息：模型 + 提示词（长提示词在卡片内部滚动，不撑高页面） */}
-        <GenerationInfo item={item} />
+        {/* 媒体：并排双图 + 左右切换；每张图右下角「生成信息」浮层，点图看大图 */}
+        <MediaGallery
+          item={item}
+          media={media}
+          onOpenViewer={setViewerIndex}
+          onScrollToCreate={scrollToCreate}
+        />
 
         <section>
           <h2 className='mb-2.5 text-[15px] font-semibold text-foreground'>
@@ -205,8 +146,8 @@ export function GalleryDetailBody({
             <ol className='space-y-1.5 text-[12.5px] leading-relaxed text-muted-foreground'>
               <li>
                 1.{' '}
-                {t('Copy the prompt above', {
-                  defaultValue: '复制上方提示词',
+                {t('Copy the prompt from the image panel', {
+                  defaultValue: '点图片右下的「生成信息」，复制提示词',
                 })}
               </li>
               <li>
@@ -237,6 +178,26 @@ export function GalleryDetailBody({
             </div>
           </div>
         </section>
+
+        {/* 提示词正文：默认折叠但一直在 DOM 里 —— 详情页是长尾搜索入口，
+            不能让提示词只存在于「点了才挂载」的浮层里，否则爬虫读不到正文 */}
+        <details className='group rounded-xl border border-border/60 bg-card'>
+          <summary className='flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-[13px] font-medium text-foreground'>
+            {t('Full prompt', { defaultValue: '提示词全文' })}
+            <ChevronDown className='size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180' />
+          </summary>
+          <div className='max-h-[280px] overflow-y-auto border-t border-border/50 px-4 py-3 text-[13px] leading-relaxed whitespace-pre-wrap text-foreground/85 [scrollbar-width:thin]'>
+            {item.prompt}
+            {item.prompt_en?.trim() && (
+              <>
+                <span className='mt-3 block h-px bg-border/50' />
+                <span className='mt-3 block text-foreground/70'>
+                  {item.prompt_en}
+                </span>
+              </>
+            )}
+          </div>
+        </details>
 
         <div id='gallery-create-with-this' className='scroll-mt-24'>
           <CreateWithThis item={item} />
@@ -368,15 +329,24 @@ export function GalleryDetailBody({
 
         <DetailDisclaimer />
       </aside>
+
+      {viewerIndex !== null && (
+        <MediaLightbox
+          item={item}
+          media={media}
+          index={viewerIndex}
+          onIndexChange={setViewerIndex}
+          onClose={() => setViewerIndex(null)}
+          likeCount={likeCount}
+          liked={liked}
+          onLike={() => onLike?.(item)}
+          onCreate={() => {
+            setViewerIndex(null)
+            // 等查看器卸载后再滚，避免 body 滚动锁把定位吞掉
+            window.setTimeout(scrollToCreate, 80)
+          }}
+        />
+      )}
     </div>
   )
-}
-
-/** 发布时间统一 YYYY/MM/DD（对齐参考稿；不跟随系统 locale，避免出现 10/29/2026） */
-function formatPublishDate(timestamp: number): string {
-  if (!timestamp) return '—'
-  const date = new Date(timestamp * 1000)
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  return `${date.getFullYear()}/${month}/${day}`
 }

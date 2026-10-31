@@ -161,7 +161,7 @@ export function CreateWithThis({ item }: { item: PromptGalleryItem }) {
         <p className='text-xs text-muted-foreground'>
           {t(
             'This work has no reusable workflow or model info yet. You can still copy the prompt above.',
-            { defaultValue: '这条作品暂未配置可复用的工作流/模型信息，可先复制上方的提示词使用。' }
+            { defaultValue: '这条作品暂未配置可复用的工作流/模型信息，可点图片右下的「生成信息」复制提示词。' }
           )}
         </p>
       )}

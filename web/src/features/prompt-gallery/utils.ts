@@ -90,6 +90,15 @@ export function isVideoUrl(url: string): boolean {
   return /\.(mp4|webm|mov|m3u8)(\?|$)/i.test(url)
 }
 
+/** 发布时间统一 YYYY/MM/DD（不跟随系统 locale，避免出现 10/29/2026） */
+export function formatPublishDate(timestamp: number): string {
+  if (!timestamp) return '—'
+  const date = new Date(timestamp * 1000)
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${date.getFullYear()}/${month}/${day}`
+}
+
 /**
  * 复制文本：优先 Clipboard API（HTTPS），
  * 非安全上下文 / 无权限时回退 execCommand，避免 http 部署下「复制失败」。

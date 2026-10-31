@@ -15,6 +15,7 @@ import { useAuthStore } from '@/stores/auth-store'
 
 import { getPromptGalleryDetail } from './api'
 import { GalleryDetailBody } from './components/gallery-detail-body'
+import { DetailSearch } from './components/detail/detail-search'
 import {
   useLikePromptGallery,
   useTogglePromptGalleryFavorite,
@@ -37,8 +38,9 @@ import {
  * 和大模型爬虫等于不存在 —— 没有独立 URL、没有独立标题、分享出去也只是
  * 一张列表页卡片。单条提示词才是匹配用户搜索原话的长尾入口。
  *
- * 版式参考 liblib 模型详情页：左栏标题/媒体/提示词，右栏 300px 信息栏。
- * 具体的两栏结构在 GalleryDetailBody 里，和列表页弹窗共用。
+ * 版式对齐 liblib 作品页：宽容器（1440）+ 左内容右信息栏。
+ * 媒体区是一屏两张的横向轮播，每张图自带「生成信息」浮层，
+ * 点图进入大图查看器。具体结构在 GalleryDetailBody 里。
  *
  * 首屏 head 由服务端 service/seo 注入；这里负责客户端跳转时的同步。
  */
@@ -190,79 +192,85 @@ export function PromptGalleryDetailPage({ id }: { id: number }) {
   return (
     <PublicLayout showMainContainer={false}>
       <PageTransition>
-        <div className='mx-auto w-full max-w-[1120px] px-4 pt-24 pb-16 md:px-6'>
-          {/* 面包屑：既方便用户回退，也是内链结构 */}
-          <nav
-            aria-label={t('Breadcrumb')}
-            className='mb-5 flex flex-wrap items-center gap-1 text-[13px] text-muted-foreground'
-          >
-            <Link to='/' className='transition-colors hover:text-foreground'>
-              {t('Home')}
-            </Link>
-            <ChevronRight className='size-3.5' />
-            <Link
-              to='/prompt-gallery'
-              className='transition-colors hover:text-foreground'
-            >
-              {t('Prompt Gallery')}
-            </Link>
-            {item && (
-              <>
-                <ChevronRight className='size-3.5' />
-                <span className='line-clamp-1 text-foreground/80'>
-                  {item.title}
-                </span>
-              </>
-            )}
-          </nav>
-
-          {isLoading && (
-            <div className='grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-7'>
-              <div className='space-y-5'>
-                <Skeleton className='h-7 w-2/3' />
-                <Skeleton className='aspect-[4/3] w-full rounded-xl' />
-                <Skeleton className='h-32 w-full rounded-xl' />
-              </div>
-              <div className='space-y-3'>
-                <Skeleton className='h-24 w-full rounded-xl' />
-                <Skeleton className='h-40 w-full rounded-xl' />
-              </div>
-            </div>
-          )}
-
-          {!isLoading && (notFound || !item) && (
-            <div className='py-24 text-center'>
-              <h1 className='text-2xl font-semibold'>
-                {t('Prompt not found')}
-              </h1>
-              <p className='mt-3 text-muted-foreground'>
-                {t(
-                  'This prompt may have been removed. Browse the gallery for more.'
-                )}
-              </p>
-              <Link
-                to='/prompt-gallery'
-                className='mt-6 inline-flex h-9 items-center rounded-full bg-primary px-5 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90'
+        {/* 详情页铺纯白底（浅色模式按设计稿 #FFFFFF），深色模式跟随主题 */}
+        <div className='min-h-svh bg-white pt-24 pb-16 dark:bg-background'>
+          <div className='mx-auto w-full max-w-[1440px] px-4 md:px-8'>
+            {/* 面包屑 + 搜索：面包屑走内链，搜索是站内长尾入口 */}
+            <div className='mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
+              <nav
+                aria-label={t('Breadcrumb')}
+                className='flex flex-wrap items-center gap-1 text-[13px] text-muted-foreground'
               >
-                {t('Back to gallery')}
-              </Link>
+                <Link to='/' className='transition-colors hover:text-foreground'>
+                  {t('Home')}
+                </Link>
+                <ChevronRight className='size-3.5' />
+                <Link
+                  to='/prompt-gallery'
+                  className='transition-colors hover:text-foreground'
+                >
+                  {t('Prompt Gallery')}
+                </Link>
+                {item && (
+                  <>
+                    <ChevronRight className='size-3.5' />
+                    <span className='line-clamp-1 text-foreground/80'>
+                      {item.title}
+                    </span>
+                  </>
+                )}
+              </nav>
+              <DetailSearch className='w-full sm:w-[280px]' />
             </div>
-          )}
 
-          {!isLoading && !notFound && item && (
-            <GalleryDetailBody
-              item={item}
-              liked={likedIds.has(item.id)}
-              likeCount={likeCounts[item.id] ?? item.likes}
-              onLike={handleLike}
-              favorited={favorites.has(item.id)}
-              onToggleFavorite={toggleFavorite}
-              onShare={handleShare}
-              onTagSelect={handleTagSelect}
-              onSelectRecommend={handleSelectRecommend}
-              variant='page'
-            />
-          )}
+            {isLoading && (
+              <div className='grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-7'>
+                <div className='space-y-5'>
+                  <Skeleton className='h-8 w-2/3' />
+                  <Skeleton className='aspect-[3/4] w-full rounded-lg' />
+                  <Skeleton className='h-32 w-full rounded-xl' />
+                </div>
+                <div className='space-y-3'>
+                  <Skeleton className='h-24 w-full rounded-xl' />
+                  <Skeleton className='h-40 w-full rounded-xl' />
+                </div>
+              </div>
+            )}
+
+            {!isLoading && (notFound || !item) && (
+              <div className='py-24 text-center'>
+                <h1 className='text-2xl font-semibold'>
+                  {t('Prompt not found')}
+                </h1>
+                <p className='mt-3 text-muted-foreground'>
+                  {t(
+                    'This prompt may have been removed. Browse the gallery for more.'
+                  )}
+                </p>
+                <Link
+                  to='/prompt-gallery'
+                  className='mt-6 inline-flex h-9 items-center rounded-full bg-primary px-5 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90'
+                >
+                  {t('Back to gallery')}
+                </Link>
+              </div>
+            )}
+
+            {!isLoading && !notFound && item && (
+              <GalleryDetailBody
+                item={item}
+                liked={likedIds.has(item.id)}
+                likeCount={likeCounts[item.id] ?? item.likes}
+                onLike={handleLike}
+                favorited={favorites.has(item.id)}
+                onToggleFavorite={toggleFavorite}
+                onShare={handleShare}
+                onTagSelect={handleTagSelect}
+                onSelectRecommend={handleSelectRecommend}
+                variant='page'
+              />
+            )}
+          </div>
         </div>
       </PageTransition>
     </PublicLayout>
