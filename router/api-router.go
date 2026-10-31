@@ -88,6 +88,10 @@ func SetApiRouter(router *gin.Engine) {
 			promptGalleryRoute.PUT("/admin/prompts/:id", middleware.AdminAuth(), controller.AdminUpdatePromptGallery)
 			promptGalleryRoute.DELETE("/admin/prompts/:id", middleware.AdminAuth(), controller.AdminDeletePromptGallery)
 			promptGalleryRoute.POST("/admin/prompts/:id/home", middleware.AdminAuth(), controller.AdminSetPromptGalleryHome)
+			// 「去创作」四个功能的数据包与开关
+			promptGalleryRoute.GET("/prompts/:id/create", controller.GetGalleryCreatePayload)
+			promptGalleryRoute.GET("/gallery-create-config", controller.GetGalleryCreateConfig)
+			promptGalleryRoute.PUT("/gallery-create-config", middleware.AdminAuth(), controller.UpdateGalleryCreateConfig)
 		}
 		// 画廊自动采集（二开新增，仅超管）：提示词种子 → 上游生成 → 转存 → 画廊草稿
 		galleryIngestRoute := apiRouter.Group("/gallery-ingest")

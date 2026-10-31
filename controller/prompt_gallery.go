@@ -154,15 +154,18 @@ func CreateMyPromptGallery(c *gin.Context) {
 	username := c.GetString("username")
 
 	var req struct {
-		Title    string `json:"title"`
-		Prompt   string `json:"prompt"`
-		PromptEn string `json:"prompt_en"`
-		Model    string `json:"model"`
-		Type     string `json:"type"`
-		Cover    string `json:"cover"`
-		Media    string `json:"media"`
-		Category string `json:"category"`
-		Tags     string `json:"tags"`
+		Title                string `json:"title"`
+		Prompt               string `json:"prompt"`
+		PromptEn             string `json:"prompt_en"`
+		Model                string `json:"model"`
+		Type                 string `json:"type"`
+		Cover                string `json:"cover"`
+		Media                string `json:"media"`
+		Category             string `json:"category"`
+		Tags                 string `json:"tags"`
+		WorkflowJson         string `json:"workflow_json"`
+		ModelSources         string `json:"model_sources"`
+		RunningHubWorkflowId string `json:"runninghub_workflow_id"`
 	}
 	if err := common.UnmarshalJsonStr(c.PostForm("json"), &req); err != nil {
 		_ = c.ShouldBindJSON(&req)
@@ -173,17 +176,20 @@ func CreateMyPromptGallery(c *gin.Context) {
 	}
 
 	item := &model.PromptGallery{
-		Title:    req.Title,
-		Prompt:   req.Prompt,
-		PromptEn: req.PromptEn,
-		Model:    req.Model,
-		Type:     req.Type,
-		Cover:    req.Cover,
-		Media:    req.Media,
-		Category: req.Category,
-		Tags:     req.Tags,
-		AuthorId: userId,
-		Author:   username,
+		Title:                req.Title,
+		Prompt:               req.Prompt,
+		PromptEn:             req.PromptEn,
+		Model:                req.Model,
+		Type:                 req.Type,
+		Cover:                req.Cover,
+		Media:                req.Media,
+		Category:             req.Category,
+		Tags:                 req.Tags,
+		WorkflowJson:         req.WorkflowJson,
+		ModelSources:         req.ModelSources,
+		RunningHubWorkflowId: req.RunningHubWorkflowId,
+		AuthorId:             userId,
+		Author:               username,
 	}
 	if item.Type == "" {
 		item.Type = "image"
@@ -205,30 +211,36 @@ func UpdateMyPromptGallery(c *gin.Context) {
 		return
 	}
 	var req struct {
-		Title    string `json:"title"`
-		Prompt   string `json:"prompt"`
-		PromptEn string `json:"prompt_en"`
-		Model    string `json:"model"`
-		Type     string `json:"type"`
-		Cover    string `json:"cover"`
-		Media    string `json:"media"`
-		Category string `json:"category"`
-		Tags     string `json:"tags"`
+		Title                string `json:"title"`
+		Prompt               string `json:"prompt"`
+		PromptEn             string `json:"prompt_en"`
+		Model                string `json:"model"`
+		Type                 string `json:"type"`
+		Cover                string `json:"cover"`
+		Media                string `json:"media"`
+		Category             string `json:"category"`
+		Tags                 string `json:"tags"`
+		WorkflowJson         string `json:"workflow_json"`
+		ModelSources         string `json:"model_sources"`
+		RunningHubWorkflowId string `json:"runninghub_workflow_id"`
 	}
 	if err := common.UnmarshalJsonStr(c.PostForm("json"), &req); err != nil {
 		_ = c.ShouldBindJSON(&req)
 	}
 
 	update := &model.PromptGallery{
-		Title:    req.Title,
-		Prompt:   req.Prompt,
-		PromptEn: req.PromptEn,
-		Model:    req.Model,
-		Type:     req.Type,
-		Cover:    req.Cover,
-		Media:    req.Media,
-		Category: req.Category,
-		Tags:     req.Tags,
+		Title:                req.Title,
+		Prompt:               req.Prompt,
+		PromptEn:             req.PromptEn,
+		Model:                req.Model,
+		Type:                 req.Type,
+		Cover:                req.Cover,
+		Media:                req.Media,
+		Category:             req.Category,
+		Tags:                 req.Tags,
+		WorkflowJson:         req.WorkflowJson,
+		ModelSources:         req.ModelSources,
+		RunningHubWorkflowId: req.RunningHubWorkflowId,
 	}
 	if err := model.UpdatePromptGallery(userId, id, update); err != nil {
 		common.ApiError(c, err)
@@ -321,15 +333,18 @@ func AdminUpdatePromptGallery(c *gin.Context) {
 		return
 	}
 	var req struct {
-		Title    string `json:"title"`
-		Prompt   string `json:"prompt"`
-		PromptEn string `json:"prompt_en"`
-		Model    string `json:"model"`
-		Type     string `json:"type"`
-		Cover    string `json:"cover"`
-		Media    string `json:"media"`
-		Category string `json:"category"`
-		Tags     string `json:"tags"`
+		Title                string `json:"title"`
+		Prompt               string `json:"prompt"`
+		PromptEn             string `json:"prompt_en"`
+		Model                string `json:"model"`
+		Type                 string `json:"type"`
+		Cover                string `json:"cover"`
+		Media                string `json:"media"`
+		Category             string `json:"category"`
+		Tags                 string `json:"tags"`
+		WorkflowJson         string `json:"workflow_json"`
+		ModelSources         string `json:"model_sources"`
+		RunningHubWorkflowId string `json:"runninghub_workflow_id"`
 	}
 	if err := common.UnmarshalJsonStr(c.PostForm("json"), &req); err != nil {
 		_ = c.ShouldBindJSON(&req)
@@ -339,15 +354,18 @@ func AdminUpdatePromptGallery(c *gin.Context) {
 		return
 	}
 	update := &model.PromptGallery{
-		Title:    req.Title,
-		Prompt:   req.Prompt,
-		PromptEn: req.PromptEn,
-		Model:    req.Model,
-		Type:     req.Type,
-		Cover:    req.Cover,
-		Media:    req.Media,
-		Category: req.Category,
-		Tags:     req.Tags,
+		Title:                req.Title,
+		Prompt:               req.Prompt,
+		PromptEn:             req.PromptEn,
+		Model:                req.Model,
+		Type:                 req.Type,
+		Cover:                req.Cover,
+		Media:                req.Media,
+		Category:             req.Category,
+		Tags:                 req.Tags,
+		WorkflowJson:         req.WorkflowJson,
+		ModelSources:         req.ModelSources,
+		RunningHubWorkflowId: req.RunningHubWorkflowId,
 	}
 	if update.Type == "" {
 		update.Type = "image"

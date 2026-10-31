@@ -33,6 +33,20 @@ type PromptGallery struct {
 	Home bool `json:"home" gorm:"default:false;index"`
 	// ProjectId 工作台所属项目/文件夹（0 = 未分组，对应 gallery_projects.id）
 	ProjectId int64 `json:"project_id" gorm:"default:0;index"`
+
+	// ──「去创作」功能所需字段（二开新增）─────────────────────────────
+	// WorkflowJson ComfyUI 工作流 JSON（API 格式），供「手动 Load / 拖入」
+	// 与 ComfyUI 自定义节点一键生图共用。空串表示未配置工作流。
+	WorkflowJson string `json:"workflow_json" gorm:"type:text"`
+	// ModelSources 模型来源清单（JSON 数组字符串）。每一项含类型与下载地址，
+	// 例如 [{"type":"huggingface","name":"xxlbase.safetensors","url":"..."},
+	//        {"type":"quark","name":"...","url":"https://pan.quark.cn/s/xxxx"}]。
+	// type=quark/netdisk 用于「网盘手动下载」；其余类型供节点/未来自动下载。
+	ModelSources string `json:"model_sources" gorm:"type:text"`
+	// RunningHubWorkflowId 云端 ComfyUI（RunningHub）工作流 ID，
+	// 「去创作」点此跳转 RunningHub 体验页。
+	RunningHubWorkflowId string `json:"runninghub_workflow_id" gorm:"type:varchar(64)"`
+
 	CreatedAt int64 `json:"created_at" gorm:"bigint"`
 	UpdatedAt int64 `json:"updated_at" gorm:"bigint"`
 }
@@ -295,17 +309,20 @@ func UpdatePromptGallery(userId int, id int64, update *PromptGallery) error {
 	res := DB.Model(&PromptGallery{}).
 		Where("id = ? AND author_id = ?", id, userId).
 		Updates(map[string]any{
-			"title":      update.Title,
-			"prompt":     update.Prompt,
-			"prompt_en":  update.PromptEn,
-			"model":      update.Model,
-			"type":       update.Type,
-			"cover":      update.Cover,
-			"media":      update.Media,
-			"category":   update.Category,
-			"tags":       update.Tags,
-			"status":     PromptGalleryStatusDraft,
-			"updated_at": common.GetTimestamp(),
+			"title":                  update.Title,
+			"prompt":                 update.Prompt,
+			"prompt_en":              update.PromptEn,
+			"model":                  update.Model,
+			"type":                   update.Type,
+			"cover":                  update.Cover,
+			"media":                  update.Media,
+			"category":               update.Category,
+			"tags":                   update.Tags,
+			"workflow_json":          update.WorkflowJson,
+			"model_sources":          update.ModelSources,
+			"runninghub_workflow_id": update.RunningHubWorkflowId,
+			"status":                 PromptGalleryStatusDraft,
+			"updated_at":             common.GetTimestamp(),
 		})
 	if res.Error != nil {
 		return res.Error
@@ -456,16 +473,19 @@ func AdminSetPromptGalleryStatus(id int64, status string) error {
 // AdminUpdatePromptGallery 管理员编辑作品（不限作者，不改审核状态）
 func AdminUpdatePromptGallery(id int64, update *PromptGallery) error {
 	res := DB.Model(&PromptGallery{}).Where("id = ?", id).Updates(map[string]any{
-		"title":      update.Title,
-		"prompt":     update.Prompt,
-		"prompt_en":  update.PromptEn,
-		"model":      update.Model,
-		"type":       update.Type,
-		"cover":      update.Cover,
-		"media":      update.Media,
-		"category":   update.Category,
-		"tags":       update.Tags,
-		"updated_at": common.GetTimestamp(),
+		"title":                  update.Title,
+		"prompt":                 update.Prompt,
+		"prompt_en":              update.PromptEn,
+		"model":                  update.Model,
+		"type":                   update.Type,
+		"cover":                  update.Cover,
+		"media":                  update.Media,
+		"category":               update.Category,
+		"tags":                   update.Tags,
+		"workflow_json":          update.WorkflowJson,
+		"model_sources":          update.ModelSources,
+		"runninghub_workflow_id": update.RunningHubWorkflowId,
+		"updated_at":             common.GetTimestamp(),
 	})
 	if res.Error != nil {
 		return res.Error

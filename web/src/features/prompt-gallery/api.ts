@@ -1,6 +1,7 @@
 import { api } from '@/lib/api'
 
 import type {
+  GalleryCreatePayload,
   PromptGalleryAdminParams,
   PromptGalleryFacets,
   PromptGalleryFavoriteToggleResult,
@@ -35,6 +36,14 @@ export async function getPromptGalleryFacets(): Promise<
   ApiEnvelope<PromptGalleryFacets>
 > {
   const res = await api.get('/api/prompt-gallery/v1/facets')
+  return res.data
+}
+
+/** 「去创作」数据包：ComfyUI 工作流 + 模型来源 + RunningHub 工作流 ID */
+export async function getGalleryCreatePayload(
+  id: number
+): Promise<ApiEnvelope<GalleryCreatePayload>> {
+  const res = await api.get(`/api/prompt-gallery/v1/prompts/${id}/create`)
   return res.data
 }
 

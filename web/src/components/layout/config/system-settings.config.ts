@@ -123,6 +123,10 @@ function getSystemSettingsNavGroups(t: TFunction): NavGroup[] {
               url: '/system-settings/translate',
             },
             {
+              title: t('Create with this', { defaultValue: '去创作设置' }),
+              url: '/system-settings/create-with-this',
+            },
+            {
               title: t('Gallery presets', { defaultValue: '画廊预设' }),
               url: '/system-settings/gallery-presets',
             },

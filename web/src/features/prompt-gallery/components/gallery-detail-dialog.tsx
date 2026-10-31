@@ -19,6 +19,7 @@ import { requireServerSuccess } from '@/lib/server-error-message'
 import { cn } from '@/lib/utils'
 
 import { getPromptGalleryDetail } from '../api'
+import { CreateWithThis } from '../create-with-this'
 import { useLikePromptGallery } from '../hooks/use-prompt-gallery'
 import type { PromptGalleryItem } from '../types'
 import { isVideoUrl, parseGalleryMedia, parseGalleryTags } from '../utils'
@@ -233,6 +234,9 @@ export function GalleryDetailDialog({
               )}
 
               <PromptBlock item={item} />
+
+              {/* 去创作：四种复用方式，由后台开关决定显示哪些 */}
+              <CreateWithThis item={item} />
 
               <div className='mt-auto flex flex-wrap items-center gap-2 pt-2'>
                 <Button

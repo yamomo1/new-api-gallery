@@ -24,6 +24,7 @@ import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/stores/auth-store'
 
 import { getPromptGalleryDetail } from './api'
+import { CreateWithThis } from './create-with-this'
 import { PromptBlock } from './components/prompt-block'
 import { RecommendStrip } from './components/recommend-strip'
 import {
@@ -343,6 +344,9 @@ export function PromptGalleryDetailPage({ id }: { id: number }) {
                 )}
 
                 <PromptBlock item={item} />
+
+                {/* 去创作：四种复用方式，由后台开关决定显示哪些 */}
+                <CreateWithThis item={item} />
 
                 <div className='mt-auto flex flex-wrap items-center gap-2 pt-2'>
                   <Button
