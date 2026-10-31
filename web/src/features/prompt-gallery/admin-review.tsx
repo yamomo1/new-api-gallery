@@ -212,6 +212,9 @@ export function AdminPromptGalleryReview() {
           media: editing.media,
           category: editing.category,
           tags: editing.tags,
+          workflow_json: editing.workflow_json ?? '',
+          model_sources: editing.model_sources ?? '',
+          runninghub_workflow_id: editing.runninghub_workflow_id ?? '',
         },
       },
       { onSuccess: () => setEditing(null) }
@@ -569,7 +572,7 @@ export function AdminPromptGalleryReview() {
           }}
           title={t('Edit work')}
           description={t('Changes go live immediately; the review status stays the same.')}
-          contentHeight='62vh'
+          contentHeight='72vh'
           footer={
             <div className='flex justify-end gap-2'>
               <Button variant='outline' onClick={() => setEditing(null)}>
@@ -692,6 +695,84 @@ export function AdminPromptGalleryReview() {
                     setEditing({ ...editing, media: e.target.value })
                   }
                 />
+              </div>
+
+              {/* 「去创作」所需数据：三选一/可并存，留空则对应入口自动隐藏 */}
+              <div className='space-y-1.5'>
+                <Label>
+                  {t('RunningHub workflow ID')}
+                  <span className='ml-1 text-xs font-normal text-muted-foreground'>
+                    ({t('optional')})
+                  </span>
+                </Label>
+                <Input
+                  value={editing.runninghub_workflow_id ?? ''}
+                  onChange={(e) =>
+                    setEditing({
+                      ...editing,
+                      runninghub_workflow_id: e.target.value,
+                    })
+                  }
+                  placeholder='2051942243882557441'
+                />
+                <p className='text-xs text-muted-foreground'>
+                  {t(
+                    'Used by the “Run on RunningHub” entry. Leave empty to hide that entry.',
+                    { defaultValue: '「RunningHub 云端出图」用；留空则该入口自动隐藏。' }
+                  )}
+                </p>
+              </div>
+              <div className='space-y-1.5'>
+                <Label>
+                  {t('Model sources (JSON array)')}
+                  <span className='ml-1 text-xs font-normal text-muted-foreground'>
+                    ({t('optional')})
+                  </span>
+                </Label>
+                <Textarea
+                  rows={4}
+                  className='font-mono text-xs'
+                  value={editing.model_sources ?? ''}
+                  onChange={(e) =>
+                    setEditing({ ...editing, model_sources: e.target.value })
+                  }
+                  placeholder={`[{"type":"huggingface","name":"base.safetensors","url":"https://...","dir":"checkpoints"},{"type":"quark","name":"LORA","url":"https://pan.quark.cn/s/xxxx"}]`}
+                />
+                <p className='text-xs text-muted-foreground'>
+                  {t(
+                    'type=quark/netdisk shows a manual download link; others are auto-downloaded by the ComfyUI node.',
+                    {
+                      defaultValue:
+                        'type=quark/netdisk 走「网盘手动下载」；其余类型由 ComfyUI 节点自动下载到 models/<dir>。',
+                    }
+                  )}
+                </p>
+              </div>
+              <div className='space-y-1.5'>
+                <Label>
+                  {t('ComfyUI workflow JSON (UI format)')}
+                  <span className='ml-1 text-xs font-normal text-muted-foreground'>
+                    ({t('optional')})
+                  </span>
+                </Label>
+                <Textarea
+                  rows={6}
+                  className='font-mono text-xs'
+                  value={editing.workflow_json ?? ''}
+                  onChange={(e) =>
+                    setEditing({ ...editing, workflow_json: e.target.value })
+                  }
+                  placeholder='{"nodes":[...],"links":[...]}'
+                />
+                <p className='text-xs text-muted-foreground'>
+                  {t(
+                    'Must be the UI workflow saved from ComfyUI (with nodes/links), used by “Download workflow” and the one-click node.',
+                    {
+                      defaultValue:
+                        '必须是 ComfyUI 里「Save」出来的 UI 格式（含 nodes/links），供「下载工作流」「ComfyUI 一键生图」使用。',
+                    }
+                  )}
+                </p>
               </div>
             </div>
           )}

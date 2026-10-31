@@ -89,6 +89,12 @@ export type PromptGallerySubmit = {
   media: string
   category: string
   tags: string
+  /** ComfyUI 工作流 JSON（UI 格式）；「去创作」用 */
+  workflow_json?: string
+  /** 模型来源清单（JSON 数组字符串）；网盘手动下载 + 节点自动下载用 */
+  model_sources?: string
+  /** RunningHub 云端工作流 ID */
+  runninghub_workflow_id?: string
 }
 
 export async function createMyPromptGallery(
