@@ -12,7 +12,9 @@
 #   · 配置      deploy/.env（SESSION_SECRET / CRYPT_KEY / SQL_DSN …）
 #   · 对外      3000:3000；1Panel 反代目标 172.18.0.4:3000（可用 PROXY_ADDR 覆盖）
 #   · 网络      容器必须常驻 1panel-network（数据库按容器名解析）；
-#               compose 重建会丢掉它 → 每次 up 之后脚本自动补接
+#               compose 重建会丢掉它 → 启动流程改成 create（只建不跑）
+#               → 补接网络 → start，从源头消掉「容器已起但没网」的窗口期
+#               （2026-11-01 误回滚事故的根因，详见 6/6 段注释）
 #   · 画布      /studio/ 由本服务直接托管，产物编在二进制里
 #               （升级 new-api 就等于升级画布，不用再单独传文件）
 #
@@ -43,7 +45,7 @@
 
 set -euo pipefail
 
-SCRIPT_VER="2026-10-29.13-studio-embed"
+SCRIPT_VER="2026-11-01.01-preconnect-net"
 
 # ---------- 自拷贝执行（见安全约定 6） ----------
 if [[ "${__UPGRADE_REEXEC:-0}" != "1" ]]; then
@@ -184,6 +186,19 @@ restore_networks() {
 db_net_hint() {
   local logs
   logs="$(compose logs --tail=80 "$SERVICE" 2>/dev/null || true)"
+  # 卡在「连库」这一步：日志只到「数据库使用 X」，后面没有「开始数据库迁移」。
+  # 这段在 gorm.Open() 建连，进程既不崩也不超时，探活必然不过。
+  if printf '%s' "$logs" | grep -qE '数据库使用|using .* as database'; then
+    if ! printf '%s' "$logs" | grep -qE '开始数据库迁移|database migration started'; then
+      warn "  日志停在「数据库使用 …」就没了 → 卡在【建立数据库连接】，还没进入迁移"
+      warn "    说明新版本的代码没问题（迁移那一步根本没跑到），是连不上 SQL_DSN 里的数据库主机"
+      warn "    典型成因：compose 重建容器会把手工接的外部网络（1panel-network）丢掉，"
+      warn "    容器起来时还没补回来 → 第一次建连挂死。本脚本 6/6 段已改成"
+      warn "    create（只建不跑）→ 补网络 → start，窗口期为 0；"
+      warn "    若仍卡住，确认： docker network ls | grep 1panel-network"
+      warn "    以及 .env 里 SQL_DSN 的主机名拼得对不对"
+    fi
+  fi
   if printf '%s' "$logs" | grep -qE 'hostname resolving error|no such host|server misbehaving'; then
     warn "  日志显示【数据库主机名解析失败】—— 不是代码问题，是容器没接上数据库所在的 docker 网络"
     warn "  现场修（这台机器就是 1panel-network）："
@@ -233,8 +248,11 @@ detect_pg() {
 # ---------- 探活：容器内 → 宿主机端口 → 容器 IP ----------
 # 按墙钟截止，不会被多端点超时叠加成几分钟（最坏 ceil(PROBE_TIMEOUT/2) 轮）
 PROBE_TIMEOUT="${PROBE_TIMEOUT:-90}"
+# 首轮探活不过时，重启一次再给的窗口（默认比首轮长一点：重启+建连+迁移）
+PROBE_RETRY_TIMEOUT="${PROBE_RETRY_TIMEOUT:-150}"
 probe() {
-  local deadline=$(( SECONDS + PROBE_TIMEOUT ))
+  local timeout="${1:-${PROBE_TIMEOUT:-90}}"
+  local deadline=$(( SECONDS + timeout ))
   local ip
   while [[ $SECONDS -lt $deadline ]]; do
     if compose exec -T "$SERVICE" wget -qO- --timeout=2 \
@@ -256,6 +274,22 @@ probe() {
     sleep 2
   done
   return 1
+}
+
+# 探活：首轮不过 → 先重启一次再试一轮，两轮都不过才判定失败。
+# 为什么加这一步：应用卡在 gorm.Open 的第一次建连上时既不崩也不超时，
+# 补接外部网络之后必须重启进程才会重新建连；否则就会像 2026-11-01 那样
+# 把「网络窗口期」误判成「新版本有问题」而回滚。
+probe_with_retry() {
+  if probe "${PROBE_TIMEOUT}"; then
+    return 0
+  fi
+  warn "  首轮 ${PROBE_TIMEOUT} 秒探活未通过，先看日志定位："
+  compose logs --tail=40 "$SERVICE" 2>/dev/null || true
+  db_net_hint
+  warn "  外部网络现已补齐，重启容器再给一轮（最多 ${PROBE_RETRY_TIMEOUT} 秒）…"
+  docker restart "$CONTAINER" >/dev/null 2>&1 || true
+  probe "${PROBE_RETRY_TIMEOUT}"
 }
 
 # ---------- 更新后验收：网络 + 反代 ----------
@@ -617,16 +651,31 @@ info "  构建完成：$(docker image inspect --format '{{.Created}}' "${IMAGE}:
 
 # ---------- 6. 启动 ----------
 step "6/6 启动新容器并探活"
-if ! compose up -d --no-deps "$SERVICE"; then
-  warn "启动失败，尝试回滚"
-  do_rollback
-  probe && warn "已回滚，服务正常" || fail "回滚后仍不可用，请人工介入"
-  exit 1
+# 关键顺序（2026-11-01 误回滚事故的根因，别改回去）：
+#   以前是 compose up -d（容器立刻跑起来）→ 之后才补接 1panel-network。
+#   中间有十几秒窗口：应用已启动并开始连数据库，但容器还没接到 PG 所在的
+#   1panel-network → gorm.Open 的第一次建连挂住（日志只到「数据库使用 …」，
+#   后面的「开始数据库迁移」永远不出现），既不崩也不超时 → 探活 90 秒不过
+#   → 被误判成「新版本有问题」而回滚。
+#   现在：create（只建不启动）→ 补网络 → start，窗口期为 0。
+CREATED_ONLY=1
+if ! compose create --force-recreate --no-deps "$SERVICE"; then
+  CREATED_ONLY=0
+  warn "  当前 docker compose 不支持 create，退回 up -d（会有上面的窗口期）"
+  if ! compose up -d --force-recreate --no-deps "$SERVICE"; then
+    warn "启动失败，尝试回滚"
+    do_rollback
+    probe && warn "已回滚，服务正常" || fail "回滚后仍不可用，请人工介入"
+    exit 1
+  fi
 fi
 restore_networks
+if [[ "$CREATED_ONLY" == "1" ]]; then
+  docker start "$CONTAINER" >/dev/null 2>&1 || true
+fi
 
-info "  探活 http://127.0.0.1:${APP_PORT}/api/status（最多 ${PROBE_TIMEOUT} 秒）…"
-if probe; then
+info "  探活 http://127.0.0.1:${APP_PORT}/api/status（首轮最多 ${PROBE_TIMEOUT} 秒）…"
+if probe_with_retry; then
   verify_after
   NEW_IP="$(container_ip)"
   printf '\n'
@@ -647,9 +696,7 @@ if probe; then
   info "  需要回滚：$ME --rollback"
   [[ "$VERIFY_FAIL" == "0" ]] || exit 2
 else
-  warn "${PROBE_TIMEOUT} 秒内探活未通过，自动回滚到上一版"
-  compose logs --tail=40 "$SERVICE" 2>/dev/null || true
-  db_net_hint
+  warn "重启后再探活仍未通过，自动回滚到上一版"
   do_rollback
   if probe; then
     fail "已回滚，服务恢复正常。请把上面的日志发出来排查新版本"
