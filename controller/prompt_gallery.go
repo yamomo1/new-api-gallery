@@ -59,6 +59,12 @@ func GetPromptGalleryDetail(c *gin.Context) {
 		common.ApiError(c, err)
 		return
 	}
+	// 作者认证标签：只在详情页现查（列表页不查，避免 N+1）
+	if item.AuthorId > 0 {
+		if author, getErr := model.GetUserById(item.AuthorId, false); getErr == nil {
+			item.AuthorBadge = author.GalleryBadge
+		}
+	}
 	model.IncrPromptGalleryViews(id)
 	c.JSON(http.StatusOK, gin.H{"success": true, "data": item})
 }

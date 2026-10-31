@@ -12,11 +12,13 @@ import {
   createMyPromptGallery,
   deleteMyPromptGallery,
   getAdminPromptGalleries,
+  getGalleryAuthor,
   getMyPromptGalleryFavorites,
   getMyPromptGalleries,
   getPromptGalleryFacets,
   getPromptGalleryList,
   likePromptGallery,
+  toggleGalleryAuthorFollow,
   togglePromptGalleryFavorite,
   updateMyPromptGallery,
   type PromptGallerySubmit,
@@ -75,6 +77,32 @@ export function useTogglePromptGalleryFavorite() {
       requireServerSuccess(await togglePromptGalleryFavorite(id)).data,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['prompt-gallery', 'favorites'] })
+    },
+  })
+}
+
+/** 作者卡统计（未登录也能看；following 恒为 false） */
+export function useGalleryAuthor(authorId?: number) {
+  const enabled = Number.isFinite(authorId) && (authorId ?? 0) > 0
+  return useQuery({
+    queryKey: ['prompt-gallery', 'author', authorId],
+    queryFn: async () =>
+      requireServerSuccess(await getGalleryAuthor(authorId as number)).data,
+    enabled,
+    staleTime: 60 * 1000,
+  })
+}
+
+/** 关注 / 取关作者（登录用户），成功后刷新作者统计里的粉丝数与关注态 */
+export function useToggleGalleryAuthorFollow() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (authorId: number) =>
+      requireServerSuccess(await toggleGalleryAuthorFollow(authorId)).data,
+    onSuccess: (_data, authorId) => {
+      queryClient.invalidateQueries({
+        queryKey: ['prompt-gallery', 'author', authorId],
+      })
     },
   })
 }

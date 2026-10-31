@@ -71,6 +71,7 @@ import {
   normalizeAdminPermissions,
   type AdminPermissionMatrix,
 } from '@/lib/admin-permissions'
+import { adminSetGalleryAuthorBadge } from '@/features/prompt-gallery/api'
 import { getCurrencyDisplay, getCurrencyLabel } from '@/lib/currency'
 import { formatQuota, parseQuotaFromDollars } from '@/lib/format'
 import { handleServerError } from '@/lib/handle-server-error'
@@ -116,6 +117,9 @@ export function UsersMutateDrawer({
   const currentUser = useAuthStore((s) => s.auth.user)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [quotaDialogOpen, setQuotaDialogOpen] = useState(false)
+  // 画廊认证标签（二开）：独立保存，不走用户表单，避免和上游字段校验纠缠
+  const [galleryBadge, setGalleryBadge] = useState('')
+  const [badgeSaving, setBadgeSaving] = useState(false)
   // Matrix as loaded from the server; an unchanged matrix is not resubmitted so
   // routine edits of an administrator do not require step-up verification.
   const loadedPermissions = useRef<AdminPermissionMatrix | undefined>(undefined)
@@ -150,6 +154,7 @@ export function UsersMutateDrawer({
           if (result.success && result.data) {
             loadedPermissions.current = result.data.admin_permissions
             form.reset(transformUserToFormDefaults(result.data))
+            setGalleryBadge(result.data.gallery_badge ?? '')
           } else {
             handleServerError(result, t('Failed to load'))
           }
@@ -158,6 +163,7 @@ export function UsersMutateDrawer({
     } else if (open && !isUpdate) {
       // For create, reset to defaults
       form.reset(USER_FORM_DEFAULT_VALUES)
+      setGalleryBadge('')
     }
   }, [open, isUpdate, currentRow, form, t])
 
@@ -255,6 +261,23 @@ export function UsersMutateDrawer({
       )
     } finally {
       setIsSubmitting(false)
+    }
+  }
+
+  // 画廊认证走独立接口：保存后不关闭抽屉，只刷新列表与本地值
+  const saveGalleryBadge = async () => {
+    if (!currentRow) return
+    setBadgeSaving(true)
+    try {
+      requireServerSuccess(
+        await adminSetGalleryAuthorBadge(currentRow.id, galleryBadge.trim())
+      )
+      toast.success(t('Saved'))
+      triggerRefresh()
+    } catch (error) {
+      handleServerError(error, t('Failed to save'))
+    } finally {
+      setBadgeSaving(false)
     }
   }
 
@@ -496,6 +519,40 @@ export function UsersMutateDrawer({
                       </FormItem>
                     )}
                   />
+                </SideDrawerSection>
+              )}
+
+              {/* 画廊认证（二开）：详情页作者卡上的认证标签，独立接口保存 */}
+              {isUpdate && (
+                <SideDrawerSection>
+                  <h3 className='text-sm font-medium'>{t('Gallery badge')}</h3>
+                  <p className='text-muted-foreground text-xs'>
+                    {t(
+                      'Author badge shown on gallery detail pages. Leave empty to show Community member.',
+                      {
+                        defaultValue:
+                          '画廊详情页作者昵称下方的认证标签，留空显示「热心网友」。',
+                      }
+                    )}
+                  </p>
+                  <div className='flex items-center gap-2'>
+                    <Input
+                      value={galleryBadge}
+                      maxLength={16}
+                      onChange={(e) => setGalleryBadge(e.target.value)}
+                      placeholder={t('e.g. Verified creator', {
+                        defaultValue: '例如：认证作者',
+                      })}
+                    />
+                    <Button
+                      type='button'
+                      variant='outline'
+                      onClick={saveGalleryBadge}
+                      disabled={badgeSaving}
+                    >
+                      {badgeSaving ? t('Saving...') : t('Save')}
+                    </Button>
+                  </div>
                 </SideDrawerSection>
               )}
 

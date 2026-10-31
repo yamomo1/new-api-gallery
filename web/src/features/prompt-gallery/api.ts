@@ -1,6 +1,8 @@
 import { api } from '@/lib/api'
 
 import type {
+  GalleryAuthorFollowResult,
+  GalleryAuthorStats,
   GalleryCreatePayload,
   PromptGalleryAdminParams,
   PromptGalleryFacets,
@@ -60,6 +62,33 @@ export async function togglePromptGalleryFavorite(
   id: number
 ): Promise<ApiEnvelope<PromptGalleryFavoriteToggleResult>> {
   const res = await api.post(`/api/prompt-gallery/v1/prompts/${id}/favorite`)
+  return res.data
+}
+
+/** 作者卡数据：名称/认证/作品数/总浏览/总点赞/粉丝数/我是否已关注 */
+export async function getGalleryAuthor(
+  id: number
+): Promise<ApiEnvelope<GalleryAuthorStats>> {
+  const res = await api.get(`/api/prompt-gallery/v1/authors/${id}`)
+  return res.data
+}
+
+/** 关注 / 取关作者（登录用户） */
+export async function toggleGalleryAuthorFollow(
+  id: number
+): Promise<ApiEnvelope<GalleryAuthorFollowResult>> {
+  const res = await api.post(`/api/prompt-gallery/v1/authors/${id}/follow`)
+  return res.data
+}
+
+/** 后台设置作者认证标签（空串 = 清除认证） */
+export async function adminSetGalleryAuthorBadge(
+  id: number,
+  badge: string
+): Promise<ApiEnvelope<{ gallery_badge: string }>> {
+  const res = await api.put(`/api/prompt-gallery/v1/admin/authors/${id}/badge`, {
+    badge,
+  })
   return res.data
 }
 

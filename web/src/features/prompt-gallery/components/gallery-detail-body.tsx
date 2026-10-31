@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { ExternalLink, Video } from 'lucide-react'
+import { ExternalLink, Eye, Heart, Video } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 
 import { runningHubInviteUrl } from '@/features/canvas/runninghub'
@@ -10,9 +10,9 @@ import { CreateWithThis } from '../create-with-this'
 import type { PromptGalleryItem } from '../types'
 import { isVideoUrl, parseGalleryMedia, parseGalleryTags } from '../utils'
 import { RecommendStrip } from './recommend-strip'
+import { AuthorCard } from './detail/author-card'
 import { GenerationInfo } from './detail/generation-info'
 import {
-  AuthorCard,
   DetailDisclaimer,
   KeyValueRow,
   MetaChip,
@@ -110,10 +110,11 @@ export function GalleryDetailBody({
       {/* ── 左栏：标题 → 媒体 → 提示词 → 去创作 → 推荐 ── */}
       <div className='min-w-0 space-y-6'>
         <header>
-          <h1 className='text-[21px] leading-snug font-semibold tracking-tight md:text-[25px]'>
+          <h1 className='text-[26px] leading-tight font-semibold tracking-tight md:text-[32px]'>
             {item.title}
           </h1>
-          <div className='mt-2.5 flex flex-wrap items-center gap-1.5'>
+          {/* 标签行：模型/类型/分类/标签 靠左，浏览点赞靠右（对齐参考稿） */}
+          <div className='mt-3.5 flex flex-wrap items-center gap-2'>
             {item.model && <MetaChip tone='primary'>{item.model}</MetaChip>}
             <MetaChip>{typeLabel}</MetaChip>
             {item.category && <MetaChip>{item.category}</MetaChip>}
@@ -122,21 +123,30 @@ export function GalleryDetailBody({
                 key={tag}
                 type='button'
                 onClick={() => onTagSelect?.(tag)}
-                className='rounded-md bg-muted px-2 py-[3px] text-[11.5px] leading-none text-muted-foreground transition-colors hover:bg-muted/70 hover:text-foreground'
+                className='rounded-lg bg-muted px-2.5 py-1 text-[12.5px] leading-none text-muted-foreground transition-colors hover:bg-muted/70 hover:text-foreground'
               >
                 #{tag}
               </button>
             ))}
+            <div className='ml-auto flex items-center gap-3.5 text-[12.5px] text-muted-foreground'>
+              <span className='inline-flex items-center gap-1'>
+                <Eye className='size-3.5' />
+                {item.views}
+              </span>
+              <span className='inline-flex items-center gap-1'>
+                <Heart className='size-3.5' />
+                {likeCount ?? item.likes}
+              </span>
+            </div>
           </div>
         </header>
 
         {/* 移动端把作者与操作提到标题下方，避免用户滚到底部才能收藏 */}
         <div className='space-y-3 lg:hidden'>
           <AuthorCard
+            authorId={item.author_id}
             author={item.author}
-            views={item.views}
-            likes={likeCount ?? item.likes}
-            createdAt={item.created_at}
+            badge={item.author_badge}
           />
           <PrimaryActions
             favorited={Boolean(favorited)}
@@ -244,10 +254,9 @@ export function GalleryDetailBody({
       >
         <div className='hidden space-y-3 lg:block'>
           <AuthorCard
+            authorId={item.author_id}
             author={item.author}
-            views={item.views}
-            likes={likeCount ?? item.likes}
-            createdAt={item.created_at}
+            badge={item.author_badge}
           />
 
           <PrimaryActions
@@ -265,6 +274,9 @@ export function GalleryDetailBody({
           </KeyValueRow>
           <KeyValueRow label={t('Status', { defaultValue: '状态' })}>
             {t('Published', { defaultValue: '已发布' })}
+          </KeyValueRow>
+          <KeyValueRow label={t('Published at', { defaultValue: '发布时间' })}>
+            {formatPublishDate(item.created_at)}
           </KeyValueRow>
           <KeyValueRow label={t('Views', { defaultValue: '浏览' })}>
             {item.views}
@@ -358,4 +370,13 @@ export function GalleryDetailBody({
       </aside>
     </div>
   )
+}
+
+/** 发布时间统一 YYYY/MM/DD（对齐参考稿；不跟随系统 locale，避免出现 10/29/2026） */
+function formatPublishDate(timestamp: number): string {
+  if (!timestamp) return '—'
+  const date = new Date(timestamp * 1000)
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${date.getFullYear()}/${month}/${day}`
 }

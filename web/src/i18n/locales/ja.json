@@ -7870,6 +7870,13 @@
     "Copy the prompt above": "上のプロンプトをコピー",
     "Pick the same model in ComfyUI or RunningHub": "ComfyUI または RunningHub で同じモデルを選ぶ",
     "Paste it and generate, then tweak the parameters": "貼り付けて生成し、必要に応じてパラメータを調整",
-    "Usage notes": "利用上の注意"
+    "Usage notes": "利用上の注意",
+    "Gallery badge": "ギャラリー認証",
+    "Author badge shown on gallery detail pages. Leave empty to show Community member.": "ギャラリー詳細ページの作者名の下に表示する認証バッジ。空欄の場合は「コミュニティメンバー」と表示されます。",
+    "e.g. Verified creator": "例：認証クリエイター",
+    "Follow": "フォロー",
+    "Following": "フォロー中",
+    "Community member": "コミュニティメンバー",
+    "Sign in to follow this creator": "ログインするとフォローできます"
   }
 }

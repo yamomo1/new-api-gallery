@@ -46,6 +46,7 @@ type PromptGallery struct {
 	// RunningHubWorkflowId 云端 ComfyUI（RunningHub）工作流 ID，
 	// 「去创作」点此跳转 RunningHub 体验页。
 	RunningHubWorkflowId string `json:"runninghub_workflow_id" gorm:"type:varchar(64)"`
+	AuthorBadge          string `json:"author_badge" gorm:"-"` // 作者认证标签：详情接口按 author_id 现查填充，空串=未认证
 
 	CreatedAt int64 `json:"created_at" gorm:"bigint"`
 	UpdatedAt int64 `json:"updated_at" gorm:"bigint"`

@@ -69,6 +69,9 @@ func SetApiRouter(router *gin.Engine) {
 			promptGalleryRoute.GET("/prompts", controller.GetPromptGalleryList)
 			promptGalleryRoute.GET("/prompts/:id", controller.GetPromptGalleryDetail)
 			promptGalleryRoute.POST("/prompts/:id/like", controller.LikePromptGallery)
+			// 作者卡：公开统计 + 登录关注
+			promptGalleryRoute.GET("/authors/:id", controller.GetGalleryAuthor)
+			promptGalleryRoute.POST("/authors/:id/follow", middleware.UserAuth(), controller.ToggleGalleryAuthorFollow)
 			// 收藏（登录用户，落库）：画廊页写入，画布素材面板读取
 			promptGalleryRoute.POST("/prompts/:id/favorite", middleware.UserAuth(), controller.TogglePromptGalleryFavorite)
 			promptGalleryRoute.GET("/favorites", middleware.UserAuth(), controller.GetMyPromptGalleryFavorites)
@@ -88,6 +91,8 @@ func SetApiRouter(router *gin.Engine) {
 			promptGalleryRoute.PUT("/admin/prompts/:id", middleware.AdminAuth(), controller.AdminUpdatePromptGallery)
 			promptGalleryRoute.DELETE("/admin/prompts/:id", middleware.AdminAuth(), controller.AdminDeletePromptGallery)
 			promptGalleryRoute.POST("/admin/prompts/:id/home", middleware.AdminAuth(), controller.AdminSetPromptGalleryHome)
+			// 作者认证标签（后台用户管理的「画廊认证」入口）
+			promptGalleryRoute.PUT("/admin/authors/:id/badge", middleware.AdminAuth(), controller.AdminSetGalleryAuthorBadge)
 			// 「去创作」四个功能的数据包与开关
 			promptGalleryRoute.GET("/prompts/:id/create", controller.GetGalleryCreatePayload)
 			promptGalleryRoute.GET("/gallery-create-config", controller.GetGalleryCreateConfig)

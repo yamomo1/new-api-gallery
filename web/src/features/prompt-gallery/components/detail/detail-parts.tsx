@@ -1,4 +1,4 @@
-import { Eye, Heart, Star, UserRound } from 'lucide-react'
+import { Play, Star } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -77,7 +77,7 @@ export function MetaChip({
   return (
     <span
       className={cn(
-        'inline-flex items-center rounded-md px-2 py-[3px] text-[11.5px] leading-none',
+        'inline-flex items-center rounded-lg px-2.5 py-1 text-[12.5px] leading-none',
         tone === 'primary'
           ? 'bg-primary/12 text-primary'
           : 'bg-muted text-muted-foreground'
@@ -88,62 +88,7 @@ export function MetaChip({
   )
 }
 
-/** 作者卡：头像（首字母）+ 名字 + 数据 */
-export function AuthorCard({
-  author,
-  views,
-  likes,
-  createdAt,
-}: {
-  author: string
-  views: number
-  likes: number
-  createdAt: number
-}) {
-  const { t } = useTranslation()
-  const initial = (author || '?').trim().slice(0, 1).toUpperCase()
-  const date = createdAt
-    ? new Date(createdAt * 1000).toLocaleDateString('zh-CN')
-    : ''
-
-  return (
-    <div className='rounded-xl border border-border/60 bg-card p-4'>
-      <div className='flex items-center gap-3'>
-        <div className='flex size-10 shrink-0 items-center justify-center rounded-full bg-muted text-[15px] font-medium text-foreground/70'>
-          {author ? initial : <UserRound className='size-4.5' />}
-        </div>
-        <div className='min-w-0'>
-          <div className='flex items-center gap-1.5'>
-            <span className='truncate text-[14px] font-medium'>
-              {author || t('Anonymous', { defaultValue: '匿名创作者' })}
-            </span>
-            <span className='shrink-0 rounded-[4px] bg-primary/12 px-1.5 py-[1px] text-[10px] leading-none text-primary'>
-              {t('Creator', { defaultValue: '创作者' })}
-            </span>
-          </div>
-          {date && (
-            <p className='mt-1 text-[11.5px] text-muted-foreground'>
-              {t('Published on', { defaultValue: '发布于' })} {date}
-            </p>
-          )}
-        </div>
-      </div>
-
-      <div className='mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-border/50 pt-2.5 text-[12px] text-muted-foreground'>
-        <span className='inline-flex items-center gap-1'>
-          <Eye className='size-3.5' />
-          {views}
-        </span>
-        <span className='inline-flex items-center gap-1'>
-          <Heart className='size-3.5' />
-          {likes}
-        </span>
-      </div>
-    </div>
-  )
-}
-
-/** 主操作行：收藏（次）+ 去创作（主）。去创作不可用时只渲染收藏 */
+/** 主操作行：收藏（次）+ 去创作（主），两个按钮等宽等高（对齐参考稿） */
 export function PrimaryActions({
   favorited,
   onToggleFavorite,
@@ -157,18 +102,18 @@ export function PrimaryActions({
 }) {
   const { t } = useTranslation()
   return (
-    <div className='flex items-stretch gap-2'>
+    <div className='flex items-stretch gap-2.5'>
       <button
         type='button'
         onClick={onToggleFavorite}
         className={cn(
-          'flex h-10 flex-1 items-center justify-center gap-1.5 rounded-lg border text-[13px] font-medium transition-colors',
+          'flex h-11 flex-1 items-center justify-center gap-2 rounded-xl border text-[14px] font-medium transition-colors',
           favorited
             ? 'border-primary/40 bg-primary/10 text-primary'
             : 'border-border bg-card text-foreground/80 hover:border-border hover:bg-muted'
         )}
       >
-        <Star className={cn('size-4', favorited && 'fill-current')} />
+        <Star className={cn('size-4.5', favorited && 'fill-current')} />
         {favorited
           ? t('Favorited', { defaultValue: '已收藏' })
           : t('Favorite', { defaultValue: '收藏' })}
@@ -178,8 +123,9 @@ export function PrimaryActions({
           type='button'
           onClick={onCreate}
           disabled={createDisabled}
-          className='flex h-10 flex-[1.4] items-center justify-center gap-1.5 rounded-lg bg-primary text-[13px] font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50'
+          className='flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-primary text-[14px] font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50'
         >
+          <Play className='size-4 fill-current' />
           {t('Create with this', { defaultValue: '去创作' })}
         </button>
       )}

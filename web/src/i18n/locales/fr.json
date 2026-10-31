@@ -7870,6 +7870,13 @@
     "Copy the prompt above": "Copiez le prompt ci-dessus",
     "Pick the same model in ComfyUI or RunningHub": "Choisissez le même modèle dans ComfyUI ou RunningHub",
     "Paste it and generate, then tweak the parameters": "Collez-le, générez, puis ajustez les paramètres",
-    "Usage notes": "Notes d'utilisation"
+    "Usage notes": "Notes d'utilisation",
+    "Gallery badge": "Badge de galerie",
+    "Author badge shown on gallery detail pages. Leave empty to show Community member.": "Badge affiché sous le nom de l'auteur sur les pages de la galerie. Laissez vide pour afficher « Membre de la communauté ».",
+    "e.g. Verified creator": "ex. : Créateur vérifié",
+    "Follow": "Suivre",
+    "Following": "Abonné",
+    "Community member": "Membre de la communauté",
+    "Sign in to follow this creator": "Connectez-vous pour suivre ce créateur"
   }
 }

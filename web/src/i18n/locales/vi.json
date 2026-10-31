@@ -7870,6 +7870,13 @@
     "Copy the prompt above": "Sao chép prompt ở trên",
     "Pick the same model in ComfyUI or RunningHub": "Chọn cùng mô hình trong ComfyUI hoặc RunningHub",
     "Paste it and generate, then tweak the parameters": "Dán, tạo rồi chỉnh tham số nếu cần",
-    "Usage notes": "Lưu ý khi dùng"
+    "Usage notes": "Lưu ý khi dùng",
+    "Gallery badge": "Huy hiệu thư viện",
+    "Author badge shown on gallery detail pages. Leave empty to show Community member.": "Huy hiệu hiển thị dưới tên tác giả trên trang chi tiết. Để trống sẽ hiển thị \"Thành viên cộng đồng\".",
+    "e.g. Verified creator": "Ví dụ: Tác giả đã xác minh",
+    "Follow": "Theo dõi",
+    "Following": "Đang theo dõi",
+    "Community member": "Thành viên cộng đồng",
+    "Sign in to follow this creator": "Đăng nhập để theo dõi tác giả"
   }
 }

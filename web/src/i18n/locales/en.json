@@ -7894,6 +7894,13 @@
     "Copy the prompt above": "Copy the prompt above",
     "Pick the same model in ComfyUI or RunningHub": "Pick the same model in ComfyUI or RunningHub",
     "Paste it and generate, then tweak the parameters": "Paste it, generate, then tweak the parameters",
-    "Usage notes": "Usage notes"
+    "Usage notes": "Usage notes",
+    "Gallery badge": "Gallery badge",
+    "Author badge shown on gallery detail pages. Leave empty to show Community member.": "Author badge shown under the creator name on gallery pages. Leave empty to show \"Community member\".",
+    "e.g. Verified creator": "e.g. Verified creator",
+    "Follow": "Follow",
+    "Following": "Following",
+    "Community member": "Community member",
+    "Sign in to follow this creator": "Sign in to follow this creator"
   }
 }

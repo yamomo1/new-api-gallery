@@ -7870,6 +7870,13 @@
     "Copy the prompt above": "Скопируйте промпт выше",
     "Pick the same model in ComfyUI or RunningHub": "Выберите ту же модель в ComfyUI или RunningHub",
     "Paste it and generate, then tweak the parameters": "Вставьте, сгенерируйте и при необходимости поправьте параметры",
-    "Usage notes": "Примечания по использованию"
+    "Usage notes": "Примечания по использованию",
+    "Gallery badge": "Значок галереи",
+    "Author badge shown on gallery detail pages. Leave empty to show Community member.": "Значок автора под именем на страницах галереи. Пустое поле — «Участник сообщества».",
+    "e.g. Verified creator": "напр.: Проверенный автор",
+    "Follow": "Подписаться",
+    "Following": "Вы подписаны",
+    "Community member": "Участник сообщества",
+    "Sign in to follow this creator": "Войдите, чтобы подписаться на автора"
   }
 }

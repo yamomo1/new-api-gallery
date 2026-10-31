@@ -40,6 +40,8 @@ export type PromptGalleryItem = {
   model_sources?: string
   /** RunningHub 云端工作流 ID；空串 = 未配置 */
   runninghub_workflow_id?: string
+  /** 作者认证标签（详情接口现查 users.gallery_badge）；空串 = 未认证 */
+  author_badge?: string
   created_at: number
   updated_at: number
 }
@@ -132,4 +134,28 @@ export type GalleryCreatePayload = {
   workflow_json: string
   model_sources: GalleryModelSource[]
   runninghub_workflow_id: string
+}
+
+// ----------------------------------------------------------------------------
+// 作者卡（详情页右栏）
+// ----------------------------------------------------------------------------
+
+/**
+ * 作者统计：`GET /api/prompt-gallery/v1/authors/:id`
+ * badge 为空串表示未认证 —— 前台统一回退展示「热心网友」。
+ */
+export type GalleryAuthorStats = {
+  id: number
+  name: string
+  badge: string
+  works: number
+  views: number
+  likes: number
+  followers: number
+  following: boolean
+}
+
+export type GalleryAuthorFollowResult = {
+  following: boolean
+  followers: number
 }

@@ -7896,6 +7896,13 @@
     "Copy the prompt above": "复制上方提示词",
     "Pick the same model in ComfyUI or RunningHub": "在 ComfyUI 或 RunningHub 里选择同一模型",
     "Paste it and generate, then tweak the parameters": "粘贴提示词并生成，再按需微调参数",
-    "Usage notes": "使用说明"
+    "Usage notes": "使用说明",
+    "Gallery badge": "画廊认证",
+    "Author badge shown on gallery detail pages. Leave empty to show Community member.": "画廊详情页作者昵称下方的认证标签，留空显示「热心网友」。",
+    "e.g. Verified creator": "例如：认证作者",
+    "Follow": "关注",
+    "Following": "已关注",
+    "Community member": "热心网友",
+    "Sign in to follow this creator": "登录后即可关注作者"
   }
 }
