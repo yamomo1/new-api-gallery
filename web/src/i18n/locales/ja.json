@@ -7863,6 +7863,13 @@
     "use": "回",
     "translate.invalid_input": "リクエストの形式が正しくありません。もう一度お試しください。",
     "增值电信业务经营许可证 川B2-20231491": "增值电信业务经营许可证 川B2-20231491",
-    "https://dxzhgl.miit.gov.cn/": "https://dxzhgl.miit.gov.cn/"
+    "https://dxzhgl.miit.gov.cn/": "https://dxzhgl.miit.gov.cn/",
+    "Generation info": "生成情報",
+    "Prompt text": "プロンプト",
+    "How to use this prompt": "使い方",
+    "Copy the prompt above": "上のプロンプトをコピー",
+    "Pick the same model in ComfyUI or RunningHub": "ComfyUI または RunningHub で同じモデルを選ぶ",
+    "Paste it and generate, then tweak the parameters": "貼り付けて生成し、必要に応じてパラメータを調整",
+    "Usage notes": "利用上の注意"
   }
 }

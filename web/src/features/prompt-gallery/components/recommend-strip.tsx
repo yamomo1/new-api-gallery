@@ -39,16 +39,44 @@ export function RecommendStrip({
   if (related.length === 0) return null
 
   return (
-    <div className='border-t border-white/10 px-4 py-4 md:px-6'>
-      <p className='mb-3 flex items-center gap-2 text-sm font-semibold text-white/90'>
-        <span className='h-4 w-1 rounded-full bg-primary' />
+    <div className='border-t border-border/60 py-4'>
+      {/* 标题靠右、字号加大，作为左栏内容的收尾分隔（对齐设计稿） */}
+      <p className='mb-3 flex items-center justify-end gap-2 text-[17px] font-semibold text-foreground/90'>
+        <span className='h-[18px] w-1 rounded-full bg-primary' />
         {t('Explore more prompts')}
       </p>
-      <div className='-mx-1 flex gap-3 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden'>
+      <div className='flex gap-3 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden'>
         {related.map((it) => {
           const media = parseGalleryMedia(it)
           const cover = resolveImageUrl(it.cover) || media[0]
           const isVideo = cover ? isVideoUrl(cover) : false
+          // 缩略图三种状态先算好，避免 JSX 里写嵌套三元
+          let thumb = (
+            <div className='flex size-full items-center justify-center text-muted-foreground/50'>
+              <Video className='size-6' />
+            </div>
+          )
+          if (cover && isVideo) {
+            thumb = (
+              <video
+                src={cover}
+                muted
+                loop
+                playsInline
+                preload='metadata'
+                className='block size-full object-cover'
+              />
+            )
+          } else if (cover) {
+            thumb = (
+              <img
+                src={cover}
+                alt={it.title}
+                loading='lazy'
+                className='block size-full object-cover transition-transform duration-300 group-hover:scale-105'
+              />
+            )
+          }
           return (
             <a
               key={it.id}
@@ -58,32 +86,10 @@ export function RecommendStrip({
                 e.preventDefault()
                 onSelect(it.id)
               }}
-              className='group w-40 shrink-0 overflow-hidden rounded-xl bg-white/5 text-left ring-1 ring-white/10 transition-all duration-200 hover:bg-white/10 hover:ring-white/25 focus-visible:ring-2 focus-visible:ring-ring'
+              className='group w-40 shrink-0 overflow-hidden rounded-xl bg-card text-left ring-1 ring-border/60 transition-all duration-200 hover:bg-muted hover:ring-border focus-visible:ring-2 focus-visible:ring-ring'
             >
               <div className='relative aspect-video w-full overflow-hidden bg-black/40'>
-                {cover ? (
-                  isVideo ? (
-                    <video
-                      src={cover}
-                      muted
-                      loop
-                      playsInline
-                      preload='metadata'
-                      className='block size-full object-cover'
-                    />
-                  ) : (
-                    <img
-                      src={cover}
-                      alt={it.title}
-                      loading='lazy'
-                      className='block size-full object-cover transition-transform duration-300 group-hover:scale-105'
-                    />
-                  )
-                ) : (
-                  <div className='flex size-full items-center justify-center text-white/30'>
-                    <Video className='size-6' />
-                  </div>
-                )}
+                {thumb}
                 {isVideo && (
                   <span className='absolute inset-0 flex items-center justify-center'>
                     <span className='flex size-7 items-center justify-center rounded-full bg-black/50 backdrop-blur-sm transition-transform duration-200 group-hover:scale-110'>
@@ -93,10 +99,10 @@ export function RecommendStrip({
                 )}
               </div>
               <div className='px-2.5 py-2'>
-                <p className='line-clamp-1 text-xs font-medium text-white/90'>
+                <p className='line-clamp-1 text-xs font-medium text-foreground/90'>
                   {it.title}
                 </p>
-                <p className='mt-0.5 flex items-center gap-1 text-[11px] text-white/45'>
+                <p className='mt-0.5 flex items-center gap-1 text-[11px] text-muted-foreground'>
                   <Eye className='size-3' /> {it.views}
                 </p>
               </div>

@@ -1,15 +1,16 @@
 import { useTranslation } from 'react-i18next'
-import { Video } from 'lucide-react'
+import { ExternalLink, Video } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 
+import { runningHubInviteUrl } from '@/features/canvas/runninghub'
 import { cn } from '@/lib/utils'
 import { resolveImageUrl } from '@/lib/storage'
 
 import { CreateWithThis } from '../create-with-this'
 import type { PromptGalleryItem } from '../types'
 import { isVideoUrl, parseGalleryMedia, parseGalleryTags } from '../utils'
-import { PromptBlock } from './prompt-block'
 import { RecommendStrip } from './recommend-strip'
+import { GenerationInfo } from './detail/generation-info'
 import {
   AuthorCard,
   DetailDisclaimer,
@@ -183,11 +184,48 @@ export function GalleryDetailBody({
           )}
         </div>
 
+        {/* 生成信息：模型 + 提示词（长提示词在卡片内部滚动，不撑高页面） */}
+        <GenerationInfo item={item} />
+
         <section>
-          <h2 className='mb-2.5 text-[14px] font-medium'>
-            {t('How to use this prompt', { defaultValue: '生图使用教学' })}
+          <h2 className='mb-2.5 text-[15px] font-semibold text-foreground'>
+            {t('How to use this prompt', { defaultValue: '使用教学' })}
           </h2>
-          <PromptBlock item={item} />
+          <div className='rounded-xl border border-border/60 bg-card px-4 py-3.5'>
+            <ol className='space-y-1.5 text-[12.5px] leading-relaxed text-muted-foreground'>
+              <li>
+                1.{' '}
+                {t('Copy the prompt above', {
+                  defaultValue: '复制上方提示词',
+                })}
+              </li>
+              <li>
+                2.{' '}
+                {t('Pick the same model in ComfyUI or RunningHub', {
+                  defaultValue: '在 ComfyUI 或 RunningHub 里选择同一模型',
+                })}
+              </li>
+              <li>
+                3.{' '}
+                {t('Paste it and generate, then tweak the parameters', {
+                  defaultValue: '粘贴提示词并生成，再按需微调参数',
+                })}
+              </li>
+            </ol>
+            {/* 外链走 runningHubInviteUrl 单一真源，始终带推广码；勿手拼 URL */}
+            <div className='mt-3 flex justify-end'>
+              <a
+                href={runningHubInviteUrl()}
+                target='_blank'
+                rel='noopener noreferrer'
+                title={t('Opens RunningHub in a new tab with your invite code')}
+                className='inline-flex items-center gap-1 text-[12px] font-medium text-primary transition-colors hover:text-primary/80'
+              >
+                <ExternalLink className='size-3.5' />
+                {t('Try on RunningHub')}
+              </a>
+            </div>
+          </div>
         </section>
 
         <div id='gallery-create-with-this' className='scroll-mt-24'>
@@ -251,11 +289,8 @@ export function GalleryDetailBody({
               : t('Chinese', { defaultValue: '中文' })}
           </KeyValueRow>
           {tags.length > 0 && (
-            <div className='flex items-start justify-between gap-4 py-[5px]'>
-              <span className='shrink-0 text-[12.5px] text-muted-foreground'>
-                {t('Tags', { defaultValue: '标签' })}
-              </span>
-              <div className='flex flex-wrap justify-end gap-1'>
+            <KeyValueRow label={t('Tags', { defaultValue: '标签' })}>
+              <div className='flex flex-wrap gap-1'>
                 {tags.slice(0, 6).map((tag) => (
                   <button
                     key={tag}
@@ -267,12 +302,12 @@ export function GalleryDetailBody({
                   </button>
                 ))}
               </div>
-            </div>
+            </KeyValueRow>
           )}
         </MetaSection>
 
-        <MetaSection title={t('Usage', { defaultValue: '使用说明' })}>
-          <ul className='space-y-1.5 text-[12px] leading-relaxed text-muted-foreground'>
+        <MetaSection title={t('Usage notes', { defaultValue: '使用说明' })}>
+          <ul className='space-y-1.5 px-3.5 py-3 text-[12px] leading-relaxed text-muted-foreground'>
             <li>
               {t('Prompt is free to copy and adapt.', {
                 defaultValue: '提示词可自由复制、修改与商用。',

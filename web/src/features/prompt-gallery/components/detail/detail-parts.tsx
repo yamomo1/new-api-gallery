@@ -12,7 +12,10 @@ import { cn } from '@/lib/utils'
  * 颜色全部走主题 token，深色/浅色两套主题都能用。
  */
 
-/** 右栏的一张信息卡：小标题 + 内容，卡片用细边框区分 */
+/**
+ * 右栏的一张信息卡：标题栏 + 表格体。
+ * 标题栏与表格、每行之间、标签列与值列之间都画分隔线（对齐 liblib 的参数表）。
+ */
 export function MetaSection({
   title,
   action,
@@ -31,16 +34,19 @@ export function MetaSection({
         className
       )}
     >
-      <div className='flex items-center justify-between gap-2 px-4 pt-3 pb-1.5'>
+      <div className='flex items-center justify-between gap-2 border-b border-border/60 px-3.5 py-2.5'>
         <h3 className='text-[13px] font-medium text-foreground/90'>{title}</h3>
         {action}
       </div>
-      <div className='px-4 pt-1 pb-3.5'>{children}</div>
+      <div>{children}</div>
     </section>
   )
 }
 
-/** 键值行：左侧灰标签、右侧值（值可换行，长文本靠右对齐） */
+/**
+ * 表格行：左标签列（右侧竖线）+ 右值列（左对齐，长文本自动换行），
+ * 行与行之间横线，最后一行不画（交给卡片边框）。
+ */
 export function KeyValueRow({
   label,
   children,
@@ -49,9 +55,13 @@ export function KeyValueRow({
   children: ReactNode
 }) {
   return (
-    <div className='flex items-start justify-between gap-4 py-[5px] text-[12.5px] leading-relaxed'>
-      <span className='shrink-0 text-muted-foreground'>{label}</span>
-      <span className='min-w-0 text-right text-foreground/85'>{children}</span>
+    <div className='flex border-b border-border/50 last:border-b-0'>
+      <div className='w-[84px] shrink-0 border-r border-border/50 px-3.5 py-2 text-[12.5px] leading-relaxed text-muted-foreground'>
+        {label}
+      </div>
+      <div className='min-w-0 flex-1 px-3.5 py-2 text-[12.5px] leading-relaxed break-words text-foreground/85'>
+        {children}
+      </div>
     </div>
   )
 }

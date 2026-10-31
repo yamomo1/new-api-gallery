@@ -7887,6 +7887,13 @@
     "Run test": "Run test",
     "Save before testing if you want trial values; otherwise the last saved prompt is used.": "Save before testing if you want trial values; otherwise the last saved prompt is used.",
     "use": "use",
-    "translate.invalid_input": "Invalid request. Please try again."
+    "translate.invalid_input": "Invalid request. Please try again.",
+    "Generation info": "Generation info",
+    "Prompt text": "Prompt",
+    "How to use this prompt": "How to use",
+    "Copy the prompt above": "Copy the prompt above",
+    "Pick the same model in ComfyUI or RunningHub": "Pick the same model in ComfyUI or RunningHub",
+    "Paste it and generate, then tweak the parameters": "Paste it, generate, then tweak the parameters",
+    "Usage notes": "Usage notes"
   }
 }
