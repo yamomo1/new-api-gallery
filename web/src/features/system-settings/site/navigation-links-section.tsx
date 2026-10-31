@@ -279,14 +279,18 @@ function GroupEditor({
               </Button>
             }
           />
-          <DropdownMenuContent align='start' className='max-h-80 overflow-auto'>
+          {/* min-w 保证中文标题不换行竖排；w-max 让菜单随内容自适应加宽 */}
+          <DropdownMenuContent
+            align='start'
+            className='max-h-80 w-max min-w-56 overflow-auto'
+          >
             {NAV_LINK_PRESETS.map((p) => (
               <DropdownMenuItem
                 key={p.id}
                 render={
                   <button type='button' onClick={() => addPreset(p.id)}>
-                    <span>{t(p.titleKey)}</span>
-                    <span className='text-muted-foreground ml-auto pl-4 text-xs'>
+                    <span className='whitespace-nowrap'>{t(p.titleKey)}</span>
+                    <span className='text-muted-foreground ml-auto pl-4 text-xs whitespace-nowrap'>
                       {p.url}
                     </span>
                   </button>
