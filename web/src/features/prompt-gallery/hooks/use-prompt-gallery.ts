@@ -9,8 +9,11 @@ import {
   adminSetPromptGalleryHome,
   adminSetPromptGalleryStatus,
   adminUpdatePromptGallery,
+  createGalleryComment,
   createMyPromptGallery,
+  deleteGalleryComment,
   deleteMyPromptGallery,
+  getGalleryComments,
   getAdminPromptGalleries,
   getGalleryAuthor,
   getMyPromptGalleryFavorites,
@@ -231,3 +234,48 @@ export function useAdminSetPromptGalleryHome() {
 
 export type PromptGalleryListData = PromptGalleryListResult
 export type PromptGalleryFacetsData = PromptGalleryFacets
+
+// ----------------------------------------------------------------------------
+// 作品评论
+// ----------------------------------------------------------------------------
+
+/** 评论列表（公开）；发表/删除后 invalidate 这份缓存与详情里的评论数 */
+export function useGalleryComments(galleryId: number) {
+  return useQuery({
+    queryKey: ['gallery-comments', galleryId],
+    queryFn: async () =>
+      requireServerSuccess(await getGalleryComments(galleryId, { limit: 50 }))
+        .data,
+    staleTime: 30 * 1000,
+    enabled: galleryId > 0,
+  })
+}
+
+export function useCreateGalleryComment(galleryId: number) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (content: string) =>
+      requireServerSuccess(await createGalleryComment(galleryId, content)).data,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['gallery-comments', galleryId] })
+      queryClient.invalidateQueries({
+        queryKey: ['prompt-gallery', 'detail', galleryId],
+      })
+    },
+  })
+}
+
+export function useDeleteGalleryComment(galleryId: number) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (commentId: number) =>
+      requireServerSuccess(await deleteGalleryComment(commentId)).data,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['gallery-comments', galleryId] })
+      queryClient.invalidateQueries({
+        queryKey: ['prompt-gallery', 'detail', galleryId],
+      })
+      toast.success(i18next.t('Comment deleted'))
+    },
+  })
+}

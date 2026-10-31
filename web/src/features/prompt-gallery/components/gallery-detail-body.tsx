@@ -4,7 +4,6 @@ import {
   ExternalLink,
   Eye,
   Heart,
-  MessageSquare,
   Share2,
   Sparkles,
 } from 'lucide-react'
@@ -16,6 +15,7 @@ import { cn } from '@/lib/utils'
 import { CreateWithThis } from '../create-with-this'
 import type { PromptGalleryItem } from '../types'
 import { formatPublishDate, parseGalleryMedia, parseGalleryTags } from '../utils'
+import { CommentSection } from './detail/comment-section'
 import { WorkGallery } from './detail/work-gallery'
 import { AuthorCard } from './detail/author-card'
 import { MediaGallery } from './detail/media-gallery'
@@ -251,23 +251,13 @@ export function GalleryDetailBody({
           <CreateWithThis item={item} />
         </div>
 
-        {/* 讨论：尚未接入后端，只给空态，不做能点没反应的假输入框 */}
-        <section className='mt-7'>
-          <h2 className='text-[14px] font-medium text-foreground'>
-            {t('Comments', { defaultValue: '评论' })}
-          </h2>
-          <div className='mt-2.5 flex items-center gap-2 rounded-full border border-border/60 bg-muted/40 px-3 py-2'>
-            <span className='text-[12px] text-muted-foreground/70'>
-              {t('Comments are coming soon', { defaultValue: '评论功能即将上线' })}
-            </span>
-          </div>
-          <div className='mt-4 flex flex-col items-center gap-1.5 text-center'>
-            <MessageSquare className='size-7 text-muted-foreground/25' />
-            <p className='text-[12px] text-muted-foreground/70'>
-              {t('No comments yet', { defaultValue: '暂无评论' })}
-            </p>
-          </div>
-        </section>
+        {/* 评论：真接口；列表公开，发表与删除需登录 */}
+        <div className='mt-7'>
+          <CommentSection
+            galleryId={item.id}
+            initialCount={item.comment_count ?? 0}
+          />
+        </div>
 
       </div>
 

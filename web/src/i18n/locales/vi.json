@@ -7895,7 +7895,6 @@
     "Create the same": "Tạo tương tự",
     "Chinese & English": "Trung và Anh",
     "This work has no reusable workflow or model info yet. You can still copy the prompt above.": "Tác phẩm này chưa có workflow hoặc thông tin mô hình để dùng lại. Sao chép prompt qua “Thông tin tạo ảnh” ở góc dưới bên phải ảnh.",
-    "Comments are coming soon": "Tính năng bình luận sắp ra mắt",
     "Full prompt": "Toàn bộ prompt",
     "First published": "Công bố lần đầu",
     "Show all": "Xem tất cả",
@@ -7906,6 +7905,15 @@
     "Hottest": "Phổ biến",
     "Share your work": "Chia sẻ tác phẩm",
     "Upload image": "Tải ảnh lên",
-    "Upload video": "Tải video lên"
+    "Upload video": "Tải video lên",
+    "just now": "Vừa xong",
+    "Comment deleted": "Đã xóa bình luận",
+    "Delete this comment?": "Xóa bình luận này?",
+    "Say something about this work": "Viết bình luận…",
+    "Sign in to comment": "Đăng nhập để bình luận",
+    "Failed to comment": "Gửi thất bại, vui lòng thử lại",
+    "{{count}} min ago": "{{count}} phút trước",
+    "{{count}} h ago": "{{count}} giờ trước",
+    "{{count}} d ago": "{{count}} ngày trước"
   }
 }

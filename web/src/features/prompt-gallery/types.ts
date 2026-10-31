@@ -42,6 +42,8 @@ export type PromptGalleryItem = {
   runninghub_workflow_id?: string
   /** 作者认证标签（详情接口现查 users.gallery_badge）；空串 = 未认证 */
   author_badge?: string
+  /** 评论数（详情接口现查，列表页不带） */
+  comment_count?: number
   created_at: number
   updated_at: number
 }
@@ -158,4 +160,28 @@ export type GalleryAuthorStats = {
 export type GalleryAuthorFollowResult = {
   following: boolean
   followers: number
+}
+
+// ----------------------------------------------------------------------------
+// 作品评论
+// ----------------------------------------------------------------------------
+
+/** `GET /api/prompt-gallery/v1/prompts/:id/comments` */
+export type GalleryComment = {
+  id: number
+  gallery_id: number
+  user_id: number
+  /** 发布时的显示名（后端冗余存储，改名不影响旧评论） */
+  username: string
+  content: string
+  created_at: number
+  /** 评论者认证标签 */
+  badge: string
+  /** 当前登录者能否删除（本人或管理员） */
+  is_mine: boolean
+}
+
+export type GalleryCommentsResult = {
+  items: GalleryComment[]
+  total: number
 }

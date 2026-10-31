@@ -65,6 +65,8 @@ func GetPromptGalleryDetail(c *gin.Context) {
 			item.AuthorBadge = author.GalleryBadge
 		}
 	}
+	// 评论数：详情接口现查，列表页不带（避免每行一次 count）
+	item.CommentCount = model.CountGalleryComments(id)
 	model.IncrPromptGalleryViews(id)
 	c.JSON(http.StatusOK, gin.H{"success": true, "data": item})
 }

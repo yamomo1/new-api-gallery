@@ -2,6 +2,8 @@ import { api } from '@/lib/api'
 
 import type {
   GalleryAuthorFollowResult,
+  GalleryComment,
+  GalleryCommentsResult,
   GalleryAuthorStats,
   GalleryCreatePayload,
   PromptGalleryAdminParams,
@@ -189,5 +191,41 @@ export async function getAdminPromptGalleries(
   params: PromptGalleryAdminParams
 ): Promise<ApiEnvelope<PromptGalleryListResult>> {
   const res = await api.get('/api/prompt-gallery/v1/admin/prompts', { params })
+  return res.data
+}
+
+// ----------------------------------------------------------------------------
+// 作品评论
+// ----------------------------------------------------------------------------
+
+/** 评论列表（公开，未登录也能读） */
+export async function getGalleryComments(
+  galleryId: number,
+  params: { offset?: number; limit?: number } = {}
+): Promise<ApiEnvelope<GalleryCommentsResult>> {
+  const res = await api.get(
+    `/api/prompt-gallery/v1/prompts/${galleryId}/comments`,
+    { params }
+  )
+  return res.data
+}
+
+/** 发表评论（登录用户） */
+export async function createGalleryComment(
+  galleryId: number,
+  content: string
+): Promise<ApiEnvelope<GalleryComment>> {
+  const res = await api.post(
+    `/api/prompt-gallery/v1/prompts/${galleryId}/comments`,
+    { content }
+  )
+  return res.data
+}
+
+/** 删除评论（本人或管理员） */
+export async function deleteGalleryComment(
+  commentId: number
+): Promise<ApiEnvelope<null>> {
+  const res = await api.delete(`/api/prompt-gallery/v1/comments/${commentId}`)
   return res.data
 }

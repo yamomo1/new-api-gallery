@@ -7919,7 +7919,6 @@
     "Create the same": "Create the same",
     "Chinese & English": "Chinese & English",
     "This work has no reusable workflow or model info yet. You can still copy the prompt above.": "This work has no reusable workflow or model info yet. Use “Generation info” at the bottom right of the image to copy the prompt.",
-    "Comments are coming soon": "Comments are coming soon",
     "Full prompt": "Full prompt",
     "First published": "First published",
     "Show all": "Show all",
@@ -7930,6 +7929,15 @@
     "Hottest": "Hottest",
     "Share your work": "Share your work",
     "Upload image": "Upload image",
-    "Upload video": "Upload video"
+    "Upload video": "Upload video",
+    "just now": "Just now",
+    "Comment deleted": "Comment deleted",
+    "Delete this comment?": "Delete this comment?",
+    "Say something about this work": "Say something about this work",
+    "Sign in to comment": "Sign in to comment",
+    "Failed to comment": "Failed to post, please try again",
+    "{{count}} min ago": "{{count}} min ago",
+    "{{count}} h ago": "{{count}} h ago",
+    "{{count}} d ago": "{{count}} d ago"
   }
 }

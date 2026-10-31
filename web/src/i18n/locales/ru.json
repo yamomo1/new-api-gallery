@@ -7895,7 +7895,6 @@
     "Create the same": "Создать такое же",
     "Chinese & English": "Китайский и английский",
     "This work has no reusable workflow or model info yet. You can still copy the prompt above.": "У этой работы пока нет готового воркфлоу или данных о модели. Скопируйте промпт через «Информация о генерации» в правом нижнем углу изображения.",
-    "Comments are coming soon": "Комментарии скоро появятся",
     "Full prompt": "Полный промпт",
     "First published": "Впервые опубликовано",
     "Show all": "Показать всё",
@@ -7906,6 +7905,15 @@
     "Hottest": "Популярные",
     "Share your work": "Поделиться работой",
     "Upload image": "Загрузить изображение",
-    "Upload video": "Загрузить видео"
+    "Upload video": "Загрузить видео",
+    "just now": "Только что",
+    "Comment deleted": "Комментарий удалён",
+    "Delete this comment?": "Удалить этот комментарий?",
+    "Say something about this work": "Напишите комментарий…",
+    "Sign in to comment": "Войдите, чтобы комментировать",
+    "Failed to comment": "Не удалось отправить, попробуйте ещё раз",
+    "{{count}} min ago": "{{count}} мин назад",
+    "{{count}} h ago": "{{count}} ч назад",
+    "{{count}} d ago": "{{count}} дн назад"
   }
 }

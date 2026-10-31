@@ -7895,7 +7895,6 @@
     "Create the same": "同じものを作る",
     "Chinese & English": "中国語・英語",
     "This work has no reusable workflow or model info yet. You can still copy the prompt above.": "この作品には再利用できるワークフロー／モデル情報がまだありません。画像右下の「生成情報」からプロンプトをコピーできます。",
-    "Comments are coming soon": "コメント機能は近日公開予定です",
     "Full prompt": "プロンプト全文",
     "First published": "初公開",
     "Show all": "すべて表示",
@@ -7906,6 +7905,15 @@
     "Hottest": "人気順",
     "Share your work": "作品を投稿",
     "Upload image": "画像をアップロード",
-    "Upload video": "動画をアップロード"
+    "Upload video": "動画をアップロード",
+    "just now": "たった今",
+    "Comment deleted": "コメントを削除しました",
+    "Delete this comment?": "このコメントを削除しますか？",
+    "Say something about this work": "コメントを入力…",
+    "Sign in to comment": "ログインしてコメント",
+    "Failed to comment": "コメントできませんでした。再度お試しください",
+    "{{count}} min ago": "{{count}} 分前",
+    "{{count}} h ago": "{{count}} 時間前",
+    "{{count}} d ago": "{{count}} 日前"
   }
 }

@@ -17,6 +17,7 @@ import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
 import type { PromptGalleryItem } from '../../types'
+import { CommentSection } from './comment-section'
 import { copyText, formatPublishDate, isVideoUrl, parseGalleryTags } from '../../utils'
 
 /**
@@ -335,27 +336,13 @@ export function MediaLightbox({
             )}
           </div>
 
-          {/* 评论：尚未接入后端 —— 只放一条写明「即将上线」的占位条，不做能点但没反应的假输入框 */}
+          {/* 评论：和详情页共用同一个 CommentSection（compact 版） */}
           <div className='mt-4 border-t border-border/60 pt-3'>
-            <h3 className='text-[13px] font-medium text-foreground'>
-              {t('Comments', { defaultValue: '评论' })}
-            </h3>
-            <div className='mt-2.5 flex items-center gap-2 rounded-full border border-border/60 bg-muted/40 px-3 py-2'>
-              <span className='flex size-5 shrink-0 items-center justify-center rounded-full bg-muted text-[10px] font-medium text-muted-foreground'>
-                {initial}
-              </span>
-              <span className='text-[12px] text-muted-foreground/70'>
-                {t('Comments are coming soon', {
-                  defaultValue: '评论功能即将上线',
-                })}
-              </span>
-            </div>
-            <div className='mt-5 flex flex-col items-center gap-2 pb-2 text-center'>
-              <MessageSquare className='size-8 text-muted-foreground/30' />
-              <p className='text-[12px] text-muted-foreground/70'>
-                {t('No comments yet', { defaultValue: '暂无评论' })}
-              </p>
-            </div>
+            <CommentSection
+              galleryId={item.id}
+              initialCount={item.comment_count ?? 0}
+              compact
+            />
           </div>
         </div>
 
