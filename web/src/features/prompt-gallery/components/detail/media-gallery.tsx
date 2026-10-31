@@ -1,5 +1,5 @@
 import { ChevronLeft, ChevronRight, ImageOff, Info, Play, Video } from 'lucide-react'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { cn } from '@/lib/utils'
@@ -33,35 +33,20 @@ export function MediaGallery({
 }) {
   const { t } = useTranslation()
   const scrollerRef = useRef<HTMLDivElement>(null)
+  // 点击「生成信息」固定住的浮层（null = 没固定，跟随 hover）
   const [openIndex, setOpenIndex] = useState<number | null>(null)
-  const [canPrev, setCanPrev] = useState(false)
-  const [canNext, setCanNext] = useState(false)
+  // 鼠标悬停的卡片：悬浮即弹浮层，不用先点按钮
+  const [hoverIndex, setHoverIndex] = useState<number | null>(null)
 
-  const syncArrows = useCallback(() => {
-    const el = scrollerRef.current
-    if (!el) return
-    setCanPrev(el.scrollLeft > 8)
-    setCanNext(el.scrollLeft + el.clientWidth < el.scrollWidth - 8)
-  }, [])
-
-  useEffect(() => {
-    const el = scrollerRef.current
-    if (!el) return
-    syncArrows()
-    el.addEventListener('scroll', syncArrows, { passive: true })
-    window.addEventListener('resize', syncArrows)
-    return () => {
-      el.removeEventListener('scroll', syncArrows)
-      window.removeEventListener('resize', syncArrows)
-    }
-  }, [syncArrows, media.length])
+  // 同时只允许一张卡片显示浮层：hover 优先，其次是点按钮固定的那张
+  const activeIndex = hoverIndex ?? openIndex
 
   // 切作品时回到第一屏，并收起浮层
   useEffect(() => {
     setOpenIndex(null)
+    setHoverIndex(null)
     scrollerRef.current?.scrollTo({ left: 0 })
-    syncArrows()
-  }, [item.id, syncArrows])
+  }, [item.id])
 
   // 打开浮层时若图片滚出视野，点外面关闭
   useEffect(() => {
@@ -73,9 +58,20 @@ export function MediaGallery({
     return () => window.removeEventListener('keydown', onKey)
   }, [openIndex])
 
+  // 循环翻页：到最后一屏再点「下一张」回到第一屏，第一屏点「上一张」回最后一屏
   const page = (direction: 1 | -1) => {
     const el = scrollerRef.current
     if (!el) return
+    const max = el.scrollWidth - el.clientWidth
+    if (max <= 0) return
+    if (direction === 1 && el.scrollLeft >= max - 8) {
+      el.scrollTo({ left: 0, behavior: 'smooth' })
+      return
+    }
+    if (direction === -1 && el.scrollLeft <= 8) {
+      el.scrollTo({ left: max, behavior: 'smooth' })
+      return
+    }
     el.scrollBy({ left: direction * el.clientWidth, behavior: 'smooth' })
   }
 
@@ -100,6 +96,8 @@ export function MediaGallery({
           return (
             <figure
               key={src}
+              onMouseEnter={() => setHoverIndex(i)}
+              onMouseLeave={() => setHoverIndex(null)}
               className={cn(
                 // 参考站：卡片 413×600、间距 8、圆角 13、底色 #F6F6F6、图片 contain 不裁切
                 'group relative m-0 shrink-0 snap-start overflow-hidden rounded-[13px] bg-[#f6f6f6] dark:bg-muted',
@@ -144,11 +142,11 @@ export function MediaGallery({
               <button
                 type='button'
                 onClick={() => setOpenIndex(openIndex === i ? null : i)}
-                aria-expanded={openIndex === i}
+                aria-expanded={activeIndex === i}
                 className={cn(
                   'absolute right-3 bottom-3 z-10 inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[12.5px] font-medium shadow-sm ring-1 ring-black/5 backdrop-blur-sm transition-colors',
                   // 按钮压在图片上，始终白底黑字（深色主题下 text-foreground 会变白 → 不可读）
-                  openIndex === i
+                  activeIndex === i
                     ? 'bg-neutral-900 text-white'
                     : 'bg-white/90 text-neutral-900 hover:bg-white'
                 )}
@@ -165,7 +163,7 @@ export function MediaGallery({
                 </span>
               )}
 
-              {openIndex === i && (
+              {activeIndex === i && (
                 <GenerationPopover
                   item={item}
                   onUse={() => {
@@ -184,24 +182,16 @@ export function MediaGallery({
           <button
             type='button'
             onClick={() => page(-1)}
-            disabled={!canPrev}
             aria-label={t('Previous image')}
-            className={cn(
-              'absolute top-1/2 left-2 z-20 flex size-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/25 text-white backdrop-blur-sm transition-all hover:bg-black/40',
-              !canPrev && 'pointer-events-none opacity-0'
-            )}
+            className='absolute top-1/2 left-2 z-20 flex size-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/25 text-white backdrop-blur-sm transition-colors hover:bg-black/40'
           >
             <ChevronLeft className='size-5' />
           </button>
           <button
             type='button'
             onClick={() => page(1)}
-            disabled={!canNext}
             aria-label={t('Next image')}
-            className={cn(
-              'absolute top-1/2 right-2 z-20 flex size-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/25 text-white backdrop-blur-sm transition-all hover:bg-black/40',
-              !canNext && 'pointer-events-none opacity-0'
-            )}
+            className='absolute top-1/2 right-2 z-20 flex size-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/25 text-white backdrop-blur-sm transition-colors hover:bg-black/40'
           >
             <ChevronRight className='size-5' />
           </button>

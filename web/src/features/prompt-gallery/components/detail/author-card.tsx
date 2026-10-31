@@ -73,7 +73,7 @@ export function AuthorCard({
   }
 
   return (
-    <div className='rounded-lg bg-card p-3.5'>
+    <div className='rounded-lg bg-[#F2F5F9] p-3.5 dark:bg-muted'>
       <div className='flex items-start gap-2.5'>
         <div className='flex size-9 shrink-0 items-center justify-center rounded-full bg-muted text-[13px] font-medium text-foreground/70'>
           {initial || '?'}
@@ -124,7 +124,7 @@ export function AuthorCard({
 
       {/* 作者统计：粉丝 / 作品 / 浏览 / 点赞（加载中占位保持高度不跳） */}
       {/* 数字用参考站的金棕色，图标保持中性灰 */}
-      <div className='mt-2.5 flex min-h-[20px] flex-wrap items-center gap-x-3.5 gap-y-1 border-t border-border/40 pt-2 text-[11.5px] text-[#B07A16] [&_svg]:text-muted-foreground dark:text-primary/90'>
+      <div className='mt-2.5 flex min-h-[20px] flex-wrap items-center gap-x-3.5 gap-y-1 border-t border-white pt-2 dark:border-border/40 text-[11.5px] text-[#B07A16] [&_svg]:text-muted-foreground dark:text-primary/90'>
         {data ? (
           <>
             <span className='inline-flex items-center gap-1'>

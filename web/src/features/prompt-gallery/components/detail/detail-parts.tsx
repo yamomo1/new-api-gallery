@@ -30,11 +30,11 @@ export function MetaSection({
   return (
     <section
       className={cn(
-        'overflow-hidden rounded-lg border border-border/50 bg-card',
+        'overflow-hidden rounded-lg bg-[#F2F5F9] dark:bg-muted',
         className
       )}
     >
-      <div className='flex items-center justify-between gap-2 border-b border-border/40 px-[9px] pt-2 pb-1.5'>
+      <div className='flex items-center justify-between gap-2 border-b border-white px-[9px] pt-2 pb-1.5 dark:border-border/40'>
         <h3 className='text-[14px] font-medium text-foreground/90'>{title}</h3>
         {action}
       </div>
@@ -55,8 +55,8 @@ export function KeyValueRow({
   children: ReactNode
 }) {
   return (
-    <div className='flex border-b border-border/40 last:border-b-0'>
-      <div className='w-[92px] shrink-0 border-r border-border/40 px-[9px] py-[5px] text-[12px] leading-relaxed text-muted-foreground'>
+    <div className='flex border-b border-white last:border-b-0 dark:border-border/40'>
+      <div className='w-[92px] shrink-0 border-r border-white px-[9px] py-[5px] text-[12px] leading-relaxed text-muted-foreground dark:border-border/40'>
         {label}
       </div>
       <div className='min-w-0 flex-1 px-[9px] py-[5px] text-[12px] leading-relaxed break-words text-foreground/85'>
@@ -110,7 +110,7 @@ export function PrimaryActions({
           'flex h-12 flex-1 items-center justify-center gap-1.5 rounded-lg text-[15px] font-medium transition-colors',
           favorited
             ? 'bg-[#FFF2D6] text-[#E49026] dark:bg-primary/15 dark:text-primary'
-            : 'bg-[#ECEFF5] text-[#222] hover:bg-[#e3e7f0] dark:bg-muted dark:text-foreground dark:hover:bg-muted/80'
+            : 'bg-white text-[#222] ring-1 ring-black/[0.04] hover:bg-white/85 dark:bg-card dark:text-foreground dark:ring-0'
         )}
       >
         <Star className={cn('size-4', favorited && 'fill-current')} />

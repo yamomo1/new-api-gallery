@@ -77,7 +77,8 @@ export function GenerationPopover({
     <div
       role='dialog'
       aria-label={t('Generation info', { defaultValue: '生成信息' })}
-      className='absolute inset-x-2.5 bottom-2.5 z-20 flex max-h-[calc(100%-1.25rem)] flex-col overflow-y-auto rounded-2xl border border-black/5 bg-white p-4 text-left shadow-2xl dark:bg-card [scrollbar-width:thin] md:inset-x-3 md:bottom-3'
+      /* 底部留 48px 给「生成信息」按钮；外圈给可见描边，把卡片「框住」 */
+      className='absolute inset-x-2.5 bottom-12 z-30 flex max-h-[calc(100%-3.5rem)] flex-col overflow-y-auto rounded-2xl border border-[#E2E5EC] bg-white p-4 text-left shadow-[0_16px_40px_-16px_rgba(15,20,25,0.35)] [scrollbar-width:thin] md:inset-x-3 dark:border-border dark:bg-card'
       onClick={(event) => event.stopPropagation()}
     >
       <div className='flex shrink-0 items-center justify-between gap-2'>
