@@ -14,6 +14,7 @@
  * 不给用户点进去发现「没东西」的空按钮。
  */
 import { useQuery } from '@tanstack/react-query'
+import { Link } from '@tanstack/react-router'
 import {
   Cloud,
   Download,
@@ -29,6 +30,7 @@ import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
 import { runningHubWorkflowUrl } from '@/features/canvas/runninghub'
+import { BRIDGE_PAGE_PATH } from '@/features/comfyui-bridge/config'
 import { cn } from '@/lib/utils'
 
 import { getGalleryCreatePayload } from './api'
@@ -54,7 +56,7 @@ function buildComfyNodeUrl(galleryId: number): string {
 
 /** 把工作流 JSON 下载成文件，客户拖进 ComfyUI 即可 */
 function downloadWorkflow(title: string, workflowJson: string) {
-  const safe = (title || 'workflow').replace(/[\\/:*?"<>|]+/g, '_').slice(0, 60)
+  const safe = (title || 'workflow').replaceAll(/[\\/:*?"<>|]+/g, '_').slice(0, 60)
   const blob = new Blob([workflowJson], { type: 'application/json;charset=utf-8' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
@@ -148,19 +150,23 @@ export function CreateWithThis({ item }: { item: PromptGalleryItem }) {
         </span>
       </div>
 
-      {payloadQuery.isLoading ? (
+      {payloadQuery.isLoading && (
         <div className='flex items-center gap-2 py-2 text-xs text-muted-foreground'>
           <Loader2 className='size-3.5 animate-spin' />
           {t('Loading…')}
         </div>
-      ) : nothingToShow ? (
+      )}
+
+      {!payloadQuery.isLoading && nothingToShow && (
         <p className='text-xs text-muted-foreground'>
           {t(
             'This work has no reusable workflow or model info yet. You can still copy the prompt above.',
             { defaultValue: '这条作品暂未配置可复用的工作流/模型信息，可先复制上方的提示词使用。' }
           )}
         </p>
-      ) : (
+      )}
+
+      {!payloadQuery.isLoading && !nothingToShow && (
         <div className='space-y-3'>
           <div className='flex flex-wrap gap-2'>
             {showNode && (
@@ -201,9 +207,9 @@ export function CreateWithThis({ item }: { item: PromptGalleryItem }) {
                 {t('Models on netdisk', { defaultValue: '模型网盘下载' })}
               </div>
               <div className='flex flex-wrap gap-1.5'>
-                {netdiskSources.map((source, index) => (
+                {netdiskSources.map((source) => (
                   <a
-                    key={`${source.url}-${index}`}
+                    key={`${source.name}-${source.url}`}
                     href={source.url}
                     target='_blank'
                     rel='noopener noreferrer'
@@ -235,7 +241,13 @@ export function CreateWithThis({ item }: { item: PromptGalleryItem }) {
                   defaultValue:
                     '需本地 ComfyUI 已安装 ymm-bridge 节点，且已在 127.0.0.1:8188 启动。',
                 }
-              )}
+              )}{' '}
+              <Link
+                to={BRIDGE_PAGE_PATH}
+                className='font-medium text-primary hover:underline'
+              >
+                {t('Install guide', { defaultValue: '安装说明' })}
+              </Link>
             </p>
           )}
         </div>

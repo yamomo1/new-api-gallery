@@ -114,6 +114,13 @@ func DefaultConfig() *Config {
 				ChangeFreq:  "daily",
 				Priority:    0.9,
 			},
+			"/comfyui": {
+				Title:       "ComfyUI 插件 · 把画廊作品一键搬进本地 ComfyUI",
+				Description: "ymm-bridge 是 ComfyUI 自定义节点：在一幕AI 看到喜欢的作品，一键把工作流、模型与参数还原到你本地的 ComfyUI 并自动出图，不用手动下载模型、不用自己连线。",
+				Keywords:    "ComfyUI插件,ComfyUI自定义节点,ComfyUI一键生图,ComfyUI工作流,AI绘画本地部署,ComfyUI下载",
+				ChangeFreq:  "monthly",
+				Priority:    0.7,
+			},
 			"/pricing": {
 				Title:       "定价 · 按量计费，无会员门槛",
 				Description: "一幕AI 定价页：模型调用按量计费，价格与用量透明可查，支持支付宝/微信充值，无强制会员。",

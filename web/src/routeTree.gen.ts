@@ -31,6 +31,7 @@ import { Route as AuthenticatedChat2linkRouteImport } from './routes/_authentica
 import { Route as AuthenticatedMyCanvasesRouteImport } from './routes/_authenticated/my-canvases'
 import { Route as AuthenticatedSystemSettingsRouteRouteImport } from './routes/_authenticated/system-settings/route'
 import { Route as AboutIndexRouteImport } from './routes/about/index'
+import { Route as ComfyuiIndexRouteImport } from './routes/comfyui/index'
 import { Route as OauthProviderRouteImport } from './routes/oauth/$provider'
 import { Route as PricingIndexRouteImport } from './routes/pricing/index'
 import { Route as PromptGalleryIndexRouteImport } from './routes/prompt-gallery/index'
@@ -195,6 +196,11 @@ const AuthenticatedSystemSettingsRouteRoute =
 const AboutIndexRoute = AboutIndexRouteImport.update({
   id: '/about/',
   path: '/about/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ComfyuiIndexRoute = ComfyuiIndexRouteImport.update({
+  id: '/comfyui/',
+  path: '/comfyui/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OauthProviderRoute = OauthProviderRouteImport.update({
@@ -546,6 +552,7 @@ export interface FileRoutesByFullPath {
   '/oauth/$provider': typeof OauthProviderRoute
   '/prompt-gallery/$id': typeof PromptGalleryIdRoute
   '/about/': typeof AboutIndexRoute
+  '/comfyui/': typeof ComfyuiIndexRoute
   '/pricing/': typeof PricingIndexRoute
   '/prompt-gallery/': typeof PromptGalleryIndexRoute
   '/rankings/': typeof RankingsIndexRoute
@@ -623,6 +630,7 @@ export interface FileRoutesByTo {
   '/oauth/$provider': typeof OauthProviderRoute
   '/prompt-gallery/$id': typeof PromptGalleryIdRoute
   '/about': typeof AboutIndexRoute
+  '/comfyui': typeof ComfyuiIndexRoute
   '/pricing': typeof PricingIndexRoute
   '/prompt-gallery': typeof PromptGalleryIndexRoute
   '/rankings': typeof RankingsIndexRoute
@@ -704,6 +712,7 @@ export interface FileRoutesById {
   '/oauth/$provider': typeof OauthProviderRoute
   '/prompt-gallery/$id': typeof PromptGalleryIdRoute
   '/about/': typeof AboutIndexRoute
+  '/comfyui/': typeof ComfyuiIndexRoute
   '/pricing/': typeof PricingIndexRoute
   '/prompt-gallery/': typeof PromptGalleryIndexRoute
   '/rankings/': typeof RankingsIndexRoute
@@ -784,6 +793,7 @@ export interface FileRouteTypes {
     | '/oauth/$provider'
     | '/prompt-gallery/$id'
     | '/about/'
+    | '/comfyui/'
     | '/pricing/'
     | '/prompt-gallery/'
     | '/rankings/'
@@ -861,6 +871,7 @@ export interface FileRouteTypes {
     | '/oauth/$provider'
     | '/prompt-gallery/$id'
     | '/about'
+    | '/comfyui'
     | '/pricing'
     | '/prompt-gallery'
     | '/rankings'
@@ -941,6 +952,7 @@ export interface FileRouteTypes {
     | '/oauth/$provider'
     | '/prompt-gallery/$id'
     | '/about/'
+    | '/comfyui/'
     | '/pricing/'
     | '/prompt-gallery/'
     | '/rankings/'
@@ -1012,6 +1024,7 @@ export interface RootRouteChildren {
   OauthProviderRoute: typeof OauthProviderRoute
   PromptGalleryIdRoute: typeof PromptGalleryIdRoute
   AboutIndexRoute: typeof AboutIndexRoute
+  ComfyuiIndexRoute: typeof ComfyuiIndexRoute
   PricingIndexRoute: typeof PricingIndexRoute
   PromptGalleryIndexRoute: typeof PromptGalleryIndexRoute
   RankingsIndexRoute: typeof RankingsIndexRoute
@@ -1173,6 +1186,13 @@ declare module '@tanstack/react-router' {
       path: '/about'
       fullPath: '/about/'
       preLoaderRoute: typeof AboutIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/comfyui/': {
+      id: '/comfyui/'
+      path: '/comfyui'
+      fullPath: '/comfyui/'
+      preLoaderRoute: typeof ComfyuiIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/oauth/$provider': {
@@ -1761,6 +1781,7 @@ const rootRouteChildren: RootRouteChildren = {
   OauthProviderRoute: OauthProviderRoute,
   PromptGalleryIdRoute: PromptGalleryIdRoute,
   AboutIndexRoute: AboutIndexRoute,
+  ComfyuiIndexRoute: ComfyuiIndexRoute,
   PricingIndexRoute: PricingIndexRoute,
   PromptGalleryIndexRoute: PromptGalleryIndexRoute,
   RankingsIndexRoute: RankingsIndexRoute,
