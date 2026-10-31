@@ -20,6 +20,7 @@ import {
   getMyPromptGalleries,
   getPromptGalleryFacets,
   getPromptGalleryList,
+  likeGalleryComment,
   likePromptGallery,
   toggleGalleryAuthorFollow,
   togglePromptGalleryFavorite,
@@ -240,14 +241,30 @@ export type PromptGalleryFacetsData = PromptGalleryFacets
 // ----------------------------------------------------------------------------
 
 /** 评论列表（公开）；发表/删除后 invalidate 这份缓存与详情里的评论数 */
-export function useGalleryComments(galleryId: number) {
+export function useGalleryComments(
+  galleryId: number,
+  sort: 'latest' | 'popular' = 'latest'
+) {
   return useQuery({
-    queryKey: ['gallery-comments', galleryId],
+    queryKey: ['gallery-comments', galleryId, sort],
     queryFn: async () =>
-      requireServerSuccess(await getGalleryComments(galleryId, { limit: 50 }))
-        .data,
+      requireServerSuccess(
+        await getGalleryComments(galleryId, { limit: 50, sort })
+      ).data,
     staleTime: 30 * 1000,
     enabled: galleryId > 0,
+  })
+}
+
+/** 评论点赞：只更新数字，不整页刷新 */
+export function useLikeGalleryComment(galleryId: number) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (commentId: number) =>
+      requireServerSuccess(await likeGalleryComment(commentId)).data,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['gallery-comments', galleryId] })
+    },
   })
 }
 

@@ -34,8 +34,8 @@ export function MetaSection({
         className
       )}
     >
-      <div className='flex items-center justify-between gap-2 border-b border-white px-[9px] pt-2 pb-1.5 dark:border-border/40'>
-        <h3 className='text-[14px] font-medium text-foreground/90'>{title}</h3>
+      <div className='flex items-center justify-between gap-2 border-b border-white px-3 pt-2.5 pb-2 dark:border-border/40'>
+        <h3 className='text-[15px] font-semibold text-foreground/90'>{title}</h3>
         {action}
       </div>
       <div>{children}</div>
@@ -56,10 +56,10 @@ export function KeyValueRow({
 }) {
   return (
     <div className='flex border-b border-white last:border-b-0 dark:border-border/40'>
-      <div className='w-[92px] shrink-0 border-r border-white px-[9px] py-[5px] text-[12px] leading-relaxed text-muted-foreground dark:border-border/40'>
+      <div className='w-[96px] shrink-0 border-r border-white px-3 py-2 text-[13px] leading-relaxed text-muted-foreground dark:border-border/40'>
         {label}
       </div>
-      <div className='min-w-0 flex-1 px-[9px] py-[5px] text-[12px] leading-relaxed break-words text-foreground/85'>
+      <div className='min-w-0 flex-1 px-3 py-2 text-[13px] leading-relaxed break-words text-foreground/85'>
         {children}
       </div>
     </div>

@@ -7914,6 +7914,10 @@
     "Failed to comment": "Gửi thất bại, vui lòng thử lại",
     "{{count}} min ago": "{{count}} phút trước",
     "{{count}} h ago": "{{count}} giờ trước",
-    "{{count}} d ago": "{{count}} ngày trước"
+    "{{count}} d ago": "{{count}} ngày trước",
+    "Reply": "Trả lời",
+    "No more comments": "Không còn bình luận nào",
+    "Say something kind": "Hãy nói lời tử tế.",
+    "Discussion": "Thảo luận"
   }
 }

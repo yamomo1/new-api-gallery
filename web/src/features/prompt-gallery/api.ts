@@ -201,7 +201,7 @@ export async function getAdminPromptGalleries(
 /** 评论列表（公开，未登录也能读） */
 export async function getGalleryComments(
   galleryId: number,
-  params: { offset?: number; limit?: number } = {}
+  params: { offset?: number; limit?: number; sort?: 'latest' | 'popular' } = {}
 ): Promise<ApiEnvelope<GalleryCommentsResult>> {
   const res = await api.get(
     `/api/prompt-gallery/v1/prompts/${galleryId}/comments`,
@@ -227,5 +227,13 @@ export async function deleteGalleryComment(
   commentId: number
 ): Promise<ApiEnvelope<null>> {
   const res = await api.delete(`/api/prompt-gallery/v1/comments/${commentId}`)
+  return res.data
+}
+
+/** 评论点赞（公开，前端 localStorage 防重复） */
+export async function likeGalleryComment(
+  commentId: number
+): Promise<ApiEnvelope<{ likes: number }>> {
+  const res = await api.post(`/api/prompt-gallery/v1/comments/${commentId}/like`)
   return res.data
 }

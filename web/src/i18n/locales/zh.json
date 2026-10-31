@@ -7940,6 +7940,10 @@
     "Failed to comment": "评论失败，请重试",
     "{{count}} min ago": "{{count}} 分钟前",
     "{{count}} h ago": "{{count}} 小时前",
-    "{{count}} d ago": "{{count}} 天前"
+    "{{count}} d ago": "{{count}} 天前",
+    "Reply": "回复",
+    "No more comments": "暂时没有更多评论",
+    "Say something kind": "善语结善缘，恶言伤人心～",
+    "Discussion": "讨论"
   }
 }

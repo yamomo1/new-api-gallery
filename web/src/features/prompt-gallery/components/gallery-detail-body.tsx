@@ -158,7 +158,7 @@ export function GalleryDetailBody({
         </header>
 
         {/* 移动端把作者与操作提到标题下方，避免滚到底才能收藏 */}
-        <div className='mt-4 space-y-3 lg:hidden'>
+        <div className='mt-6 space-y-3 lg:hidden'>
           <AuthorCard
             authorId={item.author_id}
             author={item.author}
@@ -171,7 +171,7 @@ export function GalleryDetailBody({
           />
         </div>
 
-        <div className='mt-4'>
+        <div className='mt-5'>
           <MediaGallery
             item={item}
             media={media}
@@ -181,7 +181,7 @@ export function GalleryDetailBody({
         </div>
 
         {/* 提示词正文：参考站是图片下方直接铺开的正文，不再收进卡片 */}
-        <div className='mt-4'>
+        <div className='mt-6'>
           <p
             className={cn(
               'text-[14px] leading-[1.7] whitespace-pre-wrap text-[#0f1419] dark:text-foreground/90',
@@ -210,8 +210,8 @@ export function GalleryDetailBody({
         </div>
 
         {/* 使用教学：三步 + RunningHub 入口（本站补充，参考站无） */}
-        <section className='mt-6'>
-          <h2 className='mb-2 text-[14px] font-medium text-foreground'>
+        <section className='mt-10'>
+          <h2 className='mb-3 text-[16px] font-semibold text-foreground'>
             {t('How to use this prompt', { defaultValue: '使用教学' })}
           </h2>
           <ol className='space-y-1 text-[13px] leading-relaxed text-muted-foreground'>
@@ -247,12 +247,12 @@ export function GalleryDetailBody({
           </a>
         </section>
 
-        <div id='gallery-create-with-this' className='mt-6 scroll-mt-24'>
+        <div id='gallery-create-with-this' className='mt-10 scroll-mt-24'>
           <CreateWithThis item={item} />
         </div>
 
         {/* 评论：真接口；列表公开，发表与删除需登录 */}
-        <div className='mt-7'>
+        <div className='mt-14'>
           <CommentSection
             galleryId={item.id}
             initialCount={item.comment_count ?? 0}
@@ -263,9 +263,9 @@ export function GalleryDetailBody({
 
       {/* ── 右栏：作者 → 操作 → 认证信息 → 参数 → 许可 ── */}
       <aside
-        className={cn('space-y-2.5', variant === 'page' && 'lg:sticky lg:top-20')}
+        className={cn('space-y-3.5', variant === 'page' && 'lg:sticky lg:top-20')}
       >
-        <div className='hidden space-y-2.5 lg:block'>
+        <div className='hidden space-y-3.5 lg:block'>
           <AuthorCard
             authorId={item.author_id}
             author={item.author}
@@ -364,7 +364,7 @@ export function GalleryDetailBody({
       </div>
 
       {/* 作品展示：拉通整行，和上方内容同宽 */}
-      <div className='mt-10'>
+      <div className='mt-16'>
         <WorkGallery
           item={item}
           onSelect={onSelectRecommend}

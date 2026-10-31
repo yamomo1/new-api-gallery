@@ -7914,6 +7914,10 @@
     "Failed to comment": "Не удалось отправить, попробуйте ещё раз",
     "{{count}} min ago": "{{count}} мин назад",
     "{{count}} h ago": "{{count}} ч назад",
-    "{{count}} d ago": "{{count}} дн назад"
+    "{{count}} d ago": "{{count}} дн назад",
+    "Reply": "Ответить",
+    "No more comments": "Больше комментариев нет",
+    "Say something kind": "Пишите по-доброму.",
+    "Discussion": "Обсуждение"
   }
 }

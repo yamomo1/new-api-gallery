@@ -7914,6 +7914,10 @@
     "Failed to comment": "コメントできませんでした。再度お試しください",
     "{{count}} min ago": "{{count}} 分前",
     "{{count}} h ago": "{{count}} 時間前",
-    "{{count}} d ago": "{{count}} 日前"
+    "{{count}} d ago": "{{count}} 日前",
+    "Reply": "返信",
+    "No more comments": "これ以上のコメントはありません",
+    "Say something kind": "思いやりのある言葉を。",
+    "Discussion": "ディスカッション"
   }
 }

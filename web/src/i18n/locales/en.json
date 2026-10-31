@@ -7938,6 +7938,10 @@
     "Failed to comment": "Failed to post, please try again",
     "{{count}} min ago": "{{count}} min ago",
     "{{count}} h ago": "{{count}} h ago",
-    "{{count}} d ago": "{{count}} d ago"
+    "{{count}} d ago": "{{count}} d ago",
+    "Reply": "Reply",
+    "No more comments": "No more comments",
+    "Say something kind": "Be kind — words matter.",
+    "Discussion": "Discussion"
   }
 }

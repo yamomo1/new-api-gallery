@@ -7914,6 +7914,10 @@
     "Failed to comment": "Échec de l'envoi, veuillez réessayer",
     "{{count}} min ago": "il y a {{count}} min",
     "{{count}} h ago": "il y a {{count}} h",
-    "{{count}} d ago": "il y a {{count}} j"
+    "{{count}} d ago": "il y a {{count}} j",
+    "Reply": "Répondre",
+    "No more comments": "Aucun autre commentaire",
+    "Say something kind": "Un mot gentil fait toujours plaisir.",
+    "Discussion": "Discussion"
   }
 }

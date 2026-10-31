@@ -73,6 +73,7 @@ func SetApiRouter(router *gin.Engine) {
 			promptGalleryRoute.GET("/prompts/:id/comments", controller.GetGalleryComments)
 			promptGalleryRoute.POST("/prompts/:id/comments", middleware.UserAuth(), controller.CreateGalleryComment)
 			promptGalleryRoute.DELETE("/comments/:id", middleware.UserAuth(), controller.DeleteGalleryComment)
+			promptGalleryRoute.POST("/comments/:id/like", controller.LikeGalleryComment)
 			// 作者卡：公开统计 + 登录关注
 			promptGalleryRoute.GET("/authors/:id", controller.GetGalleryAuthor)
 			promptGalleryRoute.POST("/authors/:id/follow", middleware.UserAuth(), controller.ToggleGalleryAuthorFollow)

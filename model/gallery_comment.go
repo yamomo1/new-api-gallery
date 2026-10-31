@@ -23,6 +23,7 @@ type GalleryComment struct {
 	Username  string `json:"username" gorm:"type:varchar(64)"`
 	Content   string `json:"content" gorm:"type:varchar(500)"`
 	CreatedAt int64  `json:"created_at" gorm:"bigint;index"`
+	Likes     int    `json:"likes" gorm:"not null;default:0"`
 
 	// Badge 作者认证标签（现查 users.gallery_badge，不落库）
 	Badge string `json:"badge" gorm:"-"`
@@ -44,8 +45,8 @@ func CountGalleryComments(galleryId int64) int64 {
 	return total
 }
 
-// ListGalleryComments 分页取评论（新→旧）
-func ListGalleryComments(galleryId int64, offset, limit int) ([]GalleryComment, int64, error) {
+// ListGalleryComments 分页取评论；sort=popular 按点赞，其余按最新
+func ListGalleryComments(galleryId int64, offset, limit int, sort string) ([]GalleryComment, int64, error) {
 	if DB == nil || galleryId <= 0 {
 		return nil, 0, nil
 	}
@@ -59,9 +60,13 @@ func ListGalleryComments(galleryId int64, offset, limit int) ([]GalleryComment, 
 	if err := DB.Model(&GalleryComment{}).Where("gallery_id = ?", galleryId).Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
+	order := "id DESC"
+	if sort == "popular" {
+		order = "likes DESC, id DESC"
+	}
 	var items []GalleryComment
 	err := DB.Where("gallery_id = ?", galleryId).
-		Order("id DESC").
+		Order(order).
 		Offset(offset).
 		Limit(limit).
 		Find(&items).Error
@@ -144,4 +149,25 @@ func GetUserGalleryBadges(userIds []int) map[int]string {
 		result[r.Id] = r.GalleryBadge
 	}
 	return result
+}
+
+// LikeGalleryComment 评论点赞 +1，返回最新点赞数（前端用 localStorage 防重复点击）
+func LikeGalleryComment(commentId int64) (int, error) {
+	if DB == nil || commentId <= 0 {
+		return 0, gorm.ErrRecordNotFound
+	}
+	result := DB.Model(&GalleryComment{}).
+		Where("id = ?", commentId).
+		Update("likes", gorm.Expr("likes + 1"))
+	if result.Error != nil {
+		return 0, result.Error
+	}
+	if result.RowsAffected == 0 {
+		return 0, gorm.ErrRecordNotFound
+	}
+	var item GalleryComment
+	if err := DB.Select("likes").Where("id = ?", commentId).First(&item).Error; err != nil {
+		return 0, err
+	}
+	return item.Likes, nil
 }

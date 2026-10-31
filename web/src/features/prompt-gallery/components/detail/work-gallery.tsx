@@ -86,16 +86,16 @@ export function WorkGallery({
 
   return (
     <section>
-      <div className='mb-2.5 flex items-start justify-between gap-3'>
+      <div className='mb-4 flex items-start justify-between gap-3'>
         <div>
-          <h2 className='text-[15px] font-medium text-foreground'>
+          <h2 className='text-[17px] font-semibold text-foreground'>
             {t('Work showcase', { defaultValue: '作品展示' })}
-            <span className='ml-1 text-[13px] font-normal text-muted-foreground'>
+            <span className='ml-2 text-[14px] font-normal text-muted-foreground'>
               ({total})
             </span>
           </h2>
 
-          <div className='mt-2 flex items-center gap-2 text-[12.5px]'>
+          <div className='mt-3 flex items-center gap-3 text-[13px]'>
             {tabs.map((tab, i) => (
               <span key={tab.key} className='flex items-center gap-2'>
                 {i > 0 && <span className='text-border'>|</span>}
@@ -117,7 +117,7 @@ export function WorkGallery({
         </div>
 
         <DropdownMenu>
-          <DropdownMenuTrigger className='inline-flex h-8 shrink-0 items-center gap-1.5 rounded-lg border border-border/60 bg-card px-3 text-[13px] text-foreground/85 transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none'>
+          <DropdownMenuTrigger className='inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg bg-[#F4F5F9] px-4 text-[13px] text-foreground/85 transition-colors hover:bg-[#EEF0F5] focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none dark:bg-muted'>
             <ImagePlus className='size-4' />
             {t('Share your work', { defaultValue: '我要晒图' })}
           </DropdownMenuTrigger>

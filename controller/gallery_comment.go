@@ -19,8 +19,9 @@ func GetGalleryComments(c *gin.Context) {
 	}
 	offset, _ := strconv.Atoi(c.DefaultQuery("offset", "0"))
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
+	sort := c.DefaultQuery("sort", "latest")
 
-	items, total, err := model.ListGalleryComments(galleryId, offset, limit)
+	items, total, err := model.ListGalleryComments(galleryId, offset, limit, sort)
 	if err != nil {
 		common.ApiError(c, err)
 		return
@@ -97,4 +98,20 @@ func DeleteGalleryComment(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"success": true})
+}
+
+// LikeGalleryComment 评论点赞（公开，前端 localStorage 防重复）
+// POST /api/prompt-gallery/v1/comments/:id/like
+func LikeGalleryComment(c *gin.Context) {
+	commentId, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil || commentId <= 0 {
+		common.ApiErrorT(c, "Invalid comment id")
+		return
+	}
+	likes, err := model.LikeGalleryComment(commentId)
+	if err != nil {
+		common.ApiError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"success": true, "data": gin.H{"likes": likes}})
 }

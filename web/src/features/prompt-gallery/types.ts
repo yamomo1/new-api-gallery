@@ -175,6 +175,8 @@ export type GalleryComment = {
   username: string
   content: string
   created_at: number
+  /** 点赞数 */
+  likes: number
   /** 评论者认证标签 */
   badge: string
   /** 当前登录者能否删除（本人或管理员） */
