@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { FolderOpen, Plus, Share2, Sparkles, Star } from 'lucide-react'
 import { toast } from 'sonner'
 
-import { PublicLayout } from '@/components/layout'
+import { GalleryLayout } from './components/gallery-layout'
 import { PageTransition } from '@/components/page-transition'
 import { Button } from '@/components/ui/button'
 import { canvasStudioNewUrl } from '@/features/canvas/studio'
@@ -229,7 +229,7 @@ export function PromptGallery() {
   const isLoading = listQuery.isLoading && allItems.length === 0
 
   return (
-    <PublicLayout showMainContainer={false}>
+    <GalleryLayout>
       <PageTransition>
         <div className='container px-4 pb-16 pt-24 md:px-6'>
           {/* 页头（对标参考站：徽标 + 标题 + 副标题 + 操作按钮组） */}
@@ -345,7 +345,7 @@ export function PromptGallery() {
           )}
         </div>
       </PageTransition>
-    </PublicLayout>
+    </GalleryLayout>
   )
 }
 

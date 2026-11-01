@@ -141,6 +141,13 @@ For commercial licensing, please contact support@quantumnous.com
   --border: oklch(0.93 0 0);
   --input: oklch(0.93 0 0);
   --ring: oklch(0.708 0.16 249.003);
+  /* 二开：记忆规范 .ymm-dd / 磨砂面板共用令牌（只放与色板无关的量，
+     凡依赖 --primary 的派生色一律在组件处 color-mix 现算 —— 强调色预设挂在
+     <body data-theme-preset>，在这一层预计算会拿到 :root 的旧值）。 */
+  --shadow-sm: 0 1px 2px rgba(24, 24, 27, 0.05);
+  --shadow: 0 1px 2px rgba(24, 24, 27, 0.04), 0 10px 28px -14px rgba(24, 24, 27, 0.16);
+  --dur: 200ms;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
   --chart-1: oklch(0.72 0.18 250);
   --chart-2: oklch(0.65 0.15 200);
   --chart-3: oklch(0.7 0.12 280);
@@ -223,6 +230,9 @@ For commercial licensing, please contact support@quantumnous.com
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 17%);
   --ring: oklch(0.554 0.148 250.726);
+  /* 二开：记忆规范控件令牌（暗色）—— 阴影加深，派生色同样在组件处现算 */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.45), 0 12px 32px -14px rgba(0, 0, 0, 0.7);
   --chart-1: oklch(0.76 0.14 250);
   --chart-2: oklch(0.76 0.13 200);
   --chart-3: oklch(0.76 0.13 285);

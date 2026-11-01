@@ -40,6 +40,7 @@ const defaultSiteSettings: SiteSettings = {
   SidebarModulesAdmin: '',
   ThemePreset: '',
   NavCustomLinks: '',
+  GalleryModelCatalog: '',
 }
 
 export function SiteSettings() {

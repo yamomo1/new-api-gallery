@@ -34,6 +34,8 @@ import { ThemeProvider } from './context/theme-provider'
 import { bootstrapI18n } from './i18n/config'
 // Generated Routes
 import { routeTree } from './routeTree.gen'
+// Dev-only：组件标注叠加层（生产构建会被 tree-shake 剔除，零运行时侵入）
+import { mountComponentLabels } from './dev/ComponentLabels'
 
 // Styles
 import './styles/index.css'
@@ -129,3 +131,8 @@ function renderApp() {
 // 等当前语言的词条到位再渲染：语言包是按需 import 的（见 i18n/config.ts），
 // 提前渲染会先闪一眼英文。失败也要渲染，不能因为语言包卡住整站。
 void bootstrapI18n().finally(renderApp)
+
+// 仅开发环境挂载组件标注叠加层（DEV 为 false 时该分支被剔除，模块不会被打包进生产）
+if (import.meta.env.DEV) {
+  mountComponentLabels()
+}

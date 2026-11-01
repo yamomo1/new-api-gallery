@@ -179,6 +179,9 @@ export function resolveNavIcon(name?: string): LucideIcon {
 function isValidLink(link: unknown): link is CustomNavLink {
   if (!link || typeof link !== 'object') return false
   const l = link as Record<string, unknown>
+  // v2 配置里内置项也带 url（后台可覆盖地址），这里必须排除，
+  // 否则控制台侧边栏会把「首页 / 控制台」等内置项重复追加一遍。
+  if (l.kind === 'builtin') return false
   return typeof l.url === 'string' && l.url.trim() !== ''
 }
 

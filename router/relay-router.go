@@ -95,8 +95,21 @@ func SetRelayRouter(router *gin.Engine) {
 	translateTestRouter.Use(middleware.GalleryTranslateModel())
 	translateTestRouter.Use(middleware.Distribute())
 	{
-		translateTestRouter.POST("/translate/test", controller.TestGalleryTranslate)
-	}
+	translateTestRouter.POST("/translate/test", controller.TestGalleryTranslate)
+}
+// 站内创作页的文生图 / 图生图（二开新增）
+//
+// 与 /pg/chat/completions 同构：UserAuth() 认登录会话，Distribute() 选渠道。
+// 路径必须挂在 /pg 下 —— GenRelayInfo 靠这个前缀判定 IsPlayground
+//（跳过令牌预扣、按用户额度计费），且 Relay() 内部会重算 relayInfo。
+imagePlaygroundRouter := router.Group("/pg")
+imagePlaygroundRouter.Use(middleware.RouteTag("relay"))
+imagePlaygroundRouter.Use(middleware.SystemPerformanceCheck())
+imagePlaygroundRouter.Use(middleware.UserAuth())
+imagePlaygroundRouter.Use(middleware.Distribute())
+{
+	imagePlaygroundRouter.POST("/images/generations", controller.PlaygroundImage)
+}
 	relayV1Router := router.Group("/v1")
 	relayV1Router.Use(middleware.RouteTag("relay"))
 	relayV1Router.Use(middleware.SystemPerformanceCheck())

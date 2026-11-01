@@ -121,6 +121,20 @@ func DefaultConfig() *Config {
 				ChangeFreq:  "monthly",
 				Priority:    0.7,
 			},
+			"/ai-tool/image-generator": {
+				Title:       "图片创作 · 一句话生成图片，支持风格模型与参考图",
+				Description: "一幕AI 图片生成：输入描述即可出图，可上传参考图做局部编辑与风格迁移，支持多模型、比例与批量张数选择。",
+				Keywords:    "AI图片生成,文生图,图生图,AI绘画,风格模型,参考图生图",
+				ChangeFreq:  "weekly",
+				Priority:    0.8,
+			},
+			"/ai-tool/video-generator": {
+				Title:       "视频创作 · 图片视频音频自由组合生成视频",
+				Description: "一幕AI 视频生成：输入画面描述，支持 @ 图片、视频、音频组合驱动，可选比例、分辨率、时长与配音，一键生成短视频。",
+				Keywords:    "AI视频生成,图生视频,文生视频,首尾帧,配音视频,短视频生成",
+				ChangeFreq:  "weekly",
+				Priority:    0.8,
+			},
 			"/pricing": {
 				Title:       "定价 · 按量计费，无会员门槛",
 				Description: "一幕AI 定价页：模型调用按量计费，价格与用量透明可查，支持支付宝/微信充值，无强制会员。",

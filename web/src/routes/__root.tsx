@@ -29,6 +29,7 @@ import { SiteFooter } from '@/features/gallery-home/footer'
 import { NavigationProgress } from '@/components/navigation-progress'
 import { SeoRouteSync } from '@/components/seo-route-sync'
 import { Toaster } from '@/components/ui/sonner'
+import { SignInDialog } from '@/features/auth/sign-in-dialog'
 import { ThemeCustomizationProvider } from '@/context/theme-customization-provider'
 import { saveAffiliateCode } from '@/features/auth/lib/storage'
 import { GeneralError } from '@/features/errors/general-error'
@@ -99,6 +100,8 @@ function RootComponent() {
       <Outlet />
       {/* 二开：全站备案信息条（每个页面底部都显示，含电影感画廊首页） */}
       <SiteFooter />
+      {/* 二开：弹窗式登录宿主（任意页面 openSignInDialog() 即可唤起） */}
+      <SignInDialog />
       <Toaster closeButton duration={5000} position='top-center' richColors />
     </ThemeCustomizationProvider>
   )

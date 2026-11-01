@@ -31,6 +31,7 @@ var knownSpaSegments = map[string]bool{
 	"401": true, "403": true, "404": true, "500": true, "503": true,
 	"chat2link": true, "my-canvases": true, "system-settings": true,
 	"about": true, "pricing": true, "prompt-gallery": true, "comfyui": true,
+	"ai-tool": true,
 	"rankings": true, "setup": true, "user": true, "keys": true, "models": true,
 	"my-works": true, "playground": true, "profile": true, "profit": true,
 	"redemption-codes": true, "security": true, "subscriptions": true,

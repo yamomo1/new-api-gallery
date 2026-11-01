@@ -156,6 +156,7 @@ export type SiteSettings = {
   SidebarModulesAdmin: string
   ThemePreset: string
   NavCustomLinks: string
+  GalleryModelCatalog: string
 }
 
 export type AuthSettings = {

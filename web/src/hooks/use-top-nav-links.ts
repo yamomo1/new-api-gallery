@@ -17,12 +17,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 import { useMemo } from 'react'
-import { useTranslation } from 'react-i18next'
 
-import { useStatus } from '@/hooks/use-status'
-import { parseHeaderNavModulesFromStatus } from '@/lib/nav-modules'
-import { useAuthStore } from '@/stores/auth-store'
-import { useNavCustomLinks } from '@/hooks/use-nav-custom-links'
+import { useNavConfig } from '@/hooks/use-nav-config'
 
 export type TopNavLink = {
   title: string
@@ -33,77 +29,25 @@ export type TopNavLink = {
 }
 
 /**
- * Generate top navigation links based on HeaderNavModules configuration from backend /api/status
- * Backend format example (stringified JSON):
- * {
- *   home: true,
- *   console: true,
- *   pricing: { enabled: true, requireAuth: false },
- *   rankings: { enabled: true, requireAuth: false },
- *   docs: true,
- *   about: true
- * }
+ * 顶部导航链接。
+ *
+ * 二开改造后，顺序 / 显示名 / 图标 / 地址 / 是否显示全部由后台
+ * 「站点设置 → 导航链接」维护（Option `NavCustomLinks`，v2 结构），
+ * 本 Hook 只做「配置 → 渲染数据」的解析：
+ * - `enabled:false` → 不出现
+ * - 后台模块开关（HeaderNavModules）关闭 → 不出现
+ * - `requireAuth` 且未登录 → 不出现
  */
 export function useTopNavLinks(): TopNavLink[] {
-  const { t } = useTranslation()
-  const { status } = useStatus()
-  const { auth } = useAuthStore()
-
-  // Parse HeaderNavModules
-  const modules = useMemo(() => {
-    return parseHeaderNavModulesFromStatus(
-      status as Record<string, unknown> | null
-    )
-  }, [status])
-
-  // Documentation link (may be external)
-  const docsLink: string | undefined = status?.docs_link as string | undefined
-
-  const isAuthed = !!auth?.user
-
-  const links: TopNavLink[] = []
-
-  // Home
-  if (modules?.home !== false) {
-    links.push({ title: t('Home'), href: '/' })
-  }
-
-  // Console -> /dashboard (new console path)
-  if (modules?.console !== false) {
-    links.push({ title: t('Console'), href: '/dashboard' })
-  }
-
-  // Pricing
-  const pricing = modules?.pricing
-  if (pricing && typeof pricing === 'object' && pricing.enabled) {
-    const requiresAuth = pricing.requireAuth && !isAuthed
-    links.push({ title: t('Model Square'), href: '/pricing', requiresAuth })
-  }
-
-  // Rankings
-  const rankings = modules?.rankings
-  if (rankings && typeof rankings === 'object' && rankings.enabled) {
-    const requiresAuth = rankings.requireAuth && !isAuthed
-    links.push({ title: t('Rankings'), href: '/rankings', requiresAuth })
-  }
-
-  // Docs (supports external links)
-  if (modules?.docs !== false) {
-    if (docsLink) {
-      links.push({ title: t('Docs'), href: docsLink, external: true })
-    } else {
-      links.push({ title: t('Docs'), href: '/docs' })
-    }
-  }
-
-  // About
-  if (modules?.about !== false) {
-    links.push({ title: t('About'), href: '/about' })
-  }
-
-  // 二开：后台自定义链接（顶部导航）
-  const custom = useNavCustomLinks()
-  links.push(...custom.top)
-
-  return links
+  const { top } = useNavConfig()
+  return useMemo(
+    () =>
+      top.map((l) => ({
+        title: l.title,
+        href: l.href,
+        external: l.external,
+        requiresAuth: l.requiresAuth,
+      })),
+    [top]
+  )
 }

@@ -5,7 +5,7 @@ import { ChevronRight } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
-import { PublicLayout } from '@/components/layout'
+import { GalleryLayout } from './components/gallery-layout'
 import { PageTransition } from '@/components/page-transition'
 import { Skeleton } from '@/components/ui/skeleton'
 import { applySeoForPath, loadSeoConfig, setSeoOverride } from '@/lib/seo'
@@ -213,7 +213,7 @@ export function PromptGalleryDetailPage({ id }: { id: number }) {
   const notFound = detailQuery.isError || !Number.isFinite(id) || id <= 0
 
   return (
-    <PublicLayout showMainContainer={false}>
+    <GalleryLayout>
       <PageTransition>
         {/* 详情页铺纯白底（浅色模式按设计稿 #FFFFFF），深色模式跟随主题 */}
         <div className='min-h-svh bg-white pt-20 pb-16 dark:bg-background'>
@@ -298,7 +298,7 @@ export function PromptGalleryDetailPage({ id }: { id: number }) {
           </div>
         </div>
       </PageTransition>
-    </PublicLayout>
+    </GalleryLayout>
   )
 }
 

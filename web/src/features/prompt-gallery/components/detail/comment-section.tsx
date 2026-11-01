@@ -1,4 +1,3 @@
-import { useNavigate } from '@tanstack/react-router'
 import {
   Loader2,
   MessageSquare,
@@ -11,6 +10,7 @@ import { useMemo, useRef, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
+import { openSignInDialog } from '@/features/auth/sign-in-dialog'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/stores/auth-store'
 
@@ -72,7 +72,6 @@ export function CommentSection({
   compact?: boolean
 }) {
   const { t } = useTranslation()
-  const navigate = useNavigate()
   const isLoggedIn = useAuthStore((state) => Boolean(state.auth.user))
   const currentUser = useAuthStore((state) => state.auth.user)
 
@@ -95,7 +94,7 @@ export function CommentSection({
     .toUpperCase()
 
   const goSignIn = () => {
-    void navigate({ to: '/sign-in', search: { redirect: window.location.href } })
+    openSignInDialog()
   }
 
   const submit = () => {
@@ -168,8 +167,14 @@ export function CommentSection({
     )
   } else {
     listBody = (
-      <>
-        <ul className={cn('mt-8', compact ? 'space-y-5' : 'space-y-8')}>
+      <div
+        className={cn(
+          'mt-8 overflow-y-auto',
+          compact ? 'max-h-[360px]' : 'max-h-[560px]',
+          'pr-1.5'
+        )}
+      >
+        <ul className={cn(compact ? 'space-y-5' : 'space-y-8')}>
           {comments.map((comment) => {
             const canDelete =
               comment.is_mine || (currentUser?.id ?? 0) === comment.user_id
@@ -287,7 +292,7 @@ export function CommentSection({
         <p className='mt-10 text-center text-[13px] text-muted-foreground/60'>
           {t('No more comments', { defaultValue: '暂时没有更多评论' })}
         </p>
-      </>
+      </div>
     )
   }
 

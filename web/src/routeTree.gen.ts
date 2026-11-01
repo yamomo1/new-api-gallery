@@ -31,6 +31,8 @@ import { Route as AuthenticatedChat2linkRouteImport } from './routes/_authentica
 import { Route as AuthenticatedMyCanvasesRouteImport } from './routes/_authenticated/my-canvases'
 import { Route as AuthenticatedSystemSettingsRouteRouteImport } from './routes/_authenticated/system-settings/route'
 import { Route as AboutIndexRouteImport } from './routes/about/index'
+import { Route as AiToolImageGeneratorRouteImport } from './routes/ai-tool/image-generator'
+import { Route as AiToolVideoGeneratorRouteImport } from './routes/ai-tool/video-generator'
 import { Route as ComfyuiIndexRouteImport } from './routes/comfyui/index'
 import { Route as OauthProviderRouteImport } from './routes/oauth/$provider'
 import { Route as PricingIndexRouteImport } from './routes/pricing/index'
@@ -196,6 +198,16 @@ const AuthenticatedSystemSettingsRouteRoute =
 const AboutIndexRoute = AboutIndexRouteImport.update({
   id: '/about/',
   path: '/about/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AiToolImageGeneratorRoute = AiToolImageGeneratorRouteImport.update({
+  id: '/ai-tool/image-generator',
+  path: '/ai-tool/image-generator',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AiToolVideoGeneratorRoute = AiToolVideoGeneratorRouteImport.update({
+  id: '/ai-tool/video-generator',
+  path: '/ai-tool/video-generator',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ComfyuiIndexRoute = ComfyuiIndexRouteImport.update({
@@ -549,6 +561,8 @@ export interface FileRoutesByFullPath {
   '/503': typeof errors503Route
   '/chat2link': typeof AuthenticatedChat2linkRoute
   '/my-canvases': typeof AuthenticatedMyCanvasesRoute
+  '/ai-tool/image-generator': typeof AiToolImageGeneratorRoute
+  '/ai-tool/video-generator': typeof AiToolVideoGeneratorRoute
   '/oauth/$provider': typeof OauthProviderRoute
   '/prompt-gallery/$id': typeof PromptGalleryIdRoute
   '/about/': typeof AboutIndexRoute
@@ -627,6 +641,8 @@ export interface FileRoutesByTo {
   '/503': typeof errors503Route
   '/chat2link': typeof AuthenticatedChat2linkRoute
   '/my-canvases': typeof AuthenticatedMyCanvasesRoute
+  '/ai-tool/image-generator': typeof AiToolImageGeneratorRoute
+  '/ai-tool/video-generator': typeof AiToolVideoGeneratorRoute
   '/oauth/$provider': typeof OauthProviderRoute
   '/prompt-gallery/$id': typeof PromptGalleryIdRoute
   '/about': typeof AboutIndexRoute
@@ -709,6 +725,8 @@ export interface FileRoutesById {
   '/(errors)/503': typeof errors503Route
   '/_authenticated/chat2link': typeof AuthenticatedChat2linkRoute
   '/_authenticated/my-canvases': typeof AuthenticatedMyCanvasesRoute
+  '/ai-tool/image-generator': typeof AiToolImageGeneratorRoute
+  '/ai-tool/video-generator': typeof AiToolVideoGeneratorRoute
   '/oauth/$provider': typeof OauthProviderRoute
   '/prompt-gallery/$id': typeof PromptGalleryIdRoute
   '/about/': typeof AboutIndexRoute
@@ -790,6 +808,8 @@ export interface FileRouteTypes {
     | '/503'
     | '/chat2link'
     | '/my-canvases'
+    | '/ai-tool/image-generator'
+    | '/ai-tool/video-generator'
     | '/oauth/$provider'
     | '/prompt-gallery/$id'
     | '/about/'
@@ -868,6 +888,8 @@ export interface FileRouteTypes {
     | '/503'
     | '/chat2link'
     | '/my-canvases'
+    | '/ai-tool/image-generator'
+    | '/ai-tool/video-generator'
     | '/oauth/$provider'
     | '/prompt-gallery/$id'
     | '/about'
@@ -949,6 +971,8 @@ export interface FileRouteTypes {
     | '/(errors)/503'
     | '/_authenticated/chat2link'
     | '/_authenticated/my-canvases'
+    | '/ai-tool/image-generator'
+    | '/ai-tool/video-generator'
     | '/oauth/$provider'
     | '/prompt-gallery/$id'
     | '/about/'
@@ -1021,6 +1045,8 @@ export interface RootRouteChildren {
   errors404Route: typeof errors404Route
   errors500Route: typeof errors500Route
   errors503Route: typeof errors503Route
+  AiToolImageGeneratorRoute: typeof AiToolImageGeneratorRoute
+  AiToolVideoGeneratorRoute: typeof AiToolVideoGeneratorRoute
   OauthProviderRoute: typeof OauthProviderRoute
   PromptGalleryIdRoute: typeof PromptGalleryIdRoute
   AboutIndexRoute: typeof AboutIndexRoute
@@ -1186,6 +1212,20 @@ declare module '@tanstack/react-router' {
       path: '/about'
       fullPath: '/about/'
       preLoaderRoute: typeof AboutIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ai-tool/image-generator': {
+      id: '/ai-tool/image-generator'
+      path: '/ai-tool/image-generator'
+      fullPath: '/ai-tool/image-generator'
+      preLoaderRoute: typeof AiToolImageGeneratorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ai-tool/video-generator': {
+      id: '/ai-tool/video-generator'
+      path: '/ai-tool/video-generator'
+      fullPath: '/ai-tool/video-generator'
+      preLoaderRoute: typeof AiToolVideoGeneratorRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/comfyui/': {
@@ -1778,6 +1818,8 @@ const rootRouteChildren: RootRouteChildren = {
   errors404Route: errors404Route,
   errors500Route: errors500Route,
   errors503Route: errors503Route,
+  AiToolImageGeneratorRoute: AiToolImageGeneratorRoute,
+  AiToolVideoGeneratorRoute: AiToolVideoGeneratorRoute,
   OauthProviderRoute: OauthProviderRoute,
   PromptGalleryIdRoute: PromptGalleryIdRoute,
   AboutIndexRoute: AboutIndexRoute,

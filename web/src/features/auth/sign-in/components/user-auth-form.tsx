@@ -63,6 +63,9 @@ import { cn } from '@/lib/utils'
 export function UserAuthForm({
   className,
   redirectTo,
+  stayOnPage,
+  onSuccess,
+  hideWeChatEntry,
   ...props
 }: AuthFormProps) {
   const { t } = useTranslation()
@@ -111,7 +114,7 @@ export function UserAuthForm({
     isPasskeyLoading ||
     !passkeySupported ||
     (requiresLegalConsent && !agreedToLegal)
-  const hasWeChatLogin = Boolean(status?.wechat_login)
+  const hasWeChatLogin = Boolean(status?.wechat_login) && !hideWeChatEntry
   const hasOAuthLogin = Boolean(
     status?.github_oauth ||
     status?.discord_oauth ||
@@ -184,8 +187,9 @@ export function UserAuthForm({
 
       if (res.success) {
         form.setValue('password', '')
-        if (await handleLoginResult(res.data, redirectTo)) {
+        if (await handleLoginResult(res.data, redirectTo, stayOnPage)) {
           toast.success(t('Welcome back!'))
+          onSuccess?.()
         }
       } else {
         handleServerError(createServerError(res, loginFailedMessage))
@@ -225,8 +229,9 @@ export function UserAuthForm({
       const res = await wechatLoginByCode(wechatCode)
       if (res?.success) {
         handleWeChatDialogChange(false)
-        if (await handleLoginResult(res.data, redirectTo)) {
+        if (await handleLoginResult(res.data, redirectTo, stayOnPage)) {
           toast.success(t('Signed in via WeChat'))
+          onSuccess?.()
         }
       } else {
         handleServerError(createServerError(res, loginFailedMessage))
@@ -277,8 +282,9 @@ export function UserAuthForm({
       }
 
       rememberPasskeyRPID(passkey.rpID)
-      if (await handleLoginResult(finish.data, redirectTo)) {
+      if (await handleLoginResult(finish.data, redirectTo, stayOnPage)) {
         toast.success(t('Signed in with Passkey'))
+        onSuccess?.()
       }
     } catch (error: unknown) {
       if (controller.signal.aborted) return

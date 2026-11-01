@@ -223,4 +223,10 @@ export interface CustomOAuthProviderInfo {
 
 export interface AuthFormProps extends React.HTMLAttributes<HTMLFormElement> {
   redirectTo?: string
+  /** 登录成功后不跳页（弹窗式登录用），留在当前页并刷新登录态 */
+  stayOnPage?: boolean
+  /** 登录成功后的回调（弹窗用来自行关闭） */
+  onSuccess?: () => void
+  /** 隐藏表单里的「微信登录」入口（弹窗右栏已经单独展示微信扫码时用） */
+  hideWeChatEntry?: boolean
 }

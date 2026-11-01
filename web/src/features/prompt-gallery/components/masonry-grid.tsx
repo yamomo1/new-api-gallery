@@ -13,6 +13,8 @@ type MasonryGridProps<T> = {
   className?: string
   /** 卡片未挂载时的估算高度，仅用于首帧分列，随后会被真实高度覆盖 */
   estimateHeight?: number
+  /** 列间距 / 卡片间距（px），默认 24（MASONRY_GAP）；按需覆盖以匹配调用方原有间距 */
+  gap?: number
 }
 
 /**
@@ -39,6 +41,7 @@ export function MasonryGrid<T>({
   deps = [],
   className,
   estimateHeight = 240,
+  gap = MASONRY_GAP,
 }: MasonryGridProps<T>) {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const nodeMap = useRef(new Map<string | number, HTMLElement>())
@@ -71,7 +74,7 @@ export function MasonryGrid<T>({
           if (heights[c] < heights[target]) target = c
         }
         cols[target].push(item)
-        heights[target] += h + MASONRY_GAP
+        heights[target] += h + gap
       }
       // 内容没变就不触发重渲染，避免 ResizeObserver 抖动成死循环
       setBuckets((prev) => (isSameBuckets(prev, cols, getKey) ? prev : cols))
@@ -131,7 +134,7 @@ export function MasonryGrid<T>({
       ref={containerRef}
       className={className}
       data-masonry-columns={columns}
-      style={{ display: 'flex', alignItems: 'flex-start', gap: MASONRY_GAP }}
+      style={{ display: 'flex', alignItems: 'flex-start', gap }}
     >
       {buckets.map((col, ci) => (
         <div
@@ -143,7 +146,7 @@ export function MasonryGrid<T>({
             minWidth: 0,
             display: 'flex',
             flexDirection: 'column',
-            gap: MASONRY_GAP,
+            gap,
           }}
         >
           {col.map((item) => (

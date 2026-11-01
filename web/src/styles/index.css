@@ -46,6 +46,8 @@ For commercial licensing, please contact support@quantumnous.com
 
 @import './theme.css';
 @import './theme-presets.css';
+/* 二开：记忆规范的下拉 / 磨砂浮层组件类（.ymm-dd 体系） */
+@import './ymm-dd.css';
 
 @layer base {
   :root {

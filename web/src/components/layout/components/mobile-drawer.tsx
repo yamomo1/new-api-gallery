@@ -21,6 +21,7 @@ import { X, User, Wallet, LogOut, ShieldCheck } from 'lucide-react'
 import { AnimatePresence, motion, type Variants } from 'motion/react'
 import { useTranslation } from 'react-i18next'
 
+import { openSignInDialog } from '@/features/auth/sign-in-dialog'
 import { SignOutDialog } from '@/components/sign-out-dialog'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
@@ -174,7 +175,10 @@ function MobileSignInButton({ onNavigate }: MobileSignInButtonProps) {
       variant='secondary'
       size='sm'
       className='h-10 w-full'
-      render={<Link to='/sign-in' onClick={onNavigate} />}
+      onClick={() => {
+        onNavigate?.()
+        openSignInDialog()
+      }}
     >
       {t('Sign in')}
     </Button>

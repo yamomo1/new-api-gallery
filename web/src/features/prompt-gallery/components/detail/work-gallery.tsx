@@ -10,7 +10,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { useMediaQuery } from '@/hooks/use-media-query'
 import { requireServerSuccess } from '@/lib/server-error-message'
 import { resolveImageUrl } from '@/lib/storage'
 import { cn } from '@/lib/utils'
@@ -18,9 +17,7 @@ import { cn } from '@/lib/utils'
 import { getPromptGalleryList } from '../../api'
 import type { PromptGalleryItem, PromptGallerySort } from '../../types'
 import { isVideoUrl, parseGalleryMedia } from '../../utils'
-
-/** 固定列 key：避免用数组下标当 key（oxlint no-array-index-key） */
-const COLUMN_KEYS = ['c0', 'c1', 'c2', 'c3'] as const
+import { MasonryGrid } from '../masonry-grid'
 
 /**
  * 作品展示（对齐 liblib 模型页的 UGC 区）
@@ -55,25 +52,11 @@ export function WorkGallery({
     staleTime: 60 * 1000,
   })
 
-  // 窄屏 2 列、其余 4 列；自己分列而不用 CSS columns —— 卡片等高时浏览器会少排一列
-  const narrow = useMediaQuery('(max-width: 639px)')
-  const columnCount = narrow ? 2 : 4
-
   const works = useMemo(
     () => (data?.items ?? []).filter((it) => it.id !== item.id),
     [data, item.id]
   )
   const total = Math.max((data?.total ?? 0) - 1, works.length)
-
-  // 轮流分配到各列，保证第一屏四列都有内容
-  const columns = useMemo(() => {
-    const bucket: PromptGalleryItem[][] = Array.from(
-      { length: columnCount },
-      () => []
-    )
-    works.forEach((work, i) => bucket[i % columnCount].push(work))
-    return bucket
-  }, [works, columnCount])
 
   const goCreate = () => {
     void navigate({ to: '/my-works', search: { create: true } })
@@ -139,109 +122,109 @@ export function WorkGallery({
           {t('No works yet', { defaultValue: '暂无作品' })}
         </p>
       ) : (
-        // 瀑布流：每列独立竖排，图片保持原始比例，高度自然错落（对齐参考站的晒图墙）
-        <div className='flex items-start gap-2.5'>
-          {columns.map((column, ci) => (
-            <div
-              key={COLUMN_KEYS[ci]}
-              className='flex min-w-0 flex-1 flex-col gap-2.5'
-            >
-              {column.map((it) => {
-                const media = parseGalleryMedia(it)
-                const cover = resolveImageUrl(it.cover) || media[0]
-                const isVideo = cover ? isVideoUrl(cover) : false
+        // 真·瀑布流：复用 MasonryGrid，按「当前最矮列」贪心分配，列高自动平衡、
+        // 图片加载/悬浮展开时只推挤本列、绝不跨列闪跳（设计规范 §8.8）。
+        // gap 维持原 2.5(10px) 间距，卡片视觉样式完全不变。
+        <MasonryGrid
+          items={works}
+          getKey={(it) => it.id}
+          deps={[sort]}
+          gap={10}
+          estimateHeight={260}
+          renderItem={(it, _i, ref) => {
+            const media = parseGalleryMedia(it)
+            const cover = resolveImageUrl(it.cover) || media[0]
+            const isVideo = cover ? isVideoUrl(cover) : false
 
-                // 三种封面先算好，避免 JSX 里叠三元
-                let thumb = (
-                  <div className='flex aspect-[3/4] w-full items-center justify-center text-muted-foreground/40'>
-                    <Video className='size-6' />
+            // 三种封面先算好，避免 JSX 里叠三元
+            let thumb = (
+              <div className='flex aspect-[3/4] w-full items-center justify-center text-muted-foreground/40'>
+                <Video className='size-6' />
+              </div>
+            )
+            if (cover && isVideo) {
+              thumb = (
+                <div className='relative'>
+                  <video
+                    src={cover}
+                    muted
+                    loop
+                    playsInline
+                    preload='metadata'
+                    className='block w-full'
+                  />
+                  <span className='pointer-events-none absolute inset-0 flex items-center justify-center'>
+                    <span className='flex size-8 items-center justify-center rounded-full bg-black/45 text-white'>
+                      <Play className='size-3.5 fill-current' />
+                    </span>
+                  </span>
+                </div>
+              )
+            } else if (cover) {
+              thumb = (
+                <img
+                  src={cover}
+                  alt={it.title}
+                  loading='lazy'
+                  className='block min-h-[120px] w-full object-cover transition-opacity group-hover:opacity-90'
+                />
+              )
+            }
+
+            const initial = (it.author || '?').trim().slice(0, 1).toUpperCase()
+
+            return (
+              <div
+                ref={ref}
+                className='group relative overflow-hidden rounded-xl bg-muted transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_0_0_1px_rgba(15,20,25,0.06),0_22px_44px_-18px_rgba(15,20,25,0.45)]'
+              >
+                <a
+                  href={`/prompt-gallery/${it.id}`}
+                  title={it.title}
+                  onClick={(event) => {
+                    if (!onSelect) return
+                    event.preventDefault()
+                    onSelect(it.id)
+                  }}
+                  className='block'
+                >
+                  <span className='block overflow-hidden'>{thumb}</span>
+                </a>
+
+                {/* 悬浮信息层：底部渐变 + 作者/标题 + 做同款/点赞（对齐参考站） */}
+                <div className='pointer-events-none absolute inset-0 flex items-end justify-between gap-2 bg-gradient-to-t from-black/80 via-black/25 to-transparent p-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100'>
+                  <div className='flex min-w-0 items-center gap-2'>
+                    <span className='flex size-7 shrink-0 items-center justify-center rounded-full bg-white/25 text-[11px] font-medium text-white ring-1 ring-white/35 backdrop-blur-sm'>
+                      {initial}
+                    </span>
+                    <span className='line-clamp-1 text-[13px] font-medium text-white drop-shadow-sm'>
+                      {it.title}
+                    </span>
                   </div>
-                )
-                if (cover && isVideo) {
-                  thumb = (
-                    <div className='relative'>
-                      <video
-                        src={cover}
-                        muted
-                        loop
-                        playsInline
-                        preload='metadata'
-                        className='block w-full'
-                      />
-                      <span className='pointer-events-none absolute inset-0 flex items-center justify-center'>
-                        <span className='flex size-8 items-center justify-center rounded-full bg-black/45 text-white'>
-                          <Play className='size-3.5 fill-current' />
-                        </span>
-                      </span>
-                    </div>
-                  )
-                } else if (cover) {
-                  thumb = (
-                    <img
-                      src={cover}
-                      alt={it.title}
-                      loading='lazy'
-                      className='block min-h-[120px] w-full object-cover transition-opacity group-hover:opacity-90'
-                    />
-                  )
-                }
-
-                const initial = (it.author || '?').trim().slice(0, 1).toUpperCase()
-
-                return (
-                  <div
-                    key={it.id}
-                    className='group relative overflow-hidden rounded-xl bg-muted transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_0_0_1px_rgba(15,20,25,0.06),0_22px_44px_-18px_rgba(15,20,25,0.45)]'
-                  >
-                    <a
-                      href={`/prompt-gallery/${it.id}`}
-                      title={it.title}
+                  <div className='flex shrink-0 items-center gap-1.5'>
+                    <button
+                      type='button'
                       onClick={(event) => {
-                        if (!onSelect) return
                         event.preventDefault()
-                        onSelect(it.id)
+                        event.stopPropagation()
+                        if (onOpenCreate) onOpenCreate(it.id)
+                        else onSelect?.(it.id)
                       }}
-                      className='block'
+                      className='pointer-events-auto inline-flex h-7 items-center gap-1 rounded-full bg-black/40 px-2.5 text-[12px] text-white ring-1 ring-white/25 backdrop-blur-sm transition-colors hover:bg-black/55'
                     >
-                      <span className='block overflow-hidden'>{thumb}</span>
-                    </a>
-
-                    {/* 悬浮信息层：底部渐变 + 作者/标题 + 做同款/点赞（对齐参考站） */}
-                    <div className='pointer-events-none absolute inset-0 flex items-end justify-between gap-2 bg-gradient-to-t from-black/80 via-black/25 to-transparent p-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100'>
-                      <div className='flex min-w-0 items-center gap-2'>
-                        <span className='flex size-7 shrink-0 items-center justify-center rounded-full bg-white/25 text-[11px] font-medium text-white ring-1 ring-white/35 backdrop-blur-sm'>
-                          {initial}
-                        </span>
-                        <span className='line-clamp-1 text-[13px] font-medium text-white drop-shadow-sm'>
-                          {it.title}
-                        </span>
-                      </div>
-                      <div className='flex shrink-0 items-center gap-1.5'>
-                        <button
-                          type='button'
-                          onClick={(event) => {
-                            event.preventDefault()
-                            event.stopPropagation()
-                            if (onOpenCreate) onOpenCreate(it.id)
-                            else onSelect?.(it.id)
-                          }}
-                          className='pointer-events-auto inline-flex h-7 items-center gap-1 rounded-full bg-black/40 px-2.5 text-[12px] text-white ring-1 ring-white/25 backdrop-blur-sm transition-colors hover:bg-black/55'
-                        >
-                          <Wand2 className='size-3.5' />
-                          {t('Create the same', { defaultValue: '做同款' })}
-                        </button>
-                        <span className='inline-flex h-7 items-center gap-1 rounded-full bg-black/40 px-2.5 text-[12px] text-white ring-1 ring-white/25 backdrop-blur-sm'>
-                          <Heart className='size-3.5' />
-                          {it.likes}
-                        </span>
-                      </div>
-                    </div>
+                      <Wand2 className='size-3.5' />
+                      {t('Create the same', { defaultValue: '做同款' })}
+                    </button>
+                    <span className='inline-flex h-7 items-center gap-1 rounded-full bg-black/40 px-2.5 text-[12px] text-white ring-1 ring-white/25 backdrop-blur-sm'>
+                      <Heart className='size-3.5' />
+                      {it.likes}
+                    </span>
                   </div>
-                )
-              })}
-            </div>
-          ))}
-        </div>
+                </div>
+              </div>
+            )
+          }}
+        />
       )}
     </section>
   )

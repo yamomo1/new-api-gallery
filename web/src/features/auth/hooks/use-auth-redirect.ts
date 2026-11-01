@@ -52,7 +52,7 @@ export function useAuthRedirect() {
    * @param redirectTo - Redirect path after login
    */
   const handleLoginSuccess = useCallback(
-    async (bundle: AuthBundle, redirectTo?: string) => {
+    async (bundle: AuthBundle, redirectTo?: string, stayOnPage?: boolean) => {
       if (
         !mounted.current ||
         useAuthStore.getState().auth.session?.sid !== sessionID
@@ -65,6 +65,9 @@ export function useAuthRedirect() {
         await changeLanguageWithBundle(savedLang)
       }
 
+      // 弹窗式登录：只刷新登录态，不打断当前浏览
+      if (stayOnPage) return
+
       const targetPath =
         sanitizeAuthRedirect(redirectTo, window.location.origin) ?? '/dashboard'
       await navigate({ href: targetPath, replace: true })
@@ -76,7 +79,11 @@ export function useAuthRedirect() {
    * Every primary login transport returns the same bundle-or-challenge contract.
    */
   const handleLoginResult = useCallback(
-    async (result: unknown, redirectTo?: string): Promise<boolean> => {
+    async (
+      result: unknown,
+      redirectTo?: string,
+      stayOnPage?: boolean
+    ): Promise<boolean> => {
       if (
         !mounted.current ||
         useAuthStore.getState().auth.session?.sid !== sessionID
@@ -84,7 +91,7 @@ export function useAuthRedirect() {
         return false
       }
       if (isAuthBundle(result)) {
-        await handleLoginSuccess(result, redirectTo)
+        await handleLoginSuccess(result, redirectTo, stayOnPage)
         return true
       }
       if (!isLoginChallenge(result)) {

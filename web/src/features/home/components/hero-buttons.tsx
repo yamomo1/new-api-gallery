@@ -20,6 +20,7 @@ import { Link } from '@tanstack/react-router'
 import { ArrowRight } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
+import { openSignInDialog } from '@/features/auth/sign-in-dialog'
 import { Button } from '@/components/ui/button'
 
 interface HeroButtonsProps {
@@ -45,7 +46,7 @@ export function HeroButtons({ isAuthenticated }: HeroButtonsProps) {
         {t('Get Started')}
         <ArrowRight className='ml-2 h-5 w-5' />
       </Button>
-      <Button size='lg' variant='outline' render={<Link to='/sign-in' />}>
+      <Button size='lg' variant='outline' onClick={openSignInDialog}>
         {t('Sign In')}
       </Button>
     </>

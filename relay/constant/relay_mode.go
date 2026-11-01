@@ -70,6 +70,14 @@ func Path2RelayMode(path string) int {
 		relayMode = RelayModeImagesGenerations
 	} else if strings.HasPrefix(path, "/v1/images/edits") {
 		relayMode = RelayModeImagesEdits
+		// 二开：站内创作页的图生图/文生图走 /pg 前缀（登录态，无 API 令牌），
+		// 与上方 /pg/chat/completions 一个道理 —— 路径决定了 IsPlayground 语义，
+		// 这里不认的话 relayMode 会落到 Unknown，Relay 会按普通聊天请求处理，
+		// 于是报 invalid request type, expected dto.GeneralOpenAIRequest。
+	} else if strings.HasPrefix(path, "/pg/images/generations") {
+		relayMode = RelayModeImagesGenerations
+	} else if strings.HasPrefix(path, "/pg/images/edits") {
+		relayMode = RelayModeImagesEdits
 	} else if strings.HasPrefix(path, "/v1/edits") {
 		relayMode = RelayModeEdits
 	} else if strings.HasPrefix(path, "/v1/responses/compact") {

@@ -30,10 +30,15 @@ import type { SiteSettings } from '../types'
 import { createSectionRegistry } from '../utils/section-registry'
 import { ThemeAppearanceSection } from './theme-appearance-section'
 import { NavigationLinksSection } from './navigation-links-section'
+import { ModelCatalogSection } from './model-catalog-section'
 import {
-  parseNavCustomLinks,
-  serializeNavCustomLinks,
-} from '@/lib/nav-custom-links'
+  parseModelCatalog,
+  serializeModelCatalog,
+} from '@/lib/model-catalog'
+import {
+  parseNavConfig,
+  serializeNavConfig,
+} from '@/lib/nav-config'
 
 const SITE_SECTIONS = [
   {
@@ -108,10 +113,20 @@ const SITE_SECTIONS = [
     id: 'navigation-links',
     titleKey: 'Navigation links',
     build: (settings: SiteSettings) => {
-      const linksConfig = parseNavCustomLinks(settings.NavCustomLinks)
-      const linksSerialized = serializeNavCustomLinks(linksConfig)
+      const linksConfig = parseNavConfig(settings.NavCustomLinks)
+      const linksSerialized = serializeNavConfig(linksConfig)
       return (
         <NavigationLinksSection initialSerialized={linksSerialized} />
+      )
+    },
+  },
+  {
+    id: 'model-catalog',
+    titleKey: 'Model settings',
+    build: (settings: SiteSettings) => {
+      const catalog = parseModelCatalog(settings.GalleryModelCatalog)
+      return (
+        <ModelCatalogSection initialSerialized={serializeModelCatalog(catalog)} />
       )
     },
   },

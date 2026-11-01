@@ -1,4 +1,3 @@
-import { useNavigate } from '@tanstack/react-router'
 import {
   BadgeCheck,
   Eye,
@@ -10,6 +9,7 @@ import {
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
+import { openSignInDialog } from '@/features/auth/sign-in-dialog'
 import { toIntlLocale } from '@/i18n/languages'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/stores/auth-store'
@@ -40,7 +40,6 @@ export function AuthorCard({
   badge?: string
 }) {
   const { t, i18n } = useTranslation()
-  const navigate = useNavigate()
   const isLoggedIn = useAuthStore((state) => Boolean(state.auth.user))
   const selfId = useAuthStore((state) => state.auth.user?.id)
   const { data } = useGalleryAuthor(authorId)
@@ -62,11 +61,8 @@ export function AuthorCard({
   const handleFollow = () => {
     if (!isLoggedIn) {
       toast(t('Sign in to follow this creator', { defaultValue: '登录后即可关注作者' }))
-      // 带上当前地址，登录后回到这条作品
-      void navigate({
-        to: '/sign-in',
-        search: { redirect: window.location.href },
-      })
+      // 弹窗式登录：不离开当前作品页
+      openSignInDialog()
       return
     }
     followMutation.mutate(authorId)

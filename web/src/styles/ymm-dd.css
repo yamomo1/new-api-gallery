@@ -1,0 +1,266 @@
+/*
+ * 自定义下拉 / 磨砂浮层 —— 记忆规范 DESIGN-SYSTEM-YMM §I 的 .ymm-dd 体系
+ * 真源：design-system/tokens.css（.ymm-dd / .ymm-glass-menu / .ymm-slider）
+ * 此处逐条对齐该规范，色值全部走 theme.css 里的派生令牌（--primary 系），
+ * 组件里不再手写任何十六进制强调色。
+ *
+ * 结构：
+ *   <div class="ymm-dd [open]">
+ *     <button class="ymm-dd-btn"><span class="ymm-dd-label">…</span><svg class="chev"/></button>
+ *     <div class="ymm-dd-menu ymm-glass-menu">
+ *       <button class="ymm-dd-item [selected]">…</button>
+ *     </div>
+ *   </div>
+ */
+
+/* 放进 components 层：本文件提供组件默认样式，页面可用 Tailwind 工具类覆盖个别微调。 */
+@layer components {
+  /* 组件内派生色：在组件元素上现算（不是 :root），这样 <body data-theme-preset>
+     换强调色时能拿到最新的 --primary；light/dark 只改透明度。 */
+  .ymm-dd,
+  .ymm-glass-menu {
+    --ymm-soft: color-mix(in oklch, var(--primary) 10%, transparent);
+    --ymm-ring: color-mix(in oklch, var(--primary) 35%, transparent);
+    --ymm-line-strong: color-mix(in oklch, var(--foreground) 16%, var(--border));
+    --ymm-track: color-mix(in oklch, var(--foreground) 8%, var(--card));
+  }
+
+  .dark .ymm-dd,
+  .dark .ymm-glass-menu {
+    --ymm-soft: color-mix(in oklch, var(--primary) 22%, transparent);
+    --ymm-ring: color-mix(in oklch, var(--primary) 45%, transparent);
+    --ymm-line-strong: color-mix(in oklch, var(--foreground) 22%, var(--border));
+    --ymm-track: color-mix(in oklch, var(--foreground) 14%, var(--card));
+  }
+  /* ── 触发器 ───────────────────────────────────────────────────────────── */
+  .ymm-dd {
+    position: relative;
+    display: inline-flex;
+    max-width: 100%;
+  }
+
+  .ymm-dd-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    height: 34px;
+    max-width: 100%;
+    padding: 0 13px;
+    font: inherit;
+    font-size: 13px;
+    line-height: 1;
+    color: var(--muted-foreground);
+    cursor: pointer;
+    background: color-mix(in srgb, var(--card) 82%, transparent);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    box-shadow: var(--shadow-sm);
+    transition:
+      color var(--dur) var(--ease),
+      border-color var(--dur) var(--ease),
+      box-shadow var(--dur) var(--ease),
+      background var(--dur) var(--ease);
+  }
+
+  .ymm-dd-btn:hover {
+    color: var(--foreground);
+    border-color: var(--ymm-line-strong);
+  }
+
+  /* 方形图标按钮（随机参数 / 单图标触发器） */
+  .ymm-dd-btn.ymm-dd-icon {
+    width: 34px;
+    padding: 0;
+    justify-content: center;
+  }
+
+  .ymm-dd-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+
+  .ymm-dd-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: left;
+  }
+
+  .ymm-dd .chev {
+    flex: none;
+    transition: transform var(--dur) var(--ease);
+  }
+
+  /* 打开态：主色描边 + 3px 聚焦环 + 箭头翻转 */
+  .ymm-dd.open > .ymm-dd-btn {
+    color: var(--foreground);
+    border-color: color-mix(in srgb, var(--primary) 40%, var(--border));
+    box-shadow:
+      0 0 0 3px var(--ymm-ring),
+      var(--shadow-sm);
+  }
+
+  .ymm-dd.open .chev {
+    transform: rotate(180deg);
+  }
+
+  /* ── 磨砂面板 ─────────────────────────────────────────────────────────── */
+  .ymm-glass-menu {
+    background: color-mix(in srgb, var(--card) 86%, transparent);
+    -webkit-backdrop-filter: blur(20px) saturate(1.4);
+    backdrop-filter: blur(20px) saturate(1.4);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 6px;
+    box-shadow:
+      0 4px 10px -4px rgb(0 0 0 / 12%),
+      0 20px 48px -16px rgb(0 0 0 / 32%);
+  }
+
+  /* ── 菜单 ─────────────────────────────────────────────────────────────── */
+  .ymm-dd-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    z-index: 60;
+    min-width: 150px;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(-8px) scale(0.95);
+    transform-origin: top;
+    transition:
+      opacity 0.22s var(--ease),
+      transform 0.22s var(--ease);
+  }
+
+  .ymm-dd.open > .ymm-dd-menu {
+    pointer-events: auto;
+    opacity: 1;
+    transform: none;
+  }
+
+  .ymm-dd-menu--start {
+    right: auto;
+    left: 0;
+    min-width: 100%;
+  }
+
+  .ymm-dd-menu--up {
+    top: auto;
+    bottom: calc(100% + 8px);
+    transform: translateY(8px) scale(0.95);
+    transform-origin: bottom;
+  }
+
+  .ymm-dd.open > .ymm-dd-menu--up {
+    transform: none;
+  }
+
+  .ymm-dd-menu--scroll {
+    max-height: 280px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  /* ── 菜单项 ───────────────────────────────────────────────────────────── */
+  .ymm-dd-item {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    width: 100%;
+    padding: 9px 12px;
+    font: inherit;
+    font-size: 13px;
+    text-align: left;
+    color: var(--muted-foreground);
+    cursor: pointer;
+    background: none;
+    border: 0;
+    border-radius: 9px;
+    transition:
+      background 0.14s,
+      color 0.14s,
+      transform 0.14s;
+  }
+
+  .ymm-dd-item:hover {
+    color: var(--primary);
+    background: var(--ymm-soft);
+    transform: translateX(2px);
+  }
+
+  .ymm-dd-item.selected {
+    font-weight: 600;
+    color: var(--primary);
+    background: var(--ymm-soft);
+  }
+
+  .ymm-dd-item.selected::after {
+    content: '✓';
+    margin-left: auto;
+    font-size: 12px;
+  }
+
+  /* ── 权重滑杆（.ymm-slider 简化版：粗方角轨道 + 凹槽阴影） ─────────────── */
+  input[type='range'].ymm-slider {
+    width: 100%;
+    height: 20px;
+    margin: 3px 0 2px;
+    cursor: pointer;
+    background: transparent;
+    -webkit-appearance: none;
+    appearance: none;
+    --fill: 50%;
+  }
+
+  input[type='range'].ymm-slider::-webkit-slider-runnable-track {
+    height: 8px;
+    background: linear-gradient(
+      90deg,
+      var(--primary) var(--fill),
+      var(--ymm-track) var(--fill)
+    );
+    border-radius: 4px;
+    box-shadow: inset 0 1px 3px rgb(0 0 0 / 18%);
+  }
+
+  input[type='range'].ymm-slider::-webkit-slider-thumb {
+    width: 14px;
+    height: 14px;
+    margin-top: -3px;
+    background: var(--card);
+    border: 2px solid var(--primary);
+    border-radius: 50%;
+    box-shadow: 0 0 0 3px var(--ymm-ring);
+    transition: box-shadow 0.18s var(--ease);
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  input[type='range'].ymm-slider:hover::-webkit-slider-thumb {
+    box-shadow: 0 0 0 5px var(--ymm-ring);
+  }
+
+  input[type='range'].ymm-slider::-moz-range-track {
+    height: 8px;
+    background: var(--ymm-track);
+    border-radius: 4px;
+  }
+
+  input[type='range'].ymm-slider::-moz-range-progress {
+    height: 8px;
+    background: var(--primary);
+    border-radius: 4px;
+  }
+
+  input[type='range'].ymm-slider::-moz-range-thumb {
+    width: 12px;
+    height: 12px;
+    background: var(--card);
+    border: 2px solid var(--primary);
+    border-radius: 50%;
+    box-shadow: 0 0 0 3px var(--ymm-ring);
+  }
+}
