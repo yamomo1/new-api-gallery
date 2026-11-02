@@ -80,6 +80,8 @@ import { Route as AuthenticatedSystemSettingsModelsIndexRouteImport } from './ro
 import { Route as AuthenticatedSystemSettingsModelsSectionRouteImport } from './routes/_authenticated/system-settings/models/$section'
 import { Route as AuthenticatedSystemSettingsOperationsIndexRouteImport } from './routes/_authenticated/system-settings/operations/index'
 import { Route as AuthenticatedSystemSettingsOperationsSectionRouteImport } from './routes/_authenticated/system-settings/operations/$section'
+import { Route as AuthenticatedSystemSettingsPricingIndexRouteImport } from './routes/_authenticated/system-settings/pricing/index'
+import { Route as AuthenticatedSystemSettingsPricingSectionRouteImport } from './routes/_authenticated/system-settings/pricing/$section'
 import { Route as AuthenticatedSystemSettingsRequestPoliciesIndexRouteImport } from './routes/_authenticated/system-settings/request-policies/index'
 import { Route as AuthenticatedSystemSettingsRequestPoliciesSectionRouteImport } from './routes/_authenticated/system-settings/request-policies/$section'
 import { Route as AuthenticatedSystemSettingsSecurityIndexRouteImport } from './routes/_authenticated/system-settings/security/index'
@@ -480,6 +482,18 @@ const AuthenticatedSystemSettingsOperationsSectionRoute =
     path: '/operations/$section',
     getParentRoute: () => AuthenticatedSystemSettingsRouteRoute,
   } as any)
+const AuthenticatedSystemSettingsPricingIndexRoute =
+  AuthenticatedSystemSettingsPricingIndexRouteImport.update({
+    id: '/pricing/',
+    path: '/pricing/',
+    getParentRoute: () => AuthenticatedSystemSettingsRouteRoute,
+  } as any)
+const AuthenticatedSystemSettingsPricingSectionRoute =
+  AuthenticatedSystemSettingsPricingSectionRouteImport.update({
+    id: '/pricing/$section',
+    path: '/pricing/$section',
+    getParentRoute: () => AuthenticatedSystemSettingsRouteRoute,
+  } as any)
 const AuthenticatedSystemSettingsRequestPoliciesIndexRoute =
   AuthenticatedSystemSettingsRequestPoliciesIndexRouteImport.update({
     id: '/request-policies/',
@@ -602,6 +616,7 @@ export interface FileRoutesByFullPath {
   '/system-settings/content/$section': typeof AuthenticatedSystemSettingsContentSectionRoute
   '/system-settings/models/$section': typeof AuthenticatedSystemSettingsModelsSectionRoute
   '/system-settings/operations/$section': typeof AuthenticatedSystemSettingsOperationsSectionRoute
+  '/system-settings/pricing/$section': typeof AuthenticatedSystemSettingsPricingSectionRoute
   '/system-settings/request-policies/$section': typeof AuthenticatedSystemSettingsRequestPoliciesSectionRoute
   '/system-settings/security/$section': typeof AuthenticatedSystemSettingsSecuritySectionRoute
   '/system-settings/site/$section': typeof AuthenticatedSystemSettingsSiteSectionRoute
@@ -614,6 +629,7 @@ export interface FileRoutesByFullPath {
   '/system-settings/gallery-presets/': typeof AuthenticatedSystemSettingsGalleryPresetsIndexRoute
   '/system-settings/models/': typeof AuthenticatedSystemSettingsModelsIndexRoute
   '/system-settings/operations/': typeof AuthenticatedSystemSettingsOperationsIndexRoute
+  '/system-settings/pricing/': typeof AuthenticatedSystemSettingsPricingIndexRoute
   '/system-settings/request-policies/': typeof AuthenticatedSystemSettingsRequestPoliciesIndexRoute
   '/system-settings/security/': typeof AuthenticatedSystemSettingsSecurityIndexRoute
   '/system-settings/seo/': typeof AuthenticatedSystemSettingsSeoIndexRoute
@@ -682,6 +698,7 @@ export interface FileRoutesByTo {
   '/system-settings/content/$section': typeof AuthenticatedSystemSettingsContentSectionRoute
   '/system-settings/models/$section': typeof AuthenticatedSystemSettingsModelsSectionRoute
   '/system-settings/operations/$section': typeof AuthenticatedSystemSettingsOperationsSectionRoute
+  '/system-settings/pricing/$section': typeof AuthenticatedSystemSettingsPricingSectionRoute
   '/system-settings/request-policies/$section': typeof AuthenticatedSystemSettingsRequestPoliciesSectionRoute
   '/system-settings/security/$section': typeof AuthenticatedSystemSettingsSecuritySectionRoute
   '/system-settings/site/$section': typeof AuthenticatedSystemSettingsSiteSectionRoute
@@ -694,6 +711,7 @@ export interface FileRoutesByTo {
   '/system-settings/gallery-presets': typeof AuthenticatedSystemSettingsGalleryPresetsIndexRoute
   '/system-settings/models': typeof AuthenticatedSystemSettingsModelsIndexRoute
   '/system-settings/operations': typeof AuthenticatedSystemSettingsOperationsIndexRoute
+  '/system-settings/pricing': typeof AuthenticatedSystemSettingsPricingIndexRoute
   '/system-settings/request-policies': typeof AuthenticatedSystemSettingsRequestPoliciesIndexRoute
   '/system-settings/security': typeof AuthenticatedSystemSettingsSecurityIndexRoute
   '/system-settings/seo': typeof AuthenticatedSystemSettingsSeoIndexRoute
@@ -766,6 +784,7 @@ export interface FileRoutesById {
   '/_authenticated/system-settings/content/$section': typeof AuthenticatedSystemSettingsContentSectionRoute
   '/_authenticated/system-settings/models/$section': typeof AuthenticatedSystemSettingsModelsSectionRoute
   '/_authenticated/system-settings/operations/$section': typeof AuthenticatedSystemSettingsOperationsSectionRoute
+  '/_authenticated/system-settings/pricing/$section': typeof AuthenticatedSystemSettingsPricingSectionRoute
   '/_authenticated/system-settings/request-policies/$section': typeof AuthenticatedSystemSettingsRequestPoliciesSectionRoute
   '/_authenticated/system-settings/security/$section': typeof AuthenticatedSystemSettingsSecuritySectionRoute
   '/_authenticated/system-settings/site/$section': typeof AuthenticatedSystemSettingsSiteSectionRoute
@@ -778,6 +797,7 @@ export interface FileRoutesById {
   '/_authenticated/system-settings/gallery-presets/': typeof AuthenticatedSystemSettingsGalleryPresetsIndexRoute
   '/_authenticated/system-settings/models/': typeof AuthenticatedSystemSettingsModelsIndexRoute
   '/_authenticated/system-settings/operations/': typeof AuthenticatedSystemSettingsOperationsIndexRoute
+  '/_authenticated/system-settings/pricing/': typeof AuthenticatedSystemSettingsPricingIndexRoute
   '/_authenticated/system-settings/request-policies/': typeof AuthenticatedSystemSettingsRequestPoliciesIndexRoute
   '/_authenticated/system-settings/security/': typeof AuthenticatedSystemSettingsSecurityIndexRoute
   '/_authenticated/system-settings/seo/': typeof AuthenticatedSystemSettingsSeoIndexRoute
@@ -849,6 +869,7 @@ export interface FileRouteTypes {
     | '/system-settings/content/$section'
     | '/system-settings/models/$section'
     | '/system-settings/operations/$section'
+    | '/system-settings/pricing/$section'
     | '/system-settings/request-policies/$section'
     | '/system-settings/security/$section'
     | '/system-settings/site/$section'
@@ -861,6 +882,7 @@ export interface FileRouteTypes {
     | '/system-settings/gallery-presets/'
     | '/system-settings/models/'
     | '/system-settings/operations/'
+    | '/system-settings/pricing/'
     | '/system-settings/request-policies/'
     | '/system-settings/security/'
     | '/system-settings/seo/'
@@ -929,6 +951,7 @@ export interface FileRouteTypes {
     | '/system-settings/content/$section'
     | '/system-settings/models/$section'
     | '/system-settings/operations/$section'
+    | '/system-settings/pricing/$section'
     | '/system-settings/request-policies/$section'
     | '/system-settings/security/$section'
     | '/system-settings/site/$section'
@@ -941,6 +964,7 @@ export interface FileRouteTypes {
     | '/system-settings/gallery-presets'
     | '/system-settings/models'
     | '/system-settings/operations'
+    | '/system-settings/pricing'
     | '/system-settings/request-policies'
     | '/system-settings/security'
     | '/system-settings/seo'
@@ -1012,6 +1036,7 @@ export interface FileRouteTypes {
     | '/_authenticated/system-settings/content/$section'
     | '/_authenticated/system-settings/models/$section'
     | '/_authenticated/system-settings/operations/$section'
+    | '/_authenticated/system-settings/pricing/$section'
     | '/_authenticated/system-settings/request-policies/$section'
     | '/_authenticated/system-settings/security/$section'
     | '/_authenticated/system-settings/site/$section'
@@ -1024,6 +1049,7 @@ export interface FileRouteTypes {
     | '/_authenticated/system-settings/gallery-presets/'
     | '/_authenticated/system-settings/models/'
     | '/_authenticated/system-settings/operations/'
+    | '/_authenticated/system-settings/pricing/'
     | '/_authenticated/system-settings/request-policies/'
     | '/_authenticated/system-settings/security/'
     | '/_authenticated/system-settings/seo/'
@@ -1557,6 +1583,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSystemSettingsOperationsSectionRouteImport
       parentRoute: typeof AuthenticatedSystemSettingsRouteRoute
     }
+    '/_authenticated/system-settings/pricing/': {
+      id: '/_authenticated/system-settings/pricing/'
+      path: '/pricing'
+      fullPath: '/system-settings/pricing/'
+      preLoaderRoute: typeof AuthenticatedSystemSettingsPricingIndexRouteImport
+      parentRoute: typeof AuthenticatedSystemSettingsRouteRoute
+    }
+    '/_authenticated/system-settings/pricing/$section': {
+      id: '/_authenticated/system-settings/pricing/$section'
+      path: '/pricing/$section'
+      fullPath: '/system-settings/pricing/$section'
+      preLoaderRoute: typeof AuthenticatedSystemSettingsPricingSectionRouteImport
+      parentRoute: typeof AuthenticatedSystemSettingsRouteRoute
+    }
     '/_authenticated/system-settings/request-policies/': {
       id: '/_authenticated/system-settings/request-policies/'
       path: '/request-policies'
@@ -1663,6 +1703,7 @@ interface AuthenticatedSystemSettingsRouteRouteChildren {
   AuthenticatedSystemSettingsContentSectionRoute: typeof AuthenticatedSystemSettingsContentSectionRoute
   AuthenticatedSystemSettingsModelsSectionRoute: typeof AuthenticatedSystemSettingsModelsSectionRoute
   AuthenticatedSystemSettingsOperationsSectionRoute: typeof AuthenticatedSystemSettingsOperationsSectionRoute
+  AuthenticatedSystemSettingsPricingSectionRoute: typeof AuthenticatedSystemSettingsPricingSectionRoute
   AuthenticatedSystemSettingsRequestPoliciesSectionRoute: typeof AuthenticatedSystemSettingsRequestPoliciesSectionRoute
   AuthenticatedSystemSettingsSecuritySectionRoute: typeof AuthenticatedSystemSettingsSecuritySectionRoute
   AuthenticatedSystemSettingsSiteSectionRoute: typeof AuthenticatedSystemSettingsSiteSectionRoute
@@ -1673,6 +1714,7 @@ interface AuthenticatedSystemSettingsRouteRouteChildren {
   AuthenticatedSystemSettingsGalleryPresetsIndexRoute: typeof AuthenticatedSystemSettingsGalleryPresetsIndexRoute
   AuthenticatedSystemSettingsModelsIndexRoute: typeof AuthenticatedSystemSettingsModelsIndexRoute
   AuthenticatedSystemSettingsOperationsIndexRoute: typeof AuthenticatedSystemSettingsOperationsIndexRoute
+  AuthenticatedSystemSettingsPricingIndexRoute: typeof AuthenticatedSystemSettingsPricingIndexRoute
   AuthenticatedSystemSettingsRequestPoliciesIndexRoute: typeof AuthenticatedSystemSettingsRequestPoliciesIndexRoute
   AuthenticatedSystemSettingsSecurityIndexRoute: typeof AuthenticatedSystemSettingsSecurityIndexRoute
   AuthenticatedSystemSettingsSeoIndexRoute: typeof AuthenticatedSystemSettingsSeoIndexRoute
@@ -1696,6 +1738,8 @@ const AuthenticatedSystemSettingsRouteRouteChildren: AuthenticatedSystemSettings
       AuthenticatedSystemSettingsModelsSectionRoute,
     AuthenticatedSystemSettingsOperationsSectionRoute:
       AuthenticatedSystemSettingsOperationsSectionRoute,
+    AuthenticatedSystemSettingsPricingSectionRoute:
+      AuthenticatedSystemSettingsPricingSectionRoute,
     AuthenticatedSystemSettingsRequestPoliciesSectionRoute:
       AuthenticatedSystemSettingsRequestPoliciesSectionRoute,
     AuthenticatedSystemSettingsSecuritySectionRoute:
@@ -1716,6 +1760,8 @@ const AuthenticatedSystemSettingsRouteRouteChildren: AuthenticatedSystemSettings
       AuthenticatedSystemSettingsModelsIndexRoute,
     AuthenticatedSystemSettingsOperationsIndexRoute:
       AuthenticatedSystemSettingsOperationsIndexRoute,
+    AuthenticatedSystemSettingsPricingIndexRoute:
+      AuthenticatedSystemSettingsPricingIndexRoute,
     AuthenticatedSystemSettingsRequestPoliciesIndexRoute:
       AuthenticatedSystemSettingsRequestPoliciesIndexRoute,
     AuthenticatedSystemSettingsSecurityIndexRoute:

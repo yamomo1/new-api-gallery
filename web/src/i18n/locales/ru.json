@@ -7956,6 +7956,11 @@
     "I have paid": "Я оплатил",
     "Scan the QR code with Alipay to finish payment": "Отсканируйте QR-код в Alipay, чтобы завершить оплату",
     "Payment successful, balance updated": "Оплата прошла успешно, баланс обновлён",
-    "Payment not confirmed yet, please try again in a moment": "Оплата ещё не подтверждена, повторите попытку чуть позже"
+    "Payment not confirmed yet, please try again in a moment": "Оплата ещё не подтверждена, повторите попытку чуть позже",
+    "Scale & currency": "Масштаб и валюта",
+    "Per-request pricing": "Цена за запрос",
+    "Top-up & grants": "Пополнение и начисления",
+    "Pre-consume & display": "Предсписание и отображение",
+    "Credit calculator": "Калькулятор кредитов"
   }
 }

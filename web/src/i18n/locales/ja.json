@@ -7956,6 +7956,11 @@
     "I have paid": "支払い済みです",
     "Scan the QR code with Alipay to finish payment": "Alipay で QR コードをスキャンして支払いを完了してください",
     "Payment successful, balance updated": "支払いが完了し、残高を更新しました",
-    "Payment not confirmed yet, please try again in a moment": "まだ入金を確認できません。しばらくしてから再度お試しください"
+    "Payment not confirmed yet, please try again in a moment": "まだ入金を確認できません。しばらくしてから再度お試しください",
+    "Scale & currency": "計価スケール",
+    "Per-request pricing": "従量課金",
+    "Top-up & grants": "チャージと付与",
+    "Pre-consume & display": "事前控除と表示",
+    "Credit calculator": "クレジット計算"
   }
 }

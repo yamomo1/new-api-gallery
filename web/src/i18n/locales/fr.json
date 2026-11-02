@@ -7956,6 +7956,11 @@
     "I have paid": "J'ai payé",
     "Scan the QR code with Alipay to finish payment": "Scannez le QR code avec Alipay pour finaliser le paiement",
     "Payment successful, balance updated": "Paiement réussi, solde mis à jour",
-    "Payment not confirmed yet, please try again in a moment": "Paiement pas encore confirmé, veuillez réessayer dans un instant"
+    "Payment not confirmed yet, please try again in a moment": "Paiement pas encore confirmé, veuillez réessayer dans un instant",
+    "Scale & currency": "Échelle et devise",
+    "Per-request pricing": "Prix par appel",
+    "Top-up & grants": "Recharge et crédits",
+    "Pre-consume & display": "Pré-débit et affichage",
+    "Credit calculator": "Calculateur de crédits"
   }
 }

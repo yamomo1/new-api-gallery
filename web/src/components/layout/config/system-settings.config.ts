@@ -19,6 +19,7 @@ For commercial licensing, please contact support@quantumnous.com
 import type { TFunction } from 'i18next'
 import {
   Box,
+  Coins,
   HardDrive,
   Images,
   Route,
@@ -35,6 +36,7 @@ import { getBillingSectionNavItems } from '@/features/system-settings/billing/se
 import { getContentSectionNavItems } from '@/features/system-settings/content/section-registry.tsx'
 import { getModelsSectionNavItems } from '@/features/system-settings/models/section-registry.tsx'
 import { getOperationsSectionNavItems } from '@/features/system-settings/operations/section-registry.tsx'
+import { getPricingSectionNavItems } from '@/features/system-settings/pricing/section-registry.tsx'
 import { getPolicySectionNavItems } from '@/features/system-settings/request-policies/section-registry'
 import { getSecuritySectionNavItems } from '@/features/system-settings/security/section-registry.tsx'
 import { getSiteSectionNavItems } from '@/features/system-settings/site/section-registry.tsx'
@@ -63,6 +65,13 @@ function getSystemSettingsNavGroups(t: TFunction): NavGroup[] {
           title: t('Authentication'),
           icon: Shield,
           items: getAuthSectionNavItems(t),
+        },
+        {
+          title: t('Unified pricing', { defaultValue: '统一定价' }),
+          icon: Coins,
+          // 独立入口：只读改写既有 option，不影响下面的「计费与支付 / 模型」原页面
+          defaultOpen: true,
+          items: getPricingSectionNavItems(t),
         },
         {
           title: t('Billing & Payment'),

@@ -7956,6 +7956,11 @@
     "I have paid": "Tôi đã thanh toán",
     "Scan the QR code with Alipay to finish payment": "Quét mã QR bằng Alipay để hoàn tất thanh toán",
     "Payment successful, balance updated": "Thanh toán thành công, số dư đã cập nhật",
-    "Payment not confirmed yet, please try again in a moment": "Chưa xác nhận được thanh toán, vui lòng thử lại sau giây lát"
+    "Payment not confirmed yet, please try again in a moment": "Chưa xác nhận được thanh toán, vui lòng thử lại sau giây lát",
+    "Scale & currency": "Thang giá & tiền tệ",
+    "Per-request pricing": "Giá theo lượt",
+    "Top-up & grants": "Nạp tiền & tặng",
+    "Pre-consume & display": "Trừ trước & hiển thị",
+    "Credit calculator": "Máy tính credit"
   }
 }
