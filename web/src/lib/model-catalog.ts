@@ -19,8 +19,10 @@ export type CatalogModel = {
   /** 角标：NEW / HOT / VIP … */
   badge?: string
   category: ModelCategory
-  /** 图标键，见 MODEL_ICON_KEYS */
+  /** 图标键（见 MODEL_ICON_KEYS）、emoji 或供应商图标键 */
   icon?: string
+  /** 图标图片地址（后台填了 URL 时使用，优先级高于 icon） */
+  iconUrl?: string
   enabled: boolean
 }
 

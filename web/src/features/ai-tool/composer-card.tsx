@@ -34,6 +34,7 @@ import { toast } from 'sonner'
 import { ymmMenuClass } from '@/components/ui/ymm-dropdown'
 import type { PromptGalleryItem } from '@/features/prompt-gallery/types'
 import { useModelsByCategory } from '@/hooks/use-model-catalog'
+import { useServerModelsByCategory } from '@/hooks/use-server-model-catalog'
 import {
   translatePromptToEnglish,
   TranslateError,
@@ -115,7 +116,11 @@ export function ComposerCard({
   }) => void
 }) {
   const navigate = useNavigate()
-  const models = useModelsByCategory(category)
+  // 优先用 New API「模型资料」（图标/说明/标签来自后台），为空时回退站点自定义目录
+  const serverCatalog = useServerModelsByCategory(category)
+  const fallbackCatalog = useModelsByCategory(category)
+  const models =
+    serverCatalog.models.length > 0 ? serverCatalog.models : fallbackCatalog
   const [text, setText] = useState('')
   const [modelName, setModelName] = useState<string>('')
   const [pickerOpen, setPickerOpen] = useState(false)

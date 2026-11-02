@@ -45,6 +45,8 @@ func SetApiRouter(router *gin.Engine) {
 		apiRouter.GET("/status", controller.GetStatus)
 		apiRouter.GET("/uptime/status", controller.GetUptimeKumaStatus)
 		apiRouter.GET("/models", middleware.UserAuth(), controller.DashboardListModels)
+		// 前台「选择模型」弹窗：模型资料（说明/图标/标签）+ 端点分类，只读且不含价格
+		apiRouter.GET("/model-catalog", middleware.UserAuth(), controller.GetModelCatalog)
 		apiRouter.GET("/status/test", middleware.AdminAuth(), controller.TestStatus)
 		apiRouter.GET("/notice", controller.GetNotice)
 		apiRouter.GET("/user-agreement", controller.GetUserAgreement)

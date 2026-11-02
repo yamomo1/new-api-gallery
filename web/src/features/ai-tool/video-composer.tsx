@@ -40,6 +40,7 @@ import { toast } from 'sonner'
 
 import { ymmMenuClass, useYmmDropdown } from '@/components/ui/ymm-dropdown'
 import { useModelsByCategory } from '@/hooks/use-model-catalog'
+import { useServerModelsByCategory } from '@/hooks/use-server-model-catalog'
 import {
   translatePromptToEnglish,
   TranslateError,
@@ -154,7 +155,11 @@ export function VideoComposerCard({
   generating?: boolean
   onGenerate?: (payload: VideoGenPayload) => void
 }) {
-  const models = useModelsByCategory('video')
+  // 优先用 New API「模型资料」里的视频模型，为空时回退站点自定义目录
+  const serverCatalog = useServerModelsByCategory('video')
+  const fallbackCatalog = useModelsByCategory('video')
+  const models =
+    serverCatalog.models.length > 0 ? serverCatalog.models : fallbackCatalog
   const [mode, setMode] = useState<ModeKey>('frames')
   const [text, setText] = useState('')
   const [modelName, setModelName] = useState('')
