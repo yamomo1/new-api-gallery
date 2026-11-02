@@ -43,18 +43,6 @@ export function ShowcaseStrip({
 
   return (
     <section className='w-full'>
-      <div
-        className={compact ? 'mb-2 flex justify-end' : 'mb-4 flex justify-end'}
-      >
-        <a
-          href={moreHref}
-          className='text-muted-foreground hover:text-foreground flex items-center gap-0.5 text-[14px]'
-        >
-          查看更多
-          <ChevronRight className='size-4' />
-        </a>
-      </div>
-
       {/* 横向滚动：可见细滚动条 + 两端可完整滑到位，最后一张不会被容器边缘切掉 */}
       <div
         className={
@@ -93,6 +81,19 @@ export function ShowcaseStrip({
             </span>
           </article>
         ))}
+      </div>
+
+      {/* 「查看更多」放在卡片下方、右对齐 —— 用户明确要求沉到最底下 */}
+      <div
+        className={compact ? 'mt-1 flex justify-end' : 'mt-2 flex justify-end'}
+      >
+        <a
+          href={moreHref}
+          className='text-muted-foreground hover:text-foreground flex items-center gap-0.5 text-[14px]'
+        >
+          查看更多
+          <ChevronRight className='size-4' />
+        </a>
       </div>
     </section>
   )
