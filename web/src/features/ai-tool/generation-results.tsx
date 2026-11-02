@@ -98,7 +98,20 @@ export function GenerationResults({
           <article key={`${job.id}-${url ?? 'state'}`} className='min-w-0'>
             <div
               className='bg-muted relative w-full overflow-hidden rounded-[14px]'
-              style={{ aspectRatio: ratioToCss(job.ratio) }}
+              style={(() => {
+                // 结果区被「作品条 + 输入卡」压在下面，高度是动态的。
+                // 用视口把它们减掉，给卡片算一个上限：单张图连同下面的参数行
+                // 都能一次看全，不用滚一半猜一半。宽高同时封顶，避免只剩中间一条。
+                const [rw, rh] = (job.ratio || '1:1')
+                  .split(':')
+                  .map((n) => Number(n) || 1)
+                const cap = 'max(200px, calc(100svh - 660px))'
+                return {
+                  aspectRatio: ratioToCss(job.ratio),
+                  maxHeight: cap,
+                  maxWidth: `calc(${cap} * ${rw / rh})`,
+                }
+              })()}
             >
               {job.status === 'running' && (
                 <div className='absolute inset-0 overflow-hidden'>
@@ -128,7 +141,7 @@ export function GenerationResults({
                     <img
                       src={url}
                       alt={job.prompt.slice(0, 40) || '生成结果'}
-                      className='size-full object-cover'
+                      className='size-full object-contain'
                     />
                   )
                 ) : (

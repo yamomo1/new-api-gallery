@@ -11,16 +11,41 @@ export type ShowcaseItem = {
   to: string
 }
 
+/** 横向滚动条：默认隐藏，这里显式给一条细的，否则用户不知道还能往右滑 */
+const SCROLL_CLASS =
+  '[scrollbar-width:thin] [scrollbar-color:rgba(0,0,0,0.18)_transparent] ' +
+  'dark:[scrollbar-color:rgba(255,255,255,0.22)_transparent] ' +
+  '[&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-track]:bg-transparent ' +
+  '[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-black/15 ' +
+  'dark:[&::-webkit-scrollbar-thumb]:bg-white/20'
+
 export function ShowcaseStrip({
   items,
   moreHref = '/prompt-gallery',
+  compact = false,
 }: {
   items: ShowcaseItem[]
   moreHref?: string
+  /**
+   * 矮版：出结果后把空间让给上方结果区。
+   * 位置不变（仍固定在下、输入卡之上），只是卡片小一号 —— 否则 900 高的窗口下
+   * 作品条吃掉近 300px，结果区只剩 250px，一张方图都看不全。
+   */
+  compact?: boolean
 }) {
+  const cardClass = compact
+    ? 'h-[132px] w-[100px] rounded-[10px]'
+    : 'h-[236px] w-[178px] rounded-[14px]'
+  const titleClass = compact
+    ? 'text-[11px] leading-[1.35]'
+    : 'text-[13px] leading-[1.5]'
+  const overlayClass = compact ? 'px-2 pt-5 pb-2' : 'px-3 pt-8 pb-3'
+
   return (
     <section className='w-full'>
-      <div className='mb-4 flex justify-end'>
+      <div
+        className={compact ? 'mb-2 flex justify-end' : 'mb-4 flex justify-end'}
+      >
         <a
           href={moreHref}
           className='text-muted-foreground hover:text-foreground flex items-center gap-0.5 text-[14px]'
@@ -29,15 +54,37 @@ export function ShowcaseStrip({
           <ChevronRight className='size-4' />
         </a>
       </div>
-      <div className='scrollbar-none flex gap-5 overflow-x-auto pb-1'>
+
+      {/* 横向滚动：可见细滚动条 + 两端可完整滑到位，最后一张不会被容器边缘切掉 */}
+      <div
+        className={
+          'flex overflow-x-auto pb-2 ' +
+          (compact ? 'gap-3 ' : 'gap-5 ') +
+          SCROLL_CLASS
+        }
+      >
         {items.map((it) => (
           <article
             key={it.id}
-            className='relative h-[236px] w-[178px] shrink-0 overflow-hidden rounded-[14px] transition-transform duration-200 hover:-translate-y-1'
-            style={{ backgroundImage: `linear-gradient(160deg, ${it.from}, ${it.to})` }}
+            className={
+              'relative shrink-0 overflow-hidden transition-transform duration-200 hover:-translate-y-1 ' +
+              cardClass
+            }
+            style={{
+              backgroundImage: `linear-gradient(160deg, ${it.from}, ${it.to})`,
+            }}
           >
-            <div className='absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/55 to-transparent px-3 pt-8 pb-3'>
-              <p className='line-clamp-2 text-[13px] leading-[1.5] font-medium text-white/95'>
+            <div
+              className={
+                'absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/55 to-transparent ' +
+                overlayClass
+              }
+            >
+              <p
+                className={
+                  'line-clamp-2 font-medium text-white/95 ' + titleClass
+                }
+              >
                 {it.title}
               </p>
             </div>
