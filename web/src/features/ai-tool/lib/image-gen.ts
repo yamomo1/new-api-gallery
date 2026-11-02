@@ -17,7 +17,7 @@ export type ImageGenInput = {
   clarity: string
   count: number
   quality?: string
-  /** 参考图（data URL / 外链）。当前后端不一定消费，先透传 */
+  /** 参考图（内联 data URL，见 lib/image-ref.ts）。单张会以字符串发送 */
   images?: string[]
 }
 
@@ -60,7 +60,14 @@ export async function generateImages(
     size: label,
   }
   if (input.quality === 'Pro') body.quality = 'hd'
-  if (input.images?.length) body.image = input.images
+  // 图生图的 `image` 字段：单张必须传「字符串」，多张才传「数组」。
+  // 这一条踩过坑 —— 单张也传数组时，一部分上游（自己拼 JSON 的中转）
+  // 直接把值丢进 base64 解码器，报 "image is not a valid image base64"；
+  // 而只传 URL 时，上游又常常因为访问不到我们的存储域名而同样解不出来。
+  // 所以：单张 → 字符串，多张 → 数组，内容统一用调用方给的内联 base64。
+  if (input.images?.length) {
+    body.image = input.images.length === 1 ? input.images[0] : input.images
+  }
 
   let res
   try {
@@ -96,7 +103,10 @@ export async function generateImages(
 /** 把 axios / 后端错误压成一句人话 */
 function readError(error: unknown): string {
   const anyError = error as {
-    response?: { status?: number; data?: { message?: string; error?: { message?: string } } }
+    response?: {
+      status?: number
+      data?: { message?: string; error?: { message?: string } }
+    }
     message?: string
   }
   const serverMessage =

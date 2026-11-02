@@ -1,3 +1,4 @@
+import { useNavigate } from '@tanstack/react-router'
 /*
  * 生成器编写卡片（图片 / 视频共用）
  * 卡片尺寸取自 liblib /ai-tool/* 实测：848px、圆角 16、白底微阴影；
@@ -13,7 +14,6 @@
  * - 风格模型选中后逐个显示缩略图，悬浮缩略图弹出权重滑杆（0.1–1.5）
  */
 import {
-  AlertCircle,
   ArrowUp,
   ChevronDown,
   Image as ImageIcon,
@@ -27,21 +27,28 @@ import {
   Video,
   Zap,
 } from 'lucide-react'
-import { useNavigate } from '@tanstack/react-router'
-import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
+import {
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from 'react'
 import { toast } from 'sonner'
 
 import { ymmMenuClass } from '@/components/ui/ymm-dropdown'
 import type { PromptGalleryItem } from '@/features/prompt-gallery/types'
 import { useModelsByCategory } from '@/hooks/use-model-catalog'
 import { useServerModelsByCategory } from '@/hooks/use-server-model-catalog'
+import type { ModelCategory } from '@/lib/model-catalog'
 import {
   translatePromptToEnglish,
   TranslateError,
 } from '@/lib/prompt-translate'
-import type { ModelCategory } from '@/lib/model-catalog'
 import { resolveImageUrl, uploadImage } from '@/lib/storage'
 import { cn } from '@/lib/utils'
+
+import { fileToInlineImage } from './lib/image-ref'
 import { ModelPickerDialog } from './model-picker'
 import { StylePickerDialog } from './style-picker'
 
@@ -55,8 +62,18 @@ export const TABS: {
   icon: typeof ImageIcon
   path?: string
 }[] = [
-  { key: 'image', label: '图片生成', icon: ImageIcon, path: '/ai-tool/image-generator' },
-  { key: 'video', label: '视频生成', icon: Video, path: '/ai-tool/video-generator' },
+  {
+    key: 'image',
+    label: '图片生成',
+    icon: ImageIcon,
+    path: '/ai-tool/image-generator',
+  },
+  {
+    key: 'video',
+    label: '视频生成',
+    icon: Video,
+    path: '/ai-tool/video-generator',
+  },
   { key: 'action', label: '数字人', icon: Zap },
   { key: 'motion', label: '动作模仿', icon: LayoutGrid },
 ]
@@ -172,7 +189,9 @@ export function ComposerCard({
         return prev.filter((s) => s.item.id !== item.id)
       }
       const next = [...prev, { item, weight: 1 }]
-      return next.length > MAX_STYLES ? next.slice(next.length - MAX_STYLES) : next
+      return next.length > MAX_STYLES
+        ? next.slice(next.length - MAX_STYLES)
+        : next
     })
   }
 
@@ -182,7 +201,9 @@ export function ComposerCard({
       if (replaceAt === null) return prev
       const old = prev[replaceAt]?.item
       const next = prev.map((s, i) => (i === replaceAt ? { ...s, item } : s))
-      const dup = next.findIndex((s, i) => i !== replaceAt && s.item.id === item.id)
+      const dup = next.findIndex(
+        (s, i) => i !== replaceAt && s.item.id === item.id
+      )
       if (dup !== -1 && old) next[dup] = { ...next[dup], item: old }
       return next
     })
@@ -190,10 +211,19 @@ export function ComposerCard({
     setReplaceAt(null)
   }
 
-  // 参考图：本地先出预览，同时上传到站内存储，生成时带的是可访问地址
+  // 参考图：本地出预览、转成 base64 供图生图使用；同时后台上传一份留档
   const fileInput = useRef<HTMLInputElement>(null)
   const [refs, setRefs] = useState<
-    { id: string; url: string; name: string; remote?: string; failed?: boolean }[]
+    {
+      id: string
+      url: string
+      name: string
+      /** 内联数据 URL：图生图真正发给上游的内容 */
+      data?: string
+      /** 转码中：此时不允许点生成，避免把空值带上去 */
+      preparing?: boolean
+      remote?: string
+    }[]
   >([])
 
   const addFiles = (files: FileList | null) => {
@@ -207,6 +237,7 @@ export function ComposerCard({
           id: `${file.name}-${file.lastModified}-${Math.random().toString(36).slice(2, 7)}`,
           url: URL.createObjectURL(file),
           name: file.name,
+          preparing: true,
           remote: '',
         },
       }))
@@ -214,6 +245,25 @@ export function ComposerCard({
     setRefs((prev) => [...prev, ...picked.map((p) => p.entry)].slice(0, 4))
 
     for (const { file, entry } of picked) {
+      // 1) 内联 base64：图生图靠这个，必须在点生成之前就绪
+      void fileToInlineImage(file)
+        .then((data) =>
+          setRefs((prev) =>
+            prev.map((r) =>
+              r.id === entry.id ? { ...r, data, preparing: false } : r
+            )
+          )
+        )
+        .catch(() => {
+          setRefs((prev) =>
+            prev.map((r) =>
+              r.id === entry.id ? { ...r, preparing: false } : r
+            )
+          )
+          toast.error(`「${file.name}」读取失败，请重新选择`)
+        })
+
+      // 2) 上传留档：不参与生成，失败也不影响出图（老版本这里失败会直接丢图）
       void uploadImage(file)
         .then(({ url }) =>
           setRefs((prev) =>
@@ -221,10 +271,7 @@ export function ComposerCard({
           )
         )
         .catch(() => {
-          setRefs((prev) =>
-            prev.map((r) => (r.id === entry.id ? { ...r, failed: true } : r))
-          )
-          toast.error(`「${file.name}」上传失败，生成时不会带上它`)
+          /* 仅留档，失败静默 */
         })
     }
   }
@@ -235,17 +282,25 @@ export function ComposerCard({
   const handleGenerate = () => {
     const prompt = text.trim()
     if (!prompt || generating) return
+    // 转码中的图还没就绪，此时提交会静默丢图 —— 宁可不发
+    if (refs.some((r) => r.preparing)) {
+      toast.info('参考图还在处理中，请稍候再试')
+      return
+    }
     onGenerate?.({
       prompt,
       model: modelName || models[0]?.name || '',
       params,
-      // 只带上已上传成功的地址；blob: 预览地址后端拿不到
-      images: refs.map((r) => r.remote ?? '').filter(Boolean),
+      // 图生图传内联 base64（上游不保证能访问我们的存储地址）；
+      // data 缺失时退回上传地址，保证不会因为转码失败就彻底不带图
+      images: refs.map((r) => r.data || r.remote || '').filter(Boolean),
     })
   }
 
   const setWeight = (id: number, weight: number) =>
-    setStyles((prev) => prev.map((s) => (s.item.id === id ? { ...s, weight } : s)))
+    setStyles((prev) =>
+      prev.map((s) => (s.item.id === id ? { ...s, weight } : s))
+    )
 
   const removeStyle = (id: number) =>
     setStyles((prev) => prev.filter((s) => s.item.id !== id))
@@ -335,14 +390,10 @@ export function ComposerCard({
                     alt={ref.name}
                     className='size-full object-cover'
                   />
-                  {/* 上传中 / 上传失败的状态盖在缩略图上 */}
-                  {!ref.remote && (
+                  {/* 转码中：base64 还没就绪，此时点生成会漏图 */}
+                  {ref.preparing && (
                     <span className='bg-foreground/55 absolute inset-0 flex items-center justify-center text-white'>
-                      {ref.failed ? (
-                        <AlertCircle className='size-4' />
-                      ) : (
-                        <Loader2 className='size-4 animate-spin' />
-                      )}
+                      <Loader2 className='size-4 animate-spin' />
                     </span>
                   )}
                   <button
@@ -378,7 +429,9 @@ export function ComposerCard({
           className='ymm-dd-btn'
         >
           <span className='text-primary'>✧</span>
-          <span className='ymm-dd-label max-w-40'>{modelName || '选择模型'}</span>
+          <span className='ymm-dd-label max-w-40'>
+            {modelName || '选择模型'}
+          </span>
           <ChevronDown className='text-muted-foreground size-3.5' />
         </button>
 
@@ -526,7 +579,12 @@ function StyleThumb({
   const fill = ((selection.weight - 0.1) / (1.5 - 0.1)) * 100
 
   return (
-    <div ref={ref} className='relative' onMouseEnter={showLater} onMouseLeave={hideLater}>
+    <div
+      ref={ref}
+      className='relative'
+      onMouseEnter={showLater}
+      onMouseLeave={hideLater}
+    >
       <div className='group/thumb bg-muted relative size-[52px] overflow-hidden rounded-[8px]'>
         <button
           type='button'
@@ -614,11 +672,14 @@ function StyleThumb({
 /** 画幅比例的小图标：按比例画出宽高不同的方框 */
 function RatioGlyph({ ratio, long = 12 }: { ratio: string; long?: number }) {
   const [w, h] = ratio.split(':').map(Number)
-  const short = Math.max(5, Math.round((long * Math.min(w, h)) / Math.max(w, h)))
+  const short = Math.max(
+    5,
+    Math.round((long * Math.min(w, h)) / Math.max(w, h))
+  )
   return (
     <span
       aria-hidden
-      className='border-current shrink-0 rounded-[2px] border opacity-60'
+      className='shrink-0 rounded-[2px] border border-current opacity-60'
       style={{ width: w >= h ? long : short, height: h >= w ? long : short }}
     />
   )
@@ -702,7 +763,11 @@ function GenSettingsChip({
 
       <div
         ref={menuRef}
-        className={ymmMenuClass({ align: 'start', side, className: 'w-[336px] p-3.5' })}
+        className={ymmMenuClass({
+          align: 'start',
+          side,
+          className: 'w-[336px] p-3.5',
+        })}
       >
         {/* 图片质量 */}
         <p className='text-muted-foreground text-[12px]'>图片质量</p>
@@ -789,7 +854,7 @@ function UploadTile({
       className={`relative flex size-[52px] flex-col items-center justify-center gap-0.5 rounded-[8px] text-[10px] leading-none transition-colors ${
         primary
           ? 'bg-primary text-primary-foreground hover:bg-primary/90'
-          : 'bg-[#F7F7F7] text-muted-foreground hover:bg-[#EFEFEF] dark:bg-muted/40'
+          : 'text-muted-foreground dark:bg-muted/40 bg-[#F7F7F7] hover:bg-[#EFEFEF]'
       }`}
     >
       {primary ? <Shuffle className='size-4' /> : <Plus className='size-4' />}
