@@ -154,10 +154,15 @@ export function ComposerCard({
   const [replaceAt, setReplaceAt] = useState<number | null>(null)
   const [styles, setStyles] = useState<StyleSelection[]>([])
 
-  // 目录加载后默认选第一个可用模型
+  // 目录加载后默认选第一个可用模型。
+  // 必须等服务端目录落地再选：否则先按本地兜底目录选中一个（比如「Seedance 2.0」），
+  // 服务端目录回来后不会纠正，提交时就会用一个后台并不存在的模型名（踩过）。
   useEffect(() => {
-    if (!modelName && models.length) setModelName(models[0].name)
-  }, [models, modelName])
+    if (serverCatalog.isLoading) return
+    if (!models.length) return
+    if (modelName && models.some((m) => m.name === modelName)) return
+    setModelName(models[0].name)
+  }, [models, modelName, serverCatalog.isLoading])
 
   const [translating, setTranslating] = useState(false)
   const canGenerate = text.trim().length > 0

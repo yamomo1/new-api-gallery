@@ -47,8 +47,9 @@ import {
 } from '@/lib/prompt-translate'
 import { uploadImage } from '@/lib/storage'
 import { cn } from '@/lib/utils'
-import { ModelPickerDialog } from './model-picker'
+
 import { TABS } from './composer-card'
+import { ModelPickerDialog } from './model-picker'
 
 /* ------------------------------------------------------------------ */
 /* 模式与槽位定义                                                       */
@@ -82,8 +83,20 @@ const MODES: Record<
     placeholder:
       '描述首帧到尾帧之间的画面变化，例如：镜头缓缓推近，人物抬头望向窗外，天色由黄昏转入夜',
     slots: [
-      { key: 'first', label: '首帧', accept: 'image/*', max: 1, multiple: false },
-      { key: 'last', label: '尾帧', accept: 'image/*', max: 1, multiple: false },
+      {
+        key: 'first',
+        label: '首帧',
+        accept: 'image/*',
+        max: 1,
+        multiple: false,
+      },
+      {
+        key: 'last',
+        label: '尾帧',
+        accept: 'image/*',
+        max: 1,
+        multiple: false,
+      },
     ],
   },
   omni: {
@@ -93,9 +106,27 @@ const MODES: Record<
     placeholder:
       '输入你想要的画面，支持 @ 图片、视频、音频自由组合，例如：让@图片1动起来像@视频1，声音用@音频1的音色',
     slots: [
-      { key: 'video', label: '视频', accept: 'video/*', max: 2, multiple: true },
-      { key: 'image', label: '图片', accept: 'image/*', max: 3, multiple: true },
-      { key: 'audio', label: '音频', accept: 'audio/*', max: 2, multiple: true },
+      {
+        key: 'video',
+        label: '视频',
+        accept: 'video/*',
+        max: 2,
+        multiple: true,
+      },
+      {
+        key: 'image',
+        label: '图片',
+        accept: 'image/*',
+        max: 3,
+        multiple: true,
+      },
+      {
+        key: 'audio',
+        label: '音频',
+        accept: 'audio/*',
+        max: 2,
+        multiple: true,
+      },
     ],
   },
 }
@@ -180,10 +211,15 @@ export function VideoComposerCard({
   const modeAssets = assets[mode]
   const modeDef = MODES[mode]
 
-  // 目录加载后默认选第一个可用模型
+  // 目录加载后默认选第一个可用模型。
+  // 必须等服务端目录落地再选：否则先按本地兜底目录选中一个（比如「Seedance 2.0」），
+  // 服务端目录回来后不会纠正，提交时就会用一个后台并不存在的模型名（踩过）。
   useEffect(() => {
-    if (!modelName && models.length) setModelName(models[0].name)
-  }, [models, modelName])
+    if (serverCatalog.isLoading) return
+    if (!models.length) return
+    if (modelName && models.some((m) => m.name === modelName)) return
+    setModelName(models[0].name)
+  }, [models, modelName, serverCatalog.isLoading])
 
   /* ---------------- 素材上传 ---------------- */
 
@@ -329,12 +365,14 @@ export function VideoComposerCard({
     } catch (error) {
       const code = error instanceof TranslateError ? error.code : 'failed'
       toast.error(
-        ({
-          limited: '今日免费翻译次数已用完',
-          need_quota: '额度不足，无法继续翻译',
-          disabled: '管理员未开启提示词翻译',
-          no_model: '管理员还没配置翻译模型',
-        } as Record<string, string>)[code] ?? '翻译失败：请确认已登录，且后台已配置翻译通道'
+        (
+          {
+            limited: '今日免费翻译次数已用完',
+            need_quota: '额度不足，无法继续翻译',
+            disabled: '管理员未开启提示词翻译',
+            no_model: '管理员还没配置翻译模型',
+          } as Record<string, string>
+        )[code] ?? '翻译失败：请确认已登录，且后台已配置翻译通道'
       )
     } finally {
       setTranslating(false)
@@ -427,7 +465,9 @@ export function VideoComposerCard({
           className='ymm-dd-btn'
         >
           <span className='text-primary'>✧</span>
-          <span className='ymm-dd-label max-w-40'>{modelName || '选择模型'}</span>
+          <span className='ymm-dd-label max-w-40'>
+            {modelName || '选择模型'}
+          </span>
           <ChevronDown className='text-muted-foreground size-3.5' />
         </button>
 
@@ -543,7 +583,11 @@ function ModeDropdown({
 
       <div
         ref={menuRef}
-        className={ymmMenuClass({ align: 'start', side, className: 'w-[176px]' })}
+        className={ymmMenuClass({
+          align: 'start',
+          side,
+          className: 'w-[176px]',
+        })}
       >
         {MODE_ORDER.map((key) => {
           const def = MODES[key]
@@ -653,7 +697,11 @@ function VideoSettingsChip({
 
       <div
         ref={menuRef}
-        className={ymmMenuClass({ align: 'start', side, className: 'w-[400px] p-4' })}
+        className={ymmMenuClass({
+          align: 'start',
+          side,
+          className: 'w-[400px] p-4',
+        })}
       >
         {/* 视频比例 */}
         <p className='text-muted-foreground text-[12px]'>视频比例</p>
@@ -669,7 +717,7 @@ function VideoSettingsChip({
               )}
             >
               {r === '智能' ? (
-                <Scan className='text-current size-[13px] opacity-70' />
+                <Scan className='size-[13px] text-current opacity-70' />
               ) : (
                 <RatioGlyph ratio={r} long={13} />
               )}
@@ -737,11 +785,14 @@ function VideoSettingsChip({
 /** 画幅比例的小图标：按比例画出宽高不同的方框 */
 function RatioGlyph({ ratio, long = 12 }: { ratio: string; long?: number }) {
   const [w, h] = ratio.split(':').map(Number)
-  const short = Math.max(5, Math.round((long * Math.min(w, h)) / Math.max(w, h)))
+  const short = Math.max(
+    5,
+    Math.round((long * Math.min(w, h)) / Math.max(w, h))
+  )
   return (
     <span
       aria-hidden
-      className='border-current shrink-0 rounded-[2px] border opacity-60'
+      className='shrink-0 rounded-[2px] border border-current opacity-60'
       style={{ width: w >= h ? long : short, height: h >= w ? long : short }}
     />
   )
@@ -773,13 +824,22 @@ function AssetThumb({
         title={`点击替换${label}素材`}
       >
         {asset.name.match(/\.(mp4|webm|mov|mkv)$/i) ? (
-          <video src={asset.url} muted preload='metadata' className='size-full object-cover' />
+          <video
+            src={asset.url}
+            muted
+            preload='metadata'
+            className='size-full object-cover'
+          />
         ) : asset.name.match(/\.(mp3|wav|ogg|m4a|aac|flac)$/i) ? (
           <span className='bg-muted flex size-full items-center justify-center'>
             <Music className='text-muted-foreground size-5' />
           </span>
         ) : (
-          <img src={asset.url} alt={asset.name} className='size-full object-cover' />
+          <img
+            src={asset.url}
+            alt={asset.name}
+            className='size-full object-cover'
+          />
         )}
         {/* 上传中 / 上传失败的状态盖在缩略图上 */}
         {!asset.remote && (

@@ -4,12 +4,13 @@ import { toast } from 'sonner'
 import { openSignInDialog } from '@/features/auth/sign-in-dialog'
 import { useAuthStore } from '@/stores/auth-store'
 
-import { ComposerCard } from './composer-card'
 import { BrandStrip } from './brand-strip'
+import { ComposerCard } from './composer-card'
 import { GenerationResults, type GenJob } from './generation-results'
 import { generateImages, resolveSize } from './lib/image-gen'
+import { pollVideoTask, submitVideo } from './lib/video-gen'
 import { ShowcaseStrip, type ShowcaseItem } from './showcase-strip'
-import { VideoComposerCard } from './video-composer'
+import { VideoComposerCard, type VideoGenPayload } from './video-composer'
 
 const IMAGE_SHOWCASE: ShowcaseItem[] = [
   { id: '1', title: '春天露营面包插画', from: '#F3E3D0', to: '#B9C7A3' },
@@ -93,7 +94,13 @@ export function ImageGeneratorPage() {
       setJobs((prev) =>
         prev.map((job) =>
           job.id === id && job.status === 'running'
-            ? { ...job, progress: Math.min(92, job.progress + 2 + Math.round(Math.random() * 4)) }
+            ? {
+                ...job,
+                progress: Math.min(
+                  92,
+                  job.progress + 2 + Math.round(Math.random() * 4)
+                ),
+              }
             : job
         )
       )
@@ -112,7 +119,13 @@ export function ImageGeneratorPage() {
       setJobs((prev) =>
         prev.map((job) =>
           job.id === id
-            ? { ...job, status: 'done', progress: 100, urls: out.urls, size: out.size }
+            ? {
+                ...job,
+                status: 'done',
+                progress: 100,
+                urls: out.urls,
+                size: out.size,
+              }
             : job
         )
       )
@@ -249,23 +262,150 @@ export function VideoGeneratorPage() {
   // 未登录时先弹登录框，别让请求 401 把整页踢到登录页
   const isLoggedIn = useAuthStore((state) => Boolean(state.auth.user))
 
+  const [jobs, setJobs] = useState<GenJob[]>([])
+  const [generating, setGenerating] = useState(false)
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const jobCount = jobs.length
+
+  useEffect(() => {
+    if (jobCount === 0) return
+    const el = scrollRef.current
+    if (!el) return
+    el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' })
+  }, [jobCount])
+
+  const runVideoGeneration = async (payload: VideoGenPayload) => {
+    if (!isLoggedIn) {
+      openSignInDialog()
+      return
+    }
+    if (generating) return
+
+    const id = `vjob-${Date.now()}`
+    const createdAt = Date.now()
+    const ratio =
+      payload.settings.ratio && payload.settings.ratio !== '智能'
+        ? payload.settings.ratio
+        : '16:9'
+
+    // 先占位一张「排队中」的卡，提交成功后再补 task_id
+    setJobs((prev) => [
+      ...prev,
+      {
+        id,
+        prompt: payload.prompt,
+        model: payload.model,
+        ratio,
+        size: `${payload.settings.quality} · ${payload.settings.duration}s`,
+        count: 1,
+        status: 'running',
+        progress: 0,
+        urls: [],
+        createdAt,
+        kind: 'video',
+      },
+    ])
+    setGenerating(true)
+
+    const patch = (next: Partial<GenJob>) =>
+      setJobs((prev) => prev.map((j) => (j.id === id ? { ...j, ...next } : j)))
+
+    try {
+      const taskId = await submitVideo({
+        model: payload.model,
+        prompt: payload.prompt,
+        seconds: payload.settings.duration,
+        ratio: payload.settings.ratio,
+        quality: payload.settings.quality,
+        first: payload.assets.first,
+        last: payload.assets.last,
+        images: payload.mode === 'omni' ? payload.assets.images : undefined,
+      })
+      patch({ taskId })
+
+      // 轮询期间只前进不后退：上游 progress 偶尔会回落，界面别跟着跳
+      const final = await pollVideoTask(taskId, (snap) => {
+        setJobs((prev) =>
+          prev.map((j) =>
+            j.id === id
+              ? {
+                  ...j,
+                  progress: Math.max(
+                    j.progress,
+                    Math.min(99, Math.round(snap.progress))
+                  ),
+                }
+              : j
+          )
+        )
+      })
+
+      if (final.status === 'completed' && final.url) {
+        patch({ status: 'done', progress: 100, urls: [final.url] })
+      } else {
+        patch({
+          status: 'error',
+          error: final.error || '视频生成失败',
+        })
+      }
+    } catch (error) {
+      const message = (error as Error).message || '视频任务提交失败'
+      toast.error(message)
+      patch({ status: 'error', error: message })
+    } finally {
+      setGenerating(false)
+    }
+  }
+
   return (
     // 与图片生成页同一套壳：内容区自己滚、输入卡吸底，出来结果后页面不会整体位移
     <div className='flex h-[calc(100svh_-_3.5rem)] flex-col overflow-hidden'>
-      <div className='min-h-0 flex-1 overflow-y-auto'>
+      <div ref={scrollRef} className='min-h-0 flex-1 overflow-y-auto'>
         <div className='mx-auto w-full max-w-[1240px] px-6 pt-6 pb-8'>
-          <div className='pt-[28px] text-center'>
-            <h1 className='text-foreground text-[36px] leading-[1.2] font-medium'>
-              视频创作
-            </h1>
-            <div className='mt-3 flex justify-center'>
-              <BrandStrip subtitle='百变风格 超多模型供你选择' />
+          {jobCount > 0 ? (
+            <div className='mx-auto w-[1000px] max-w-full pt-2'>
+              <GenerationResults
+                jobs={jobs}
+                onRetry={(job) =>
+                  // 重试不带上原始素材（我们没存），所以走「全能参考」：
+                  // 首尾帧模式会因缺首帧被卡片拦下，等于点了没反应
+                  void runVideoGeneration({
+                    prompt: job.prompt,
+                    model: job.model,
+                    mode: 'omni',
+                    settings: {
+                      ratio: job.ratio,
+                      quality: '720P',
+                      duration: 5,
+                      sound: true,
+                    },
+                    assets: {
+                      first: undefined,
+                      last: undefined,
+                      videos: [],
+                      images: [],
+                      audios: [],
+                    },
+                  })
+                }
+              />
             </div>
-          </div>
+          ) : (
+            <>
+              <div className='pt-[28px] text-center'>
+                <h1 className='text-foreground text-[36px] leading-[1.2] font-medium'>
+                  视频创作
+                </h1>
+                <div className='mt-3 flex justify-center'>
+                  <BrandStrip subtitle='百变风格 超多模型供你选择' />
+                </div>
+              </div>
 
-          <div className='mx-auto mt-[46px] w-full max-w-[1200px]'>
-            <ShowcaseStrip items={VIDEO_SHOWCASE} />
-          </div>
+              <div className='mx-auto mt-[46px] w-full max-w-[1200px]'>
+                <ShowcaseStrip items={VIDEO_SHOWCASE} />
+              </div>
+            </>
+          )}
         </div>
       </div>
 
@@ -274,18 +414,8 @@ export function VideoGeneratorPage() {
           <div className='mx-auto w-[848px] max-w-full'>
             <VideoComposerCard
               active='video'
-              onGenerate={(payload) => {
-                // 校验都在卡片内完成；视频 relay 通道尚未接入，先确认参数闭环
-                if (!isLoggedIn) {
-                  openSignInDialog()
-                  return
-                }
-                const modeLabel =
-                  payload.mode === 'frames' ? '首尾帧' : '全能参考'
-                toast.success(
-                  `视频任务已提交（${modeLabel} · ${payload.settings.quality} · ${payload.settings.duration}s）`
-                )
-              }}
+              generating={generating}
+              onGenerate={(payload) => void runVideoGeneration(payload)}
             />
           </div>
         </div>

@@ -110,6 +110,36 @@ imagePlaygroundRouter.Use(middleware.Distribute())
 {
 	imagePlaygroundRouter.POST("/images/generations", controller.PlaygroundImage)
 }
+
+// 站内创作页的视频生成（二开新增）
+//
+// 与 /v1/videos 完全同构，只把 TokenAuth() 换成 UserAuth() —— 视频走的是
+// task 插件协议（plugins/tasks 下 11 个插件、61 个模型），原本只对 sk- 令牌
+// 开放，网页的登录会话会被判「无效的令牌」。
+//
+// 中间件顺序不能改：PinTaskPluginEndpoint 决定用哪个插件、PrepareTaskPluginEndpoint
+// 做提交前的载荷准备，两者都必须在 Distribute 之前完成。
+videoPlaygroundRouter := router.Group("/pg")
+videoPlaygroundRouter.Use(middleware.RouteTag("relay"))
+videoPlaygroundRouter.Use(middleware.SystemPerformanceCheck())
+videoPlaygroundRouter.Use(middleware.UserAuth())
+videoPlaygroundRouter.Use(middleware.PinTaskPluginEndpoint())
+videoPlaygroundRouter.Use(middleware.TaskPluginEndpointOnly(middleware.ModelRequestRateLimit()))
+videoPlaygroundRouter.Use(middleware.PrepareTaskPluginEndpoint())
+videoPlaygroundRouter.Use(middleware.Distribute())
+{
+	videoPlaygroundRouter.POST("/videos", func(c *gin.Context) {
+		controller.RelayTaskPluginEndpoint(c, controller.PlaygroundVideoCreate)
+	})
+}
+
+// 轮询走本地任务表，不需要选渠道，所以单独一个组（不挂 Distribute）
+videoPlaygroundReadRouter := router.Group("/pg")
+videoPlaygroundReadRouter.Use(middleware.RouteTag("relay"))
+videoPlaygroundReadRouter.Use(middleware.UserAuth())
+{
+	videoPlaygroundReadRouter.GET("/videos/:task_id", controller.PlaygroundVideoFetch)
+}
 	relayV1Router := router.Group("/v1")
 	relayV1Router.Use(middleware.RouteTag("relay"))
 	relayV1Router.Use(middleware.SystemPerformanceCheck())

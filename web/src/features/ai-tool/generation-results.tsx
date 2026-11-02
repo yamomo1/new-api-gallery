@@ -23,6 +23,10 @@ export type GenJob = {
   error?: string
   /** 提交时间（毫秒时间戳），卡片上展示到秒 */
   createdAt: number
+  /** 产物类型：视频任务渲染 <video>，其余按图片处理 */
+  kind?: 'image' | 'video'
+  /** 视频任务 id（重试/排查用） */
+  taskId?: string
 }
 
 /** 精确到年月日时分秒，例：2026-11-03 00:52:06 */
@@ -72,7 +76,7 @@ export function GenerationResults({
         <span className='tabular-nums'>
           {running > 0
             ? `${done}/${expected} 生成中…`
-            : `${doneImages} 张已完成`}
+            : `${doneImages} ${jobs.some((j) => j.kind === 'video') ? '条' : '张'}已完成`}
         </span>
         <button
           type='button'
@@ -112,14 +116,24 @@ export function GenerationResults({
 
               {job.status === 'done' &&
                 (url ? (
-                  <img
-                    src={url}
-                    alt={job.prompt.slice(0, 40) || '生成结果'}
-                    className='size-full object-cover'
-                  />
+                  job.kind === 'video' ? (
+                    <video
+                      src={url}
+                      controls
+                      playsInline
+                      preload='metadata'
+                      className='size-full bg-black object-contain'
+                    />
+                  ) : (
+                    <img
+                      src={url}
+                      alt={job.prompt.slice(0, 40) || '生成结果'}
+                      className='size-full object-cover'
+                    />
+                  )
                 ) : (
                   <div className='text-muted-foreground flex size-full items-center justify-center text-[13px]'>
-                    没有返回图片
+                    {job.kind === 'video' ? '没有返回视频' : '没有返回图片'}
                   </div>
                 ))}
 
