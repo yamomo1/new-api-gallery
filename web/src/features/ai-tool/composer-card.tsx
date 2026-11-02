@@ -29,6 +29,7 @@ import {
 } from 'lucide-react'
 import {
   useEffect,
+  useMemo,
   useRef,
   useState,
   type CSSProperties,
@@ -49,6 +50,7 @@ import { resolveImageUrl, uploadImage } from '@/lib/storage'
 import { cn } from '@/lib/utils'
 
 import { fileToInlineImage } from './lib/image-ref'
+import { MentionMenu, useMention, type MentionItem } from './mention'
 import { ModelPickerDialog } from './model-picker'
 import { StylePickerDialog } from './style-picker'
 
@@ -281,6 +283,25 @@ export function ComposerCard({
     }
   }
 
+  // 提示词里的 @ 引用：把已上传的图片列成 图片1、图片2…
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const mentionItems = useMemo<MentionItem[]>(
+    () =>
+      refs.map((ref, i) => ({
+        key: ref.id,
+        label: `图片${i + 1}`,
+        type: 'image',
+        thumb: ref.url,
+      })),
+    [refs]
+  )
+  const mention = useMention({
+    items: mentionItems,
+    value: text,
+    setValue: setText,
+    inputRef: textareaRef,
+  })
+
   // 消耗积分展示（每张 5 点，与后端计价对齐时可再调整）
   const cost = Math.max(1, Number(params.count.replace(/\D/g, '') || 1)) * 5
 
@@ -345,14 +366,31 @@ export function ComposerCard({
         </button>
       </div>
 
-      {/* 输入区 */}
-      <textarea
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        placeholder={placeholder}
-        rows={3}
-        className='text-foreground placeholder:text-muted-foreground/70 mt-2.5 min-h-[72px] w-full resize-none bg-transparent text-sm leading-[1.6] outline-none'
-      />
+      {/* 输入区（@ 会在这里弹素材面板） */}
+      <div className='relative'>
+        <MentionMenu
+          open={mention.open}
+          items={mention.items}
+          index={mention.index}
+          onHover={mention.setIndex}
+          onPick={mention.pick}
+        />
+        <textarea
+          ref={textareaRef}
+          value={text}
+          onChange={(e) => {
+            setText(e.target.value)
+            mention.sync(e.target.value, e.target.selectionStart ?? 0)
+          }}
+          onKeyDown={(e) => {
+            mention.onKeyDown(e)
+          }}
+          onBlur={mention.close}
+          placeholder={placeholder}
+          rows={3}
+          className='text-foreground placeholder:text-muted-foreground/70 mt-2.5 min-h-[72px] w-full resize-none bg-transparent text-sm leading-[1.6] outline-none'
+        />
+      </div>
 
       {/* 上传位 + 已选风格缩略图 */}
       <div className='mt-2.5 flex flex-wrap items-center gap-2'>

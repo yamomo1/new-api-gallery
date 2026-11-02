@@ -35,7 +35,7 @@ import {
   SquarePlay,
   Zap,
 } from 'lucide-react'
-import { useEffect, useRef, useState, type CSSProperties } from 'react'
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { toast } from 'sonner'
 
 import { ymmMenuClass, useYmmDropdown } from '@/components/ui/ymm-dropdown'
@@ -49,6 +49,7 @@ import { uploadImage } from '@/lib/storage'
 import { cn } from '@/lib/utils'
 
 import { TABS } from './composer-card'
+import { MentionMenu, useMention, type MentionItem } from './mention'
 import { ModelPickerDialog } from './model-picker'
 
 /* ------------------------------------------------------------------ */
@@ -210,6 +211,49 @@ export function VideoComposerCard({
   })
   const modeAssets = assets[mode]
   const modeDef = MODES[mode]
+
+  // 提示词里的 @ 引用：按当前模式列出素材
+  // 首尾帧 → @首帧 / @尾帧；全能参考 → @图片1 / @视频1 / @音频1（按上传顺序编号）
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const mentionItems = useMemo<MentionItem[]>(() => {
+    const current = assets[mode] ?? {}
+    if (mode === 'frames') {
+      return [
+        {
+          key: 'first',
+          label: '首帧',
+          type: 'frame' as const,
+          thumb: current.first?.[0]?.url,
+        },
+        {
+          key: 'last',
+          label: '尾帧',
+          type: 'frame' as const,
+          thumb: current.last?.[0]?.url,
+        },
+      ].filter((item) => Boolean(item.thumb))
+    }
+    const groups: { key: SlotKey; name: string; type: MentionItem['type'] }[] =
+      [
+        { key: 'image', name: '图片', type: 'image' },
+        { key: 'video', name: '视频', type: 'video' },
+        { key: 'audio', name: '音频', type: 'audio' },
+      ]
+    return groups.flatMap((group) =>
+      (current[group.key] ?? []).map((asset, i) => ({
+        key: asset.id,
+        label: `${group.name}${i + 1}`,
+        type: group.type,
+        thumb: group.type === 'audio' ? undefined : asset.url,
+      }))
+    )
+  }, [assets, mode])
+  const mention = useMention({
+    items: mentionItems,
+    value: text,
+    setValue: setText,
+    inputRef: textareaRef,
+  })
 
   // 目录加载后默认选第一个可用模型。
   // 必须等服务端目录落地再选：否则先按本地兜底目录选中一个（比如「Seedance 2.0」），
@@ -405,14 +449,31 @@ export function VideoComposerCard({
         })}
       </div>
 
-      {/* 输入区：占位文案随参考模式切换 */}
-      <textarea
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        placeholder={modeDef.placeholder}
-        rows={3}
-        className='text-foreground placeholder:text-muted-foreground/70 mt-2.5 min-h-[72px] w-full resize-none bg-transparent text-sm leading-[1.6] outline-none'
-      />
+      {/* 输入区：占位文案随参考模式切换；打 @ 弹素材面板 */}
+      <div className='relative'>
+        <MentionMenu
+          open={mention.open}
+          items={mention.items}
+          index={mention.index}
+          onHover={mention.setIndex}
+          onPick={mention.pick}
+        />
+        <textarea
+          ref={textareaRef}
+          value={text}
+          onChange={(e) => {
+            setText(e.target.value)
+            mention.sync(e.target.value, e.target.selectionStart ?? 0)
+          }}
+          onKeyDown={(e) => {
+            mention.onKeyDown(e)
+          }}
+          onBlur={mention.close}
+          placeholder={modeDef.placeholder}
+          rows={3}
+          className='text-foreground placeholder:text-muted-foreground/70 mt-2.5 min-h-[72px] w-full resize-none bg-transparent text-sm leading-[1.6] outline-none'
+        />
+      </div>
 
       {/* 参考素材区：双模式上传位；固定最小高度保证切换时布局稳定 */}
       <div className='mt-2.5 flex min-h-[64px] flex-wrap items-center gap-3'>
