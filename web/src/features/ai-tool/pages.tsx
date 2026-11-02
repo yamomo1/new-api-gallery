@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
 import { openSignInDialog } from '@/features/auth/sign-in-dialog'
@@ -33,7 +33,22 @@ const VIDEO_SHOWCASE: ShowcaseItem[] = [
   { id: 'v8', title: '绽放的味道', from: '#F3C6D6', to: '#B9748F' },
 ]
 
+/**
+ * 工作台页面壳：给 body 打标记，隐藏全站营销页脚（site-footer）。
+ *
+ * 生成器是「一屏工作台」——结果区自己滚、输入卡吸底，
+ * 底部再挂一个三四百像素的营销页脚会直接把视口撑爆，
+ * 输入卡就会跟着页面一起滚走。备案信息在首页/画廊页仍然展示。
+ */
+function useWorkbenchShell() {
+  useEffect(() => {
+    document.body.classList.add('ymm-workbench')
+    return () => document.body.classList.remove('ymm-workbench')
+  }, [])
+}
+
 export function ImageGeneratorPage() {
+  useWorkbenchShell()
   const [jobs, setJobs] = useState<GenJob[]>([])
   const [generating, setGenerating] = useState(false)
   // 未登录时先弹登录框，别让请求 401 把整页踢到登录页
@@ -54,7 +69,10 @@ export function ImageGeneratorPage() {
     }
     const size = resolveSize(input.ratio, input.clarity).label
     const id = `job-${Date.now()}`
+    const createdAt = Date.now()
+    // 追加到末尾：新图从下方出现、把旧图往上顶，向上滚动即可回看历史
     setJobs((prev) => [
+      ...prev,
       {
         id,
         prompt: input.prompt,
@@ -65,8 +83,8 @@ export function ImageGeneratorPage() {
         status: 'running' as const,
         progress: 2,
         urls: [],
+        createdAt,
       },
-      ...prev,
     ])
     setGenerating(true)
 
@@ -113,6 +131,72 @@ export function ImageGeneratorPage() {
   }
 
   const hasJobs = jobs.length > 0
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const jobCount = jobs.length
+
+  // 每出一批新图，把结果区滚到最底部：
+  // 输入卡是固定不动的，只有上面的结果区在滚，符合「新图往上顶」的观感
+  useEffect(() => {
+    if (jobCount === 0) return
+    const el = scrollRef.current
+    if (!el) return
+    el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' })
+  }, [jobCount])
+
+  // 有结果后切到「结果区独立滚动 + 输入卡吸底」的布局
+  if (hasJobs) {
+    return (
+      <div className='flex h-[calc(100dvh_-_3.5rem)] flex-col overflow-hidden'>
+        <div ref={scrollRef} className='min-h-0 flex-1 overflow-y-auto'>
+          <div className='mx-auto w-full max-w-[1240px] px-6 pt-6 pb-8'>
+            <div className='mx-auto w-[1000px] max-w-full'>
+              <GenerationResults
+                jobs={jobs}
+                onRetry={(job) =>
+                  void runGeneration({
+                    prompt: job.prompt,
+                    model: job.model,
+                    ratio: job.ratio,
+                    clarity: '1K',
+                    quality: '标准',
+                    count: job.count,
+                  })
+                }
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className='bg-background shrink-0'>
+          <div className='mx-auto w-full max-w-[1240px] px-6 pb-5'>
+            <div className='mx-auto w-[848px] max-w-full'>
+              <ComposerCard
+                active='image'
+                category='image'
+                generating={generating}
+                placeholder='可直接文字生图，或上传图片输入文字指令对图片进行编辑，如：将背景改为雪夜'
+                uploads={[
+                  { key: 'style', label: '风格模型', tone: 'primary' },
+                  { key: 'image', label: '图片' },
+                ]}
+                onGenerate={({ prompt, model, params, images }) =>
+                  void runGeneration({
+                    prompt,
+                    model,
+                    ratio: params.ratio,
+                    clarity: params.clarity,
+                    quality: params.quality,
+                    count: Number(params.count.replace(/\D/g, '') || 1),
+                    images,
+                  })
+                }
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className='mx-auto w-full max-w-[1240px] px-6 pb-16'>
@@ -127,25 +211,7 @@ export function ImageGeneratorPage() {
         </div>
       )}
 
-      {hasJobs && (
-        <div className='mx-auto w-[848px] max-w-full pt-[56px]'>
-          <GenerationResults
-            jobs={jobs}
-            onRetry={(job) =>
-              void runGeneration({
-                prompt: job.prompt,
-                model: job.model,
-                ratio: job.ratio,
-                clarity: '1K',
-                quality: '标准',
-                count: job.count,
-              })
-            }
-          />
-        </div>
-      )}
-
-      <div className={`mx-auto w-[848px] max-w-full ${hasJobs ? 'mt-10' : 'mt-[62px]'}`}>
+      <div className='mx-auto mt-[62px] w-[848px] max-w-full'>
         <ComposerCard
           active='image'
           category='image'
@@ -179,6 +245,7 @@ export function ImageGeneratorPage() {
 }
 
 export function VideoGeneratorPage() {
+  useWorkbenchShell()
   // 未登录时先弹登录框，别让请求 401 把整页踢到登录页
   const isLoggedIn = useAuthStore((state) => Boolean(state.auth.user))
 

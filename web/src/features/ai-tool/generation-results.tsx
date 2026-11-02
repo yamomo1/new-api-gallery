@@ -21,6 +21,19 @@ export type GenJob = {
   progress: number
   urls: string[]
   error?: string
+  /** 提交时间（毫秒时间戳），卡片上展示到秒 */
+  createdAt: number
+}
+
+/** 精确到年月日时分秒，例：2026-11-03 00:52:06 */
+function formatJobTime(ts?: number): string {
+  if (!ts) return ''
+  const d = new Date(ts)
+  if (Number.isNaN(d.getTime())) return ''
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(
+    d.getHours()
+  )}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
 }
 
 /** 比例 → CSS aspect-ratio */
@@ -145,6 +158,11 @@ export function GenerationResults({
                 {job.model} · {job.size} · {job.ratio}
               </span>
             </div>
+            {job.createdAt ? (
+              <div className='text-muted-foreground/70 mt-0.5 text-[11.5px] tabular-nums'>
+                {formatJobTime(job.createdAt)}
+              </div>
+            ) : null}
             {job.prompt && (
               <p className='text-muted-foreground/80 mt-1 line-clamp-1 text-[12px]'>
                 {job.prompt}

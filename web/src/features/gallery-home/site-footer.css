@@ -79,3 +79,9 @@
   text-underline-offset: 3px; transition: color 0.3s ease-out;
 }
 .site-footer-beian-link:hover { color: var(--accent-gold, #e9b872); }
+
+/* AI 工具工作台（图片/视频生成）：一屏布局，不需要营销页脚。
+   页脚会把文档撑高到视口之外，导致吸底的输入卡跟着页面滚走。 */
+body.ymm-workbench .site-footer {
+  display: none;
+}
