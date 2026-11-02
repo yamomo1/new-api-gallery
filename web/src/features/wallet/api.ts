@@ -29,6 +29,8 @@ import type {
   AmountResponse,
   PaymentResponse,
   StripePaymentResponse,
+  AlipayPaymentRequest,
+  AlipayPaymentResponse,
   AffiliateCodeResponse,
   AffiliateTransferResponse,
   BillingHistoryResponse,
@@ -128,6 +130,19 @@ export async function requestStripePayment(
   request: PaymentRequest
 ): Promise<StripePaymentResponse> {
   const res = await api.post('/api/user/stripe/pay', request, {
+    skipBusinessError: true,
+  } as Record<string, unknown>)
+  return res.data
+}
+
+/**
+ * Request Alipay official payment
+ * Returns either a cashier URL (page/wap) or a QR payload (precreate).
+ */
+export async function requestAlipayPayment(
+  request: AlipayPaymentRequest
+): Promise<AlipayPaymentResponse> {
+  const res = await api.post('/api/user/alipay/pay', request, {
     skipBusinessError: true,
   } as Record<string, unknown>)
   return res.data

@@ -39,6 +39,23 @@ export type PaymentResponse = ApiResponse<Record<string, unknown>> & {
   url?: string
 }
 export type StripePaymentResponse = ApiResponse<{ pay_link: string }>
+
+/**
+ * 支付宝官方直连（电脑/手机网站支付返回 pay_url，当面付返回 qr_code）
+ */
+export type AlipayPaymentResponse = ApiResponse<{
+  mode?: 'page' | 'wap' | 'qr' | string
+  trade_no?: string
+  pay_url?: string
+  qr_code?: string
+  money?: string
+}>
+
+export interface AlipayPaymentRequest {
+  amount: number
+  /** 可选：page / wap / qr，留空由服务端按后台配置决定 */
+  mode?: string
+}
 export type AffiliateCodeResponse = ApiResponse<string>
 export type AffiliateTransferResponse = ApiResponse
 export type CreemPaymentResponse = ApiResponse<{ checkout_url: string }>
@@ -142,6 +159,10 @@ export interface TopupInfo {
   creem_products?: CreemProduct[]
   /** Whether Waffo topup is enabled */
   enable_waffo_topup?: boolean
+  /** Whether the official Alipay gateway is enabled */
+  enable_alipay_topup?: boolean
+  /** Minimum topup amount for the official Alipay gateway */
+  alipay_min_topup?: number
   /** Available Waffo payment methods */
   waffo_pay_methods?: WaffoPayMethod[]
   /** Minimum topup amount for Waffo */

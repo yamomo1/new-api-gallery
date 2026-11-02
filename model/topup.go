@@ -31,6 +31,9 @@ const (
 	PaymentMethodWaffo        = "waffo"
 	PaymentMethodWaffoPancake = "waffo_pancake"
 	PaymentMethodBalance      = "balance"
+	// PaymentMethodAlipay 表示「用支付宝付款」。Epay 聚合里的 alipay 与官方直连共用该口径，
+	// 真正的渠道差异记录在 PaymentProvider 上。
+	PaymentMethodAlipay = "alipay"
 )
 
 const (
@@ -40,6 +43,8 @@ const (
 	PaymentProviderWaffo        = "waffo"
 	PaymentProviderWaffoPancake = "waffo_pancake"
 	PaymentProviderBalance      = "balance"
+	// PaymentProviderAlipay 支付宝开放平台官方直连
+	PaymentProviderAlipay = "alipay_official"
 )
 
 var (
@@ -230,6 +235,82 @@ func RechargeEpay(tradeNo string, actualPaymentMethod string, callerIp string) (
 
 	common.SysLog(common.LogText("Epay top-up succeeded trade_no=%s user_id=%d quota_to_add=%d money=%.2f", topUp.TradeNo, topUp.UserId, quotaToAdd, topUp.Money))
 	RecordTopupLog(topUp.UserId, common.NewMessage("Online top-up succeeded, amount added: {{quota}}, payment amount: {{amount}}", map[string]any{"quota": logger.FormatQuota(quotaToAdd), "amount": fmt.Sprintf("%f", topUp.Money)}), callerIp, topUp.PaymentMethod, PaymentProviderEpay)
+	return false, nil
+}
+
+// ErrAlipayAmountMismatch 支付宝实际支付金额与订单金额不一致
+var ErrAlipayAmountMismatch = errors.New("alipay payment amount mismatch")
+
+// RechargeAlipay 原子完成支付宝官方直连订单。
+// 与 RechargeEpay 同构：行锁 + 事务内状态校验，保证重复/并发通知最多入账一次。
+// paidAmount 为支付宝通知里的 total_amount，必须与下单金额一致（按分位比较，规避 float 误差）。
+func RechargeAlipay(tradeNo string, paidAmount decimal.Decimal, channelTradeNo string, callerIp string) (alreadyDone bool, err error) {
+	if tradeNo == "" {
+		return false, errors.New("payment order number not provided")
+	}
+
+	refCol := "`trade_no`"
+	if common.UsingMainDatabase(common.DatabaseTypePostgreSQL) {
+		refCol = `"trade_no"`
+	}
+
+	var quotaToAdd int
+	topUp := &TopUp{}
+	err = DB.Transaction(func(tx *gorm.DB) error {
+		if err := lockForUpdate(tx).Where(refCol+" = ?", tradeNo).First(topUp).Error; err != nil {
+			return ErrTopUpNotFound
+		}
+		if topUp.PaymentProvider != PaymentProviderAlipay {
+			return ErrPaymentMethodMismatch
+		}
+		if topUp.Status == common.TopUpStatusSuccess {
+			alreadyDone = true
+			return nil
+		}
+		if topUp.Status != common.TopUpStatusPending {
+			return ErrTopUpStatusInvalid
+		}
+
+		expected := decimal.NewFromFloat(topUp.Money).Round(2)
+		if !paidAmount.Round(2).Equal(expected) {
+			return ErrAlipayAmountMismatch
+		}
+
+		var quotaErr error
+		quotaToAdd, quotaErr = common.WalletQuotaFromDecimalStrict(
+			decimal.NewFromInt(topUp.Amount).Mul(decimal.NewFromFloat(common.QuotaPerUnit)),
+		)
+		if quotaErr != nil || quotaToAdd <= 0 {
+			return ErrInvalidTopUpQuota
+		}
+
+		topUp.PaymentMethod = PaymentMethodAlipay
+		topUp.CompleteTime = common.GetTimestamp()
+		topUp.Status = common.TopUpStatusSuccess
+		if err := tx.Save(topUp).Error; err != nil {
+			return err
+		}
+		return creditTopUpQuota(tx, topUp.UserId, quotaToAdd, nil)
+	})
+	if err != nil {
+		if !errors.Is(err, ErrTopUpNotFound) &&
+			!errors.Is(err, ErrPaymentMethodMismatch) &&
+			!errors.Is(err, ErrTopUpStatusInvalid) &&
+			!errors.Is(err, ErrAlipayAmountMismatch) {
+			common.SysError(common.LogText("alipay topup failed: %s", err.Error()))
+		}
+		return false, err
+	}
+	if alreadyDone {
+		return true, nil
+	}
+	syncCreditUserQuotaCache(topUp.UserId, quotaToAdd, common.LogText("alipay topup"))
+
+	common.SysLog(common.LogText(
+		"Alipay top-up succeeded trade_no=%s channel_trade_no=%s user_id=%d quota_to_add=%d money=%.2f",
+		topUp.TradeNo, channelTradeNo, topUp.UserId, quotaToAdd, topUp.Money,
+	))
+	RecordTopupLog(topUp.UserId, common.NewMessage("Online top-up succeeded, amount added: {{quota}}, payment amount: {{amount}}", map[string]any{"quota": logger.FormatQuota(quotaToAdd), "amount": fmt.Sprintf("%f", topUp.Money)}), callerIp, PaymentMethodAlipay, PaymentProviderAlipay)
 	return false, nil
 }
 

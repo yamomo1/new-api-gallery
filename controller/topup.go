@@ -97,12 +97,29 @@ func GetTopUpInfo(c *gin.Context) {
 		}
 	}
 
+	// 支付宝官方直连（开放平台）优先展示在聚合支付前面
+	enableAlipay := isAlipayTopUpEnabled()
+	if enableAlipay {
+		hasAlipayOfficial := false
+		for _, method := range payMethods {
+			if method["type"] == setting.PaymentMethodTypeAlipayOfficial {
+				hasAlipayOfficial = true
+				break
+			}
+		}
+		if !hasAlipayOfficial {
+			payMethods = append([]map[string]string{buildAlipayPayMethod()}, payMethods...)
+		}
+	}
+
 	data := gin.H{
 		"enable_online_topup":              isEpayTopUpEnabled(),
 		"enable_stripe_topup":              isStripeTopUpEnabled(),
 		"enable_creem_topup":               isCreemTopUpEnabled(),
 		"enable_waffo_topup":               enableWaffo,
 		"enable_waffo_pancake_topup":       enableWaffoPancake,
+		"enable_alipay_topup":              enableAlipay,
+		"alipay_min_topup":                 alipayMinTopUp(),
 		"enable_redemption":                complianceConfirmed,
 		"payment_compliance_confirmed":     complianceConfirmed,
 		"payment_compliance_terms_version": operation_setting.CurrentComplianceTermsVersion,

@@ -94,6 +94,13 @@ export function isStripePayment(paymentType: string): boolean {
 }
 
 /**
+ * Check if payment method is Alipay's official open-platform gateway
+ */
+export function isAlipayOfficialPayment(paymentType: string): boolean {
+  return paymentType === PAYMENT_TYPES.ALIPAY_OFFICIAL
+}
+
+/**
  * Check if payment method is Waffo
  */
 export function isWaffoPayment(paymentType: string): boolean {

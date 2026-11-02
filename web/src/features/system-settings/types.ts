@@ -358,6 +358,18 @@ export type BillingSettings = {
   'checkin_setting.enabled': boolean
   'checkin_setting.min_quota': number
   'checkin_setting.max_quota': number
+  // 支付宝开放平台官方直连（与 Epay 的 alipay 区分）
+  'alipay_setting.enabled': boolean
+  'alipay_setting.sandbox': boolean
+  'alipay_setting.app_id': string
+  'alipay_setting.public_key_pem': string
+  'alipay_setting.gateway': string
+  'alipay_setting.mode': string
+  'alipay_setting.notify_url': string
+  'alipay_setting.return_url': string
+  'alipay_setting.display_name': string
+  'alipay_setting.min_topup': number
+  'alipay_setting.timeout_express': string
 }
 
 export type OperationsSettings = {

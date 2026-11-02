@@ -108,3 +108,17 @@ func isEpayWebhookConfigured() bool {
 func isEpayWebhookEnabled() bool {
 	return isEpayTopUpEnabled()
 }
+
+// isAlipayTopUpEnabled 支付宝开放平台官方直连是否可用：
+// 合规声明已确认 + 后台开启 + AppID / 应用私钥 / 支付宝公钥齐备。
+func isAlipayTopUpEnabled() bool {
+	if !isPaymentComplianceConfirmed() {
+		return false
+	}
+	s := setting.GetAlipaySetting()
+	return s.Enabled && s.Configured()
+}
+
+func isAlipayWebhookEnabled() bool {
+	return isAlipayTopUpEnabled()
+}

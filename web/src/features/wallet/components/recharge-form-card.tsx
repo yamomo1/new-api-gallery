@@ -133,6 +133,8 @@ export function RechargeFormCard({
   const hasConfigurableTopup =
     topupInfo?.enable_online_topup ||
     topupInfo?.enable_stripe_topup ||
+    // 支付宝官方直连与 Epay 无关，需单独计入，否则只开官方支付宝时金额区不显示
+    topupInfo?.enable_alipay_topup ||
     enableWaffoTopup ||
     enableWaffoPancakeTopup
   const hasAnyTopup = hasConfigurableTopup || enableCreemTopup

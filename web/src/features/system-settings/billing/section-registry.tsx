@@ -21,6 +21,7 @@ import { parseCurrencyDisplayType } from '@/lib/currency'
 import { CheckinSettingsSection } from '../general/checkin-settings-section'
 import { PricingSection } from '../general/pricing-section'
 import { QuotaSettingsSection } from '../general/quota-settings-section'
+import { AlipayOfficialSettingsSection } from '../integrations/alipay-official-settings-section'
 import { PaymentSettingsSection } from '../integrations/payment-settings-section'
 import { RatioSettingsCard } from '../models/ratio-settings-card'
 import type { BillingSettings } from '../types'
@@ -184,6 +185,32 @@ const BILLING_SECTIONS = [
             settings['payment_setting.compliance_terms_version'] ?? '',
           confirmedAt: settings['payment_setting.compliance_confirmed_at'] ?? 0,
           confirmedBy: settings['payment_setting.compliance_confirmed_by'] ?? 0,
+        }}
+      />
+    ),
+  },
+  {
+    id: 'alipay',
+    titleKey: 'Alipay (Official)',
+    build: (settings: BillingSettings) => (
+      <AlipayOfficialSettingsSection
+        defaultValues={{
+          enabled: settings['alipay_setting.enabled'] ?? false,
+          sandbox: settings['alipay_setting.sandbox'] ?? false,
+          appId: settings['alipay_setting.app_id'] ?? '',
+          privateKey: '',
+          publicKeyPem: settings['alipay_setting.public_key_pem'] ?? '',
+          gateway: settings['alipay_setting.gateway'] ?? '',
+          mode:
+            settings['alipay_setting.mode'] === 'wap' ||
+            settings['alipay_setting.mode'] === 'qr'
+              ? settings['alipay_setting.mode']
+              : 'page',
+          notifyUrl: settings['alipay_setting.notify_url'] ?? '',
+          returnUrl: settings['alipay_setting.return_url'] ?? '',
+          displayName: settings['alipay_setting.display_name'] ?? '支付宝官方',
+          minTopUp: settings['alipay_setting.min_topup'] ?? 1,
+          timeoutExpress: settings['alipay_setting.timeout_express'] ?? '30m',
         }}
       />
     ),

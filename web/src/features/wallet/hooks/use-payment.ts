@@ -27,11 +27,13 @@ import {
   calculateStripeAmount,
   calculateWaffoAmount,
   calculateWaffoPancakeAmount,
+  requestAlipayPayment,
   requestPayment,
   requestStripePayment,
   isApiSuccess,
 } from '../api'
 import {
+  isAlipayOfficialPayment,
   isStripePayment,
   isWaffoPayment,
   isWaffoPancakePayment,
@@ -57,6 +59,15 @@ const defaultPaymentAmountCalculators: PaymentAmountCalculators = {
   stripe: calculateStripeAmount,
   waffo: calculateWaffoAmount,
   waffoPancake: calculateWaffoPancakeAmount,
+}
+
+/**
+ * 支付宝当面付扫码信息（由 usePayment 状态持有，由页面渲染二维码弹窗）
+ */
+export interface AlipayQrPayload {
+  qrCode: string
+  tradeNo: string
+  money: string
 }
 
 export async function requestPaymentAmount(
@@ -85,6 +96,7 @@ export function usePayment() {
   const [amount, setAmount] = useState<number>(0)
   const [calculating, setCalculating] = useState(false)
   const [processing, setProcessing] = useState(false)
+  const [alipayQr, setAlipayQr] = useState<AlipayQrPayload | null>(null)
 
   // Calculate payment amount
   const calculatePaymentAmount = useCallback(
@@ -112,6 +124,38 @@ export function usePayment() {
     async (topupAmount: number, paymentType: string) => {
       try {
         setProcessing(true)
+
+        // 支付宝官方直连：服务端返回收银台地址或扫码内容
+        if (isAlipayOfficialPayment(paymentType)) {
+          const response = await requestAlipayPayment({
+            amount: Math.floor(topupAmount),
+          })
+          if (!isApiSuccess(response) || !response.data) {
+            handleServerError(response, i18next.t('Payment request failed'))
+            return false
+          }
+
+          const { pay_url: payUrl, qr_code: qrCode } = response.data
+          if (payUrl) {
+            window.open(payUrl, '_blank', 'noopener,noreferrer')
+            toast.success(i18next.t('Redirecting to payment page...'))
+            return true
+          }
+          if (qrCode) {
+            setAlipayQr({
+              qrCode,
+              tradeNo: response.data.trade_no ?? '',
+              money: response.data.money ?? '',
+            })
+            toast.success(
+              i18next.t('Scan the QR code with Alipay to finish payment')
+            )
+            return true
+          }
+
+          handleServerError(response, i18next.t('Payment request failed'))
+          return false
+        }
 
         const isStripe = isStripePayment(paymentType)
         const amount = Math.floor(topupAmount)
@@ -166,5 +210,7 @@ export function usePayment() {
     calculatePaymentAmount,
     processPayment,
     setAmount,
+    alipayQr,
+    clearAlipayQr: () => setAlipayQr(null),
   }
 }

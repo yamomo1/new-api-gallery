@@ -107,6 +107,18 @@ const defaultBillingSettings: BillingSettings = {
   'checkin_setting.enabled': false,
   'checkin_setting.min_quota': 1000,
   'checkin_setting.max_quota': 10000,
+  // 支付宝开放平台官方直连
+  'alipay_setting.enabled': false,
+  'alipay_setting.sandbox': false,
+  'alipay_setting.app_id': '',
+  'alipay_setting.public_key_pem': '',
+  'alipay_setting.gateway': '',
+  'alipay_setting.mode': 'page',
+  'alipay_setting.notify_url': '',
+  'alipay_setting.return_url': '',
+  'alipay_setting.display_name': '支付宝官方',
+  'alipay_setting.min_topup': 1,
+  'alipay_setting.timeout_express': '30m',
 }
 
 export function BillingSettings() {

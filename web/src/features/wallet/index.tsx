@@ -18,6 +18,7 @@ For commercial licensing, please contact support@quantumnous.com
 */
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
+import { toast } from 'sonner'
 
 import { SectionPageLayout } from '@/components/layout'
 import { useStatus } from '@/hooks/use-status'
@@ -25,6 +26,7 @@ import { useSystemConfig } from '@/hooks/use-system-config'
 import { getSelf } from '@/lib/api'
 
 import { AffiliateRewardsCard } from './components/affiliate-rewards-card'
+import { AlipayQrDialog } from './components/dialogs/alipay-qr-dialog'
 import { BillingHistoryDialog } from './components/dialogs/billing-history-dialog'
 import { CreemConfirmDialog } from './components/dialogs/creem-confirm-dialog'
 import { PaymentConfirmDialog } from './components/dialogs/payment-confirm-dialog'
@@ -96,6 +98,8 @@ export function Wallet(props: WalletProps) {
     processing,
     calculatePaymentAmount,
     processPayment,
+    alipayQr,
+    clearAlipayQr,
   } = usePayment()
   const {
     affiliateLink,
@@ -115,11 +119,15 @@ export function Wallet(props: WalletProps) {
       setUserLoading(true)
       const response = await getSelf()
       if (response.success && response.data) {
-        setUser(response.data as UserWalletData)
+        const nextUser = response.data as UserWalletData
+        setUser(nextUser)
+        return nextUser
       }
+      return null
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error('Failed to fetch user data:', error)
+      return null
     } finally {
       setUserLoading(false)
     }
@@ -167,6 +175,18 @@ export function Wallet(props: WalletProps) {
     setTopupAmount(amount)
     setSelectedPreset(null)
     calculatePaymentAmount(amount, getCurrentPaymentType())
+  }
+
+  // 扫码支付后手动确认：刷新余额，额度增加即视为到账
+  const handleAlipayPaidCheck = async () => {
+    const before = user?.quota ?? 0
+    const next = await fetchUser()
+    if (next && next.quota > before) {
+      clearAlipayQr()
+      toast.success(t('Payment successful, balance updated'))
+      return
+    }
+    toast.info(t('Payment not confirmed yet, please try again in a moment'))
   }
 
   // Handle payment method selection
@@ -335,7 +355,9 @@ export function Wallet(props: WalletProps) {
                 topupInfo={topupInfo}
                 onAvailabilityChange={handleSubscriptionAvailabilityChange}
                 userQuota={user?.quota}
-                onPurchaseSuccess={fetchUser}
+                onPurchaseSuccess={() => {
+                  void fetchUser()
+                }}
               />
             </div>
 
@@ -384,6 +406,13 @@ export function Wallet(props: WalletProps) {
         onConfirm={handleCreemConfirm}
         product={selectedCreemProduct}
         processing={creemProcessing}
+      />
+
+      <AlipayQrDialog
+        payload={alipayQr}
+        onClose={clearAlipayQr}
+        onConfirmPaid={handleAlipayPaidCheck}
+        checking={userLoading}
       />
     </>
   )
