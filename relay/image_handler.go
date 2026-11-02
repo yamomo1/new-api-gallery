@@ -77,6 +77,21 @@ func ImageHelper(c *gin.Context, info *relaycommon.RelayInfo) (newAPIError *type
 			if errors.As(err, &apiErr) {
 				return apiErr
 			}
+			// 有一批渠道的图片协议还是 TODO（aws / 讯飞 / 智谱 / 腾讯 / 百度 …），
+			// 原样透出 "not implemented" 对运营毫无指向性：他们只会看到一句
+			// 英文，不知道是自己接错了渠道。这里换成能直接指导配置的提示。
+			if strings.Contains(strings.ToLower(err.Error()), "not implemented") {
+				channelName := constant.GetChannelTypeName(info.ChannelType)
+				if channelName == "" {
+					channelName = fmt.Sprintf("#%d", info.ChannelType)
+				}
+				return types.NewErrorWithStatusCode(
+					fmt.Errorf("当前渠道「%s」不支持图片生成：该渠道类型尚未适配图片协议。请在后台改用 OpenAI 兼容、Gemini 或「高级自定义」渠道接入出图模型（也可以把该模型映射到已适配的渠道）", channelName),
+					types.ErrorCodeConvertRequestFailed,
+					http.StatusBadRequest,
+					types.ErrOptionWithSkipRetry(),
+				)
+			}
 			return types.NewError(err, types.ErrorCodeConvertRequestFailed)
 		}
 		relaycommon.AppendRequestConversionFromRequest(info, convertedRequest)

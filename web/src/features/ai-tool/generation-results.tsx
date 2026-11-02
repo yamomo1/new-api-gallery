@@ -88,7 +88,8 @@ export function GenerationResults({
         </button>
       </div>
 
-      <div className='mt-4 grid grid-cols-1 gap-x-6 gap-y-7 sm:grid-cols-2 lg:grid-cols-3'>
+      {/* 一行一张：单列大图，避免多列时每张都被压到看不清细节 */}
+      <div className='mx-auto mt-4 grid w-full max-w-[760px] grid-cols-1 gap-y-9'>
         {cards.map(({ job, url }) => (
           <article key={`${job.id}-${url ?? 'state'}`} className='min-w-0'>
             <div

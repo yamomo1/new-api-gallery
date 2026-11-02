@@ -146,7 +146,7 @@ export function ImageGeneratorPage() {
   // 有结果后切到「结果区独立滚动 + 输入卡吸底」的布局
   if (hasJobs) {
     return (
-      <div className='flex h-[calc(100dvh_-_3.5rem)] flex-col overflow-hidden'>
+      <div className='flex h-[calc(100svh_-_3.5rem)] flex-col overflow-hidden'>
         <div ref={scrollRef} className='min-h-0 flex-1 overflow-y-auto'>
           <div className='mx-auto w-full max-w-[1240px] px-6 pt-6 pb-8'>
             <div className='mx-auto w-[1000px] max-w-full'>
@@ -250,36 +250,45 @@ export function VideoGeneratorPage() {
   const isLoggedIn = useAuthStore((state) => Boolean(state.auth.user))
 
   return (
-    <div className='mx-auto w-full max-w-[1240px] px-6 pb-16'>
-      <div className='pt-[56px] text-center'>
-        <h1 className='text-foreground text-[36px] leading-[1.2] font-medium'>
-          视频创作
-        </h1>
-        <div className='mt-3 flex justify-center'>
-          <BrandStrip subtitle='百变风格 超多模型供你选择' />
+    // 与图片生成页同一套壳：内容区自己滚、输入卡吸底，出来结果后页面不会整体位移
+    <div className='flex h-[calc(100svh_-_3.5rem)] flex-col overflow-hidden'>
+      <div className='min-h-0 flex-1 overflow-y-auto'>
+        <div className='mx-auto w-full max-w-[1240px] px-6 pt-6 pb-8'>
+          <div className='pt-[28px] text-center'>
+            <h1 className='text-foreground text-[36px] leading-[1.2] font-medium'>
+              视频创作
+            </h1>
+            <div className='mt-3 flex justify-center'>
+              <BrandStrip subtitle='百变风格 超多模型供你选择' />
+            </div>
+          </div>
+
+          <div className='mx-auto mt-[46px] w-full max-w-[1200px]'>
+            <ShowcaseStrip items={VIDEO_SHOWCASE} />
+          </div>
         </div>
       </div>
 
-      <div className='mx-auto mt-[62px] w-[848px] max-w-full'>
-        <VideoComposerCard
-          active='video'
-          onGenerate={(payload) => {
-            // 校验都在卡片内完成；视频 relay 通道尚未接入，先确认参数闭环
-            if (!isLoggedIn) {
-              openSignInDialog()
-              return
-            }
-            const modeLabel =
-              payload.mode === 'frames' ? '首尾帧' : '全能参考'
-            toast.success(
-              `视频任务已提交（${modeLabel} · ${payload.settings.quality} · ${payload.settings.duration}s）`
-            )
-          }}
-        />
-      </div>
-
-      <div className='mx-auto mt-[140px] w-full max-w-[1200px]'>
-        <ShowcaseStrip items={VIDEO_SHOWCASE} />
+      <div className='bg-background shrink-0'>
+        <div className='mx-auto w-full max-w-[1240px] px-6 pb-5'>
+          <div className='mx-auto w-[848px] max-w-full'>
+            <VideoComposerCard
+              active='video'
+              onGenerate={(payload) => {
+                // 校验都在卡片内完成；视频 relay 通道尚未接入，先确认参数闭环
+                if (!isLoggedIn) {
+                  openSignInDialog()
+                  return
+                }
+                const modeLabel =
+                  payload.mode === 'frames' ? '首尾帧' : '全能参考'
+                toast.success(
+                  `视频任务已提交（${modeLabel} · ${payload.settings.quality} · ${payload.settings.duration}s）`
+                )
+              }}
+            />
+          </div>
+        </div>
       </div>
     </div>
   )
