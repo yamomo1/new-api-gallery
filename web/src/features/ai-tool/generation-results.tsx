@@ -105,7 +105,8 @@ export function GenerationResults({
                 const [rw, rh] = (job.ratio || '1:1')
                   .split(':')
                   .map((n) => Number(n) || 1)
-                const cap = 'max(200px, calc(100svh - 660px))'
+                // 出图后底部只剩输入卡（作品条只在空态出现），预留 ≈ 头部 56 + 输入卡 300 + 间距
+                const cap = 'max(200px, calc(100svh - 500px))'
                 return {
                   aspectRatio: ratioToCss(job.ratio),
                   maxHeight: cap,

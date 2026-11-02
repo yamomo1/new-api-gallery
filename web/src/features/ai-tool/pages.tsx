@@ -156,13 +156,37 @@ export function ImageGeneratorPage() {
     el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' })
   }, [jobCount])
 
+  // 输入卡两种状态出现的位置不同：空态跟在标题下方（随内容滚），出图后吸底
+  const composer = (
+    <ComposerCard
+      active='image'
+      category='image'
+      generating={generating}
+      placeholder='可直接文字生图，或上传图片输入文字指令对图片进行编辑，如：将背景改为雪夜'
+      uploads={[
+        { key: 'style', label: '风格模型', tone: 'primary' },
+        { key: 'image', label: '图片' },
+      ]}
+      onGenerate={({ prompt, model, params, images }) =>
+        void runGeneration({
+          prompt,
+          model,
+          ratio: params.ratio,
+          clarity: params.clarity,
+          quality: params.quality,
+          count: Number(params.count.replace(/\D/g, '') || 1),
+          images,
+        })
+      }
+    />
+  )
+
   return (
-    // 三段固定：结果区（自己滚）→ 作品条（固定）→ 输入卡（吸底）。
-    // 带结果的旧写法是「有结果就把作品条藏掉」，用户明确要求它留在下方不动。
     <div className='flex h-[calc(100svh_-_3.5rem)] flex-col overflow-hidden'>
+      {/* 上半：空态是「标题 + 输入卡」，出图后是结果区（自己滚，新图在下方把旧图往上顶） */}
       <div ref={scrollRef} className='min-h-0 flex-1 overflow-y-auto'>
-        <div className='mx-auto w-full max-w-[1240px] px-6 pt-4 pb-2'>
-          {hasJobs ? (
+        {hasJobs ? (
+          <div className='mx-auto w-full max-w-[1240px] px-6 pt-4'>
             <div className='mx-auto w-[1000px] max-w-full'>
               <GenerationResults
                 jobs={jobs}
@@ -178,8 +202,10 @@ export function ImageGeneratorPage() {
                 }
               />
             </div>
-          ) : (
-            <div className='pt-[40px] text-center'>
+          </div>
+        ) : (
+          <div className='mx-auto w-full max-w-[1240px] px-6'>
+            <div className='pt-[56px] text-center'>
               <h1 className='text-foreground text-[36px] leading-[1.2] font-medium'>
                 图片创作
               </h1>
@@ -187,41 +213,25 @@ export function ImageGeneratorPage() {
                 <BrandStrip subtitle='百变风格 超多模型供你选择' />
               </div>
             </div>
-          )}
-        </div>
-      </div>
 
-      <div className='bg-background shrink-0'>
-        <div className='mx-auto w-full max-w-[1240px] px-6'>
-          <ShowcaseStrip items={IMAGE_SHOWCASE} compact={hasJobs} />
-        </div>
-      </div>
+            <div className='mx-auto mt-[62px] w-[848px] max-w-full'>
+              {composer}
+            </div>
 
-      <div className='bg-background shrink-0'>
-        <div className='mx-auto w-full max-w-[1240px] px-6 pt-3 pb-5'>
-          <div className='mx-auto w-[848px] max-w-full'>
-            <ComposerCard
-              active='image'
-              category='image'
-              generating={generating}
-              placeholder='可直接文字生图，或上传图片输入文字指令对图片进行编辑，如：将背景改为雪夜'
-              uploads={[
-                { key: 'style', label: '风格模型', tone: 'primary' },
-                { key: 'image', label: '图片' },
-              ]}
-              onGenerate={({ prompt, model, params, images }) =>
-                void runGeneration({
-                  prompt,
-                  model,
-                  ratio: params.ratio,
-                  clarity: params.clarity,
-                  quality: params.quality,
-                  count: Number(params.count.replace(/\D/g, '') || 1),
-                  images,
-                })
-              }
-            />
+            {/* 把作品条压到视口最底部，中间这段留白随窗口高度伸缩 */}
+            <div className='h-[96px]' />
           </div>
+        )}
+      </div>
+
+      {/* 下半：空态是整条作品；出图后换成吸底的输入卡（贴到底边） */}
+      <div className='bg-background shrink-0'>
+        <div className='mx-auto w-full max-w-[1240px] px-6 pb-2'>
+          {hasJobs ? (
+            <div className='mx-auto w-[848px] max-w-full'>{composer}</div>
+          ) : (
+            <ShowcaseStrip items={IMAGE_SHOWCASE} />
+          )}
         </div>
       </div>
     </div>
@@ -328,12 +338,20 @@ export function VideoGeneratorPage() {
     }
   }
 
+  const composer = (
+    <VideoComposerCard
+      active='video'
+      generating={generating}
+      onGenerate={(payload) => void runVideoGeneration(payload)}
+    />
+  )
+
   return (
-    // 与图片生成页同一套壳：内容区自己滚、输入卡吸底，出来结果后页面不会整体位移
+    // 与图片生成页同一套壳：上半自己滚，下半是「空态=整条作品 / 出图=吸底输入卡」
     <div className='flex h-[calc(100svh_-_3.5rem)] flex-col overflow-hidden'>
       <div ref={scrollRef} className='min-h-0 flex-1 overflow-y-auto'>
-        <div className='mx-auto w-full max-w-[1240px] px-6 pt-4 pb-2'>
-          {jobCount > 0 ? (
+        {jobCount > 0 ? (
+          <div className='mx-auto w-full max-w-[1240px] px-6 pt-4'>
             <div className='mx-auto w-[1000px] max-w-full'>
               <GenerationResults
                 jobs={jobs}
@@ -361,8 +379,10 @@ export function VideoGeneratorPage() {
                 }
               />
             </div>
-          ) : (
-            <div className='pt-[40px] text-center'>
+          </div>
+        ) : (
+          <div className='mx-auto w-full max-w-[1240px] px-6'>
+            <div className='pt-[56px] text-center'>
               <h1 className='text-foreground text-[36px] leading-[1.2] font-medium'>
                 视频创作
               </h1>
@@ -370,26 +390,23 @@ export function VideoGeneratorPage() {
                 <BrandStrip subtitle='百变风格 超多模型供你选择' />
               </div>
             </div>
-          )}
-        </div>
-      </div>
 
-      {/* 作品条固定在下方：有结果时也不藏、不位移 */}
-      <div className='bg-background shrink-0'>
-        <div className='mx-auto w-full max-w-[1240px] px-6'>
-          <ShowcaseStrip items={VIDEO_SHOWCASE} compact={jobCount > 0} />
-        </div>
-      </div>
+            <div className='mx-auto mt-[62px] w-[848px] max-w-full'>
+              {composer}
+            </div>
 
-      <div className='bg-background shrink-0'>
-        <div className='mx-auto w-full max-w-[1240px] px-6 pt-3 pb-5'>
-          <div className='mx-auto w-[848px] max-w-full'>
-            <VideoComposerCard
-              active='video'
-              generating={generating}
-              onGenerate={(payload) => void runVideoGeneration(payload)}
-            />
+            <div className='h-[96px]' />
           </div>
+        )}
+      </div>
+
+      <div className='bg-background shrink-0'>
+        <div className='mx-auto w-full max-w-[1240px] px-6 pb-2'>
+          {jobCount > 0 ? (
+            <div className='mx-auto w-[848px] max-w-full'>{composer}</div>
+          ) : (
+            <ShowcaseStrip items={VIDEO_SHOWCASE} />
+          )}
         </div>
       </div>
     </div>
