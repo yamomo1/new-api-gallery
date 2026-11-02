@@ -45,7 +45,7 @@
 
 set -euo pipefail
 
-SCRIPT_VER="2026-11-01.01-preconnect-net"
+SCRIPT_VER="2026-11-03.01-create-no-deps-probe"
 
 # ---------- 自拷贝执行（见安全约定 6） ----------
 if [[ "${__UPGRADE_REEXEC:-0}" != "1" ]]; then
@@ -658,8 +658,22 @@ step "6/6 启动新容器并探活"
 #   后面的「开始数据库迁移」永远不出现），既不崩也不超时 → 探活 90 秒不过
 #   → 被误判成「新版本有问题」而回滚。
 #   现在：create（只建不启动）→ 补网络 → start，窗口期为 0。
+#
+# --no-deps 的能力探测（2026-11-03 踩到）：
+#   部分 compose 版本的 `create` 子命令没有 --no-deps（实测报 `unknown flag: --no-deps`），
+#   而 `up` 是有的。以前一遇到就整段退回 `up -d`，把「create→补网→start」这套
+#   0 窗口期的顺序全丢了，又回到窗口期风险里。现在改成：create 只是【少带一个 flag】，
+#   顺序仍然保住；因为少了 --no-deps，依赖服务（redis/postgres）会被一并 create，
+#   所以启动这一步改用 `compose up -d $SERVICE`（不带 --force-recreate，容器已建好只会 start），
+#   既带起依赖，又不会 recreate 掉刚接好的网络。
+CREATE_EXTRA="--no-deps"
+if ! compose create --help 2>&1 | grep -q -- '--no-deps'; then
+  CREATE_EXTRA=""
+  info "  该 compose 版本的 create 不支持 --no-deps，省略它（仍走 create→补网→启动）"
+fi
+
 CREATED_ONLY=1
-if ! compose create --force-recreate --no-deps "$SERVICE"; then
+if ! compose create --force-recreate $CREATE_EXTRA "$SERVICE"; then
   CREATED_ONLY=0
   warn "  当前 docker compose 不支持 create，退回 up -d（会有上面的窗口期）"
   if ! compose up -d --force-recreate --no-deps "$SERVICE"; then
@@ -671,7 +685,13 @@ if ! compose create --force-recreate --no-deps "$SERVICE"; then
 fi
 restore_networks
 if [[ "$CREATED_ONLY" == "1" ]]; then
-  docker start "$CONTAINER" >/dev/null 2>&1 || true
+  if [[ -n "$CREATE_EXTRA" ]]; then
+    docker start "$CONTAINER" >/dev/null 2>&1 || true
+  else
+    # 无 --no-deps 时依赖也被 create 了，用 compose up 一起拉起来（只 start，不 recreate）
+    compose up -d "$SERVICE" >/dev/null 2>&1 \
+      || docker start "$CONTAINER" >/dev/null 2>&1 || true
+  fi
 fi
 
 info "  探活 http://127.0.0.1:${APP_PORT}/api/status（首轮最多 ${PROBE_TIMEOUT} 秒）…"
@@ -693,7 +713,9 @@ if probe_with_retry; then
     warn "  ！容器 /data 的挂载源不是 $DATA_DIR，请立刻核对（可能是空站）"
   fi
   info "  备份留在：$BACKUP_DIR（env.$STAMP / commit.$STAMP.txt）"
-  info "  需要回滚：$ME --rollback"
+  # 措辞说明：这里只是「把回滚命令告诉你」，没有任何回滚发生。
+  # 真发生回滚时走的是下面的 else 分支，会打印「自动回滚到上一版」。
+  info "  （本次未回滚）如需回滚请执行：$ME --rollback"
   [[ "$VERIFY_FAIL" == "0" ]] || exit 2
 else
   warn "重启后再探活仍未通过，自动回滚到上一版"
