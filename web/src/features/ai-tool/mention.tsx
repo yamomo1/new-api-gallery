@@ -23,13 +23,29 @@ For commercial licensing, please contact support@quantumnous.com
  * 在输入框里打 `@` 就弹出一个小面板，列出当前已上传的素材；
  * 继续打字（比如 `@1`）按编号过滤；鼠标悬浮高亮、点击（或回车）插入。
  *
+ * 统一入口是 `MentionTextarea`：图片页、视频页都用它，交互完全一致。
+ * `useMention` 保留导出，供需要自定义 textarea 外观/布局的场景复用。
+ *
  * 为什么做成 hook + 受控面板而不是 contenteditable：
  * 需求只是「往文本里插一段字符」，受控 textarea + 光标计算足够，
  * 换 contenteditable 会把粘贴、输入法、撤销全搞乱。
+ *
+ * 触发规则（2026-11-04 修正）：
+ *   旧规则要求 `@` 前面必须是行首/空白/左括号，于是
+ *   `@图片1 AAA@`、`@@`、`AAA@` 这些「不是空格式分隔」的场景全都弹不出来。
+ *   现在改成：从光标往前找最近的 `@`，只要 `@` 与光标之间没有空白、
+ *   且字符数不超上限，就认为正在输入引用 —— 不再关心 `@` 前面是什么。
+ *   判定逻辑见 `lib/mention-trigger.ts`（纯函数，可单测）。
+ *   插入后的完整引用是 `@图片1 `（带尾空格），所以光标停在其后时
+ *   最近的 `@` 与光标之间隔着空格 → 不会重复弹出。
  */
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 
 import { cn } from '@/lib/utils'
+import {
+  findMentionTrigger,
+  type MentionTrigger,
+} from './lib/mention-trigger'
 
 export type MentionType = 'image' | 'video' | 'audio' | 'frame'
 
@@ -43,9 +59,6 @@ export type MentionItem = {
   thumb?: string
 }
 
-/** `@` 必须在开头或空白之后，后面最多跟 8 个非空白字符当查询串 */
-const TRIGGER = /(^|[\s(（])@([^\s@]{0,8})$/
-
 export function useMention({
   items,
   value,
@@ -57,9 +70,7 @@ export function useMention({
   setValue: (next: string) => void
   inputRef: React.RefObject<HTMLTextAreaElement | null>
 }) {
-  const [state, setState] = useState<{ start: number; query: string } | null>(
-    null
-  )
+  const [state, setState] = useState<MentionTrigger | null>(null)
   const [index, setIndex] = useState(0)
 
   const filtered = useMemo(() => {
@@ -74,32 +85,37 @@ export function useMention({
 
   /** 每次输入后同步一次：文本 + 光标位置都由调用方给，避免读到旧 value */
   const sync = (text: string, caret: number) => {
-    const before = text.slice(0, caret)
-    const matched = TRIGGER.exec(before)
-    if (!matched) {
+    const hit = findMentionTrigger(text, caret)
+    if (!hit) {
       setState(null)
       return
     }
-    const query = matched[2]
-    setState({ start: caret - query.length - 1, query })
+    // 查询串没变时不要重建 state，否则每次输入都重置高亮项
+    setState((prev) =>
+      prev && prev.start === hit.start && prev.query === hit.query
+        ? { ...hit, end: hit.end }
+        : hit
+    )
     setIndex(0)
   }
 
   const close = () => setState(null)
 
   const pick = (item: MentionItem) => {
+    if (!state) return
     const el = inputRef.current
-    if (!el || !state) return
-    const caret = el.selectionStart ?? value.length
     const inserted = `@${item.label} `
-    const next = value.slice(0, state.start) + inserted + value.slice(caret)
+    // 用 state.end 而不是实时 selectionStart：点面板时 textarea 已失焦，
+    // 有些浏览器此时 selectionStart 会归零，替换范围就错了
+    const next =
+      value.slice(0, state.start) + inserted + value.slice(state.end)
     setValue(next)
     setState(null)
     // 等 React 把新值刷进 textarea 再定位光标，否则会被重置到末尾
     requestAnimationFrame(() => {
       const pos = state.start + inserted.length
-      el.focus()
-      el.setSelectionRange(pos, pos)
+      el?.focus()
+      el?.setSelectionRange(pos, pos)
     })
   }
 
@@ -201,6 +217,60 @@ export function MentionMenu({
           </button>
         ))}
       </div>
+    </div>
+  )
+}
+
+/**
+ * 带 @ 引用的输入框 —— 全站统一入口。
+ * 图片页 / 视频页都用它，避免两处各写一遍事件绑定（以前就是这样，
+ * 一改触发规则就得改两个文件，容易漏）。
+ */
+export function MentionTextarea({
+  value,
+  onChange,
+  items,
+  placeholder,
+  rows = 3,
+  className,
+}: {
+  value: string
+  onChange: (next: string) => void
+  items: MentionItem[]
+  placeholder?: string
+  rows?: number
+  className?: string
+}) {
+  const inputRef = useRef<HTMLTextAreaElement>(null)
+  const mention = useMention({ items, value, setValue: onChange, inputRef })
+
+  return (
+    <div className='relative'>
+      <MentionMenu
+        open={mention.open}
+        items={mention.items}
+        index={mention.index}
+        onHover={mention.setIndex}
+        onPick={mention.pick}
+      />
+      <textarea
+        ref={inputRef}
+        value={value}
+        onChange={(event) => {
+          onChange(event.target.value)
+          mention.sync(event.target.value, event.target.selectionStart ?? 0)
+        }}
+        onKeyDown={(event) => {
+          mention.onKeyDown(event)
+        }}
+        onBlur={mention.close}
+        placeholder={placeholder}
+        rows={rows}
+        className={cn(
+          'text-foreground placeholder:text-muted-foreground/70 mt-2.5 min-h-[72px] w-full resize-none bg-transparent text-sm leading-[1.6] outline-none',
+          className
+        )}
+      />
     </div>
   )
 }
